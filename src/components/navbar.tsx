@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { TerrainIcon, MenuIcon } from "@/components/icons";
+import { TerrainIcon, MenuIcon, CloseIcon } from "@/components/icons";
 import { useState } from "react";
 
 const navLinks = [
-  { href: "#", label: "Product" },
-  { href: "#", label: "Learn AI" },
-  { href: "#", label: "Pricing" },
-  { href: "#", label: "Security" },
-  { href: "#", label: "Customers" },
+  { href: "/product", label: "Product" },
+  { href: "/learn-ai", label: "Learn AI" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/security", label: "Security" },
+  { href: "/customers", label: "Customers" },
 ];
 
 export function Navbar() {
@@ -44,13 +44,13 @@ export function Navbar() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
-              href="#"
+              href="/login"
               className="text-sm font-semibold text-slate-200 hover:text-white transition-colors"
             >
               Login
             </Link>
-            <Button className="bg-summit hover:bg-summit-hover text-white px-6 py-2.5 shadow-lg shadow-orange-900/20 font-bold text-sm uppercase tracking-wide">
-              Book a Demo
+            <Button asChild className="bg-summit hover:bg-summit-hover text-white px-6 py-2.5 shadow-lg shadow-orange-900/20 font-bold text-sm uppercase tracking-wide">
+              <Link href="/book-demo">Book a Demo</Link>
             </Button>
           </div>
 
@@ -60,7 +60,11 @@ export function Navbar() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            <MenuIcon className="size-6" />
+            {mobileMenuOpen ? (
+              <CloseIcon className="size-6" />
+            ) : (
+              <MenuIcon className="size-6" />
+            )}
           </button>
         </div>
 
@@ -73,19 +77,21 @@ export function Navbar() {
                   key={link.label}
                   href={link.href}
                   className="text-sm font-semibold text-slate-200 hover:text-summit transition-colors px-2 py-2"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
               <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
                 <Link
-                  href="#"
+                  href="/login"
                   className="text-sm font-semibold text-slate-200 hover:text-white transition-colors px-2"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Login
                 </Link>
-                <Button className="bg-summit hover:bg-summit-hover text-white font-bold text-sm uppercase tracking-wide w-full">
-                  Book a Demo
+                <Button asChild className="bg-summit hover:bg-summit-hover text-white font-bold text-sm uppercase tracking-wide w-full">
+                  <Link href="/book-demo">Book a Demo</Link>
                 </Button>
               </div>
             </div>

@@ -5,35 +5,35 @@ const footerLinks = {
   product: {
     title: "The Product",
     links: [
-      { label: "Basecamp Guide", href: "#" },
-      { label: "Workflow Maps", href: "#" },
-      { label: "Oxygen Integrations", href: "#" },
-      { label: "Logbooks", href: "#" },
+      { label: "Basecamp Guide", href: "/product" },
+      { label: "Workflow Maps", href: "/product" },
+      { label: "Oxygen Integrations", href: "/product" },
+      { label: "Logbooks", href: "/product" },
     ],
   },
   journey: {
     title: "The Journey",
     links: [
-      { label: "About the Range", href: "#" },
-      { label: "Safety Protocol", href: "#" },
-      { label: "Expeditions", href: "#" },
+      { label: "About the Range", href: "/about" },
+      { label: "Safety Protocol", href: "/security" },
+      { label: "Expeditions", href: "/customers" },
     ],
   },
   baseCamp: {
     title: "Base Camp",
     links: [
-      { label: "Training Center", href: "#" },
-      { label: "Maps & APIs", href: "#" },
-      { label: "Summit Support", href: "#" },
-      { label: "SOS Contact", href: "#" },
+      { label: "Training Center", href: "/learn-ai" },
+      { label: "Maps & APIs", href: "/docs" },
+      { label: "Summit Support", href: "/support" },
+      { label: "SOS Contact", href: "/contact" },
     ],
   },
 };
 
 const socialLinks = [
   { icon: ShareIcon, href: "#", label: "Share" },
-  { icon: MailIcon, href: "#", label: "Email" },
-  { icon: LanguageIcon, href: "#", label: "Website" },
+  { icon: MailIcon, href: "mailto:hello@ascenta.ai", label: "Email" },
+  { icon: LanguageIcon, href: "/", label: "Website" },
 ];
 
 export function Footer() {
@@ -95,10 +95,10 @@ export function Footer() {
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs uppercase tracking-widest font-bold">
           <p>© 2024 Ascenta AI. Conquer the Peak.</p>
           <div className="flex gap-8 mt-6 md:mt-0">
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy
             </Link>
           </div>
