@@ -33,6 +33,7 @@ import {
   UserCog,
   Settings,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -98,6 +99,18 @@ export function AppSidebar({
             >
               <MessageSquarePlus className="size-4" />
               <span>New Chat</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="HR Workflows"
+              className="mt-1"
+            >
+              <Link href="/workflows">
+                <FileText className="size-4" />
+                <span>HR Workflows</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -7,10 +7,10 @@ import { useState } from "react";
 
 const navLinks = [
   { href: "/product", label: "Product" },
-  { href: "/learn-ai", label: "Learn AI" },
+  { href: "/workflows", label: "Workflows" },
+  { href: "/chat", label: "Chat" },
   { href: "/pricing", label: "Pricing" },
   { href: "/security", label: "Security" },
-  { href: "/customers", label: "Customers" },
 ];
 
 export function Navbar() {
