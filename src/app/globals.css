@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -153,5 +154,34 @@
 @layer utilities {
   .font-display {
     font-family: 'Montserrat', sans-serif;
+  }
+}
+
+/* Custom prose styling for markdown */
+.prose-ascenta {
+  --tw-prose-body: #0c1e3d;
+  --tw-prose-headings: #0c1e3d;
+  --tw-prose-lead: #374151;
+  --tw-prose-links: #ff6b35;
+  --tw-prose-bold: #0c1e3d;
+  --tw-prose-counters: #6b7280;
+  --tw-prose-bullets: #ff6b35;
+  --tw-prose-hr: #e5e7eb;
+  --tw-prose-quotes: #0c1e3d;
+  --tw-prose-quote-borders: #ff6b35;
+  --tw-prose-captions: #6b7280;
+  --tw-prose-code: #0c1e3d;
+  --tw-prose-pre-code: #e5e7eb;
+  --tw-prose-pre-bg: #1e293b;
+  --tw-prose-th-borders: #d1d5db;
+  --tw-prose-td-borders: #e5e7eb;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

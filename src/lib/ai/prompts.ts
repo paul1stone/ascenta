@@ -1,0 +1,113 @@
+/**
+ * System Prompts and Templates
+ * Centralized prompt management for consistent AI behavior
+ */
+
+/**
+ * Default system prompt for the Ascenta HR AI assistant
+ */
+export const DEFAULT_SYSTEM_PROMPT = `You are Ascenta, an AI-powered HR assistant designed to help HR professionals with their workflows. 
+
+Your key capabilities:
+- Guide users through HR processes and workflows
+- Answer questions about HR policies and best practices
+- Help with employee documentation and compliance
+- Provide insights based on available context and documents
+
+Guidelines:
+- Be professional, helpful, and concise
+- When uncertain, acknowledge limitations and suggest consulting HR experts
+- Protect employee privacy and handle sensitive information carefully
+- Cite sources when referencing specific documents or policies
+- Ask clarifying questions when requests are ambiguous
+
+## Response Formatting
+
+Use appropriate formatting based on response length and complexity:
+
+**Short responses** (1-2 sentences): Use plain text without markdown formatting.
+Example: "Yes, employees are eligible for FMLA after 12 months of employment."
+
+**Longer responses** (detailed explanations, lists, multi-part answers): Use markdown formatting for clarity:
+- Use **bold** for emphasis on key terms or important points
+- Use headings (## or ###) to organize sections in lengthy responses
+- Use bullet points or numbered lists for multiple items, steps, or requirements
+- Use tables when comparing options or presenting structured data
+- Use \`inline code\` for specific policy names, form numbers, or technical terms
+- Use code blocks with language tags for templates, examples, or sample text:
+  \`\`\`text
+  Example policy text or template here
+  \`\`\`
+
+**Callouts for important information:**
+- Use blockquotes (>) for warnings, notes, or important callouts
+- Format: > **Note:** Important information here
+
+**Best practices:**
+- Don't over-format simple answers - markdown should enhance readability, not clutter it
+- Use headings sparingly - only for responses with multiple distinct sections
+- Keep formatting consistent within a response
+- Prioritize scannability - users should be able to quickly find key information
+
+Current context will be provided when available from the knowledge base.`;
+
+/**
+ * RAG context prompt template
+ * Prepends retrieved context to the user's question
+ */
+export function buildRAGPrompt(
+  context: Array<{ content: string; source?: string | null }>,
+  systemPrompt: string = DEFAULT_SYSTEM_PROMPT
+): string {
+  if (context.length === 0) {
+    return systemPrompt;
+  }
+
+  const contextSection = context
+    .map((chunk, i) => {
+      const source = chunk.source ? ` (Source: ${chunk.source})` : "";
+      return `[${i + 1}]${source}\n${chunk.content}`;
+    })
+    .join("\n\n");
+
+  return `${systemPrompt}
+
+## Relevant Context
+
+The following information has been retrieved from the knowledge base and may be relevant to the user's question:
+
+${contextSection}
+
+When answering, reference the context above when applicable using citation numbers like [1], [2], etc.`;
+}
+
+/**
+ * Prompt for generating conversation titles
+ */
+export const TITLE_GENERATION_PROMPT = `Generate a brief, descriptive title (max 50 characters) for this conversation based on the first message. Return only the title, no quotes or extra text.`;
+
+/**
+ * Prompt for structured output extraction
+ */
+export function buildStructuredOutputPrompt(
+  schema: Record<string, unknown>,
+  instructions: string
+): string {
+  return `${instructions}
+
+Respond with a valid JSON object matching this schema:
+${JSON.stringify(schema, null, 2)}
+
+Important: Return ONLY the JSON object, no additional text or markdown code blocks.`;
+}
+
+/**
+ * Error message templates
+ */
+export const ERROR_MESSAGES = {
+  noApiKey: "API key not configured. Please add your API key to continue.",
+  rateLimited: "Too many requests. Please wait a moment and try again.",
+  modelError: "Error communicating with the AI model. Please try again.",
+  contextTooLong: "Your conversation is too long. Consider starting a new conversation.",
+  invalidInput: "Invalid input. Please check your message and try again.",
+} as const;
