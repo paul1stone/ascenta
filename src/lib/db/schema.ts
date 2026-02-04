@@ -82,3 +82,6 @@ export type NewEmbedding = typeof embeddings.$inferInsert;
 
 // Re-export workflow schema
 export * from "./workflow-schema";
+
+// Re-export employee schema
+export * from "./employee-schema";

@@ -5,8 +5,8 @@ import { Mountain, FileText, Users, Calendar, Shield } from "lucide-react";
 const suggestions = [
   {
     icon: FileText,
-    title: "Draft a policy",
-    description: "Create a remote work policy",
+    title: "Corrective action",
+    description: "Help me make a corrective action for John Smith",
   },
   {
     icon: Users,

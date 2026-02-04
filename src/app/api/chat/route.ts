@@ -1,7 +1,18 @@
-import { streamText, type ModelMessage } from "ai";
+import { streamText, stepCountIs, type ModelMessage } from "ai";
 import { getModel, checkProviderConfig } from "@/lib/ai/providers";
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
-import { defaultChatTools, createTaskTool } from "@/lib/ai/tools";
+import {
+  defaultChatTools,
+  createTaskTool,
+  getEmployeeInfoTool,
+} from "@/lib/ai/tools";
+import {
+  startCorrectiveActionTool,
+  updateWorkflowFieldTool,
+  generateCorrectiveActionDocumentTool,
+  generateWorkflowFollowUpTool,
+  getWorkflowStateSummary,
+} from "@/lib/ai/workflow-tools";
 import { AI_CONFIG } from "@/lib/ai/config";
 import {
   createConversation,
@@ -14,27 +25,45 @@ import {
 export const maxDuration = 30;
 
 interface ChatRequest {
-  messages: ModelMessage[];
+  messages?: ModelMessage[];
   conversationId?: string;
   userId?: string;
   model?: string;
   systemPrompt?: string;
   useTools?: boolean;
+  /** When set, no user message is shown or stored; backend injects this for the model only */
+  workflowFieldSelection?: { runId: string; fieldKey: string; value: string };
+  /** When set, no user message is shown or stored; backend injects this for the model only */
+  workflowFollowUp?: { runId: string; type: "email" | "script" };
+  /** Active corrective action run – we inject current collected/still-needed state so the AI does not re-ask */
+  activeWorkflowRunId?: string;
 }
 
 export async function POST(req: Request) {
   try {
     const body: ChatRequest = await req.json();
     const {
-      messages,
+      messages = [],
       conversationId,
       userId = "anonymous",
       model = AI_CONFIG.defaultModels.anthropic,
       systemPrompt = DEFAULT_SYSTEM_PROMPT,
       useTools = true,
+      workflowFieldSelection,
+      workflowFollowUp,
+      activeWorkflowRunId,
     } = body;
 
-    if (!messages || messages.length === 0) {
+    const isWorkflowAction = !!(workflowFieldSelection || workflowFollowUp);
+
+    if (isWorkflowAction) {
+      if (!conversationId) {
+        return new Response(
+          JSON.stringify({ error: "conversationId is required for workflow actions" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    } else if (!messages || messages.length === 0) {
       return new Response(
         JSON.stringify({ error: "Messages are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -52,7 +81,6 @@ export async function POST(req: Request) {
         );
       }
     } else {
-      // Create new conversation
       conversation = await createConversation({
         userId,
         model,
@@ -66,48 +94,54 @@ export async function POST(req: Request) {
       ? await getRecentMessages(conversationId, AI_CONFIG.context.maxMessages)
       : [];
 
-    // Convert history to ModelMessage format
     const contextMessages: ModelMessage[] = historyMessages.map((msg) => ({
       role: msg.role as "user" | "assistant" | "system",
       content: msg.content,
     }));
 
-    // Combine history with new messages (avoid duplicates)
-    const allMessages = [...contextMessages];
-    const lastHistoryContent = contextMessages[contextMessages.length - 1]?.content;
-    const newMessage = messages[messages.length - 1];
+    let allMessages: ModelMessage[] = [...contextMessages];
 
-    // Get content as string for comparison
-    const getMessageContent = (msg: ModelMessage): string => {
-      if (typeof msg.content === "string") return msg.content;
-      if (Array.isArray(msg.content)) {
-        return msg.content
-          .filter((part): part is { type: "text"; text: string } => part.type === "text")
-          .map((part) => part.text)
-          .join("");
+    if (isWorkflowAction) {
+      // Inject synthetic user message for the model only; do not store it
+      const syntheticContent = workflowFieldSelection
+        ? `[SELECT:${workflowFieldSelection.runId}:${workflowFieldSelection.fieldKey}:${workflowFieldSelection.value}]`
+        : `[FOLLOW_UP:${workflowFollowUp!.runId}:${workflowFollowUp!.type}]`;
+      allMessages.push({ role: "user", content: syntheticContent });
+    } else {
+      const newMessage = messages[messages.length - 1];
+      const lastHistoryContent = contextMessages[contextMessages.length - 1]?.content;
+      const getMessageContent = (msg: ModelMessage): string => {
+        if (typeof msg.content === "string") return msg.content;
+        if (Array.isArray(msg.content)) {
+          return msg.content
+            .filter((part): part is { type: "text"; text: string } => part.type === "text")
+            .map((part) => part.text)
+            .join("");
+        }
+        return "";
+      };
+      const newMessageContent = newMessage ? getMessageContent(newMessage) : "";
+      if (lastHistoryContent !== newMessageContent && newMessage) {
+        allMessages.push(newMessage);
       }
-      return "";
-    };
-
-    const newMessageContent = newMessage ? getMessageContent(newMessage) : "";
-    
-    // Only add the new message if it's not already in history
-    if (lastHistoryContent !== newMessageContent && newMessage) {
-      allMessages.push(newMessage);
-    }
-
-    // Store the user message
-    if (newMessage?.role === "user") {
       await addMessage({
         conversationId: conversation.id,
         role: "user",
         content: newMessageContent,
       });
-
-      // Generate title from first message if not set
       if (!conversation.title && historyMessages.length === 0) {
         const title = newMessageContent.slice(0, 50) + (newMessageContent.length > 50 ? "..." : "");
         await updateConversation(conversation.id, { title });
+      }
+    }
+
+    // Inject workflow state when we have an active run so the AI does not re-ask for collected fields
+    const runIdForState = activeWorkflowRunId ?? workflowFieldSelection?.runId ?? workflowFollowUp?.runId;
+    let effectiveSystemPrompt = systemPrompt;
+    if (runIdForState) {
+      const stateSummary = await getWorkflowStateSummary(runIdForState);
+      if (stateSummary) {
+        effectiveSystemPrompt = `${systemPrompt}\n\n## Current workflow memory (use this – do not ask again for anything listed as collected)\n\n${stateSummary.formattedForPrompt}`;
       }
     }
 
@@ -116,19 +150,30 @@ export async function POST(req: Request) {
 
     // Check which tools are available based on provider availability
     const availability = checkProviderConfig();
-    // Only include searchKnowledgeBase if OpenAI is available (for embeddings)
+    // Full tools when OpenAI available (includes RAG search); otherwise workflow tools (no embeddings)
+    const workflowTools = {
+      createTask: createTaskTool,
+      getEmployeeInfo: getEmployeeInfoTool,
+      startCorrectiveAction: startCorrectiveActionTool,
+      updateWorkflowField: updateWorkflowFieldTool,
+      generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
+      generateWorkflowFollowUp: generateWorkflowFollowUpTool,
+    };
     const availableTools = useTools
       ? availability.openai
         ? defaultChatTools
-        : { createTask: createTaskTool }
+        : availability.anthropic
+          ? workflowTools
+          : { createTask: createTaskTool }
       : undefined;
 
-    // Stream the response
+    // Stream the response (stopWhen allows multiple tool roundtrips for workflow building)
     const result = streamText({
       model: modelInstance,
-      system: systemPrompt,
+      system: effectiveSystemPrompt,
       messages: allMessages,
       tools: availableTools,
+      stopWhen: stepCountIs(10),
       onFinish: async ({ text, toolCalls }) => {
         // Store the assistant's response
         await addMessage({

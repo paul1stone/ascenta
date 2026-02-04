@@ -5,6 +5,7 @@ import { ChatMessage } from "@/components/chat/chat-message";
 import { ChatInput } from "@/components/chat/chat-input";
 import { AppSidebar } from "@/components/chat/app-sidebar";
 import { ChatWelcome } from "@/components/chat/chat-welcome";
+import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
 import { ResourceSidebar } from "@/components/chat/resource-sidebar";
 import {
   SidebarProvider,
@@ -79,20 +80,20 @@ function ChatContent({
 }) {
   const { state: leftSidebarState } = useSidebar();
 
-  const handleSubmit = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSubmit = async (overrideValue?: string) => {
+    const content = (overrideValue ?? input).trim();
+    if (!content || isLoading) return;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: input.trim(),
+      content,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    if (!overrideValue) setInput("");
     setIsLoading(true);
 
-    // Create assistant message placeholder
     const assistantMessageId = `assistant-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
@@ -102,14 +103,18 @@ function ChatContent({
     try {
       abortControllerRef.current = new AbortController();
 
+      const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+      const activeWorkflowRunId = lastAssistant ? extractLastWorkflowRunId(lastAssistant.content) : undefined;
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: userMessage.content }],
+          messages: [{ role: "user", content }],
           conversationId,
           userId: "anonymous",
           model,
+          ...(activeWorkflowRunId ? { activeWorkflowRunId } : {}),
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -175,6 +180,113 @@ function ChatContent({
     setIsLoading(false);
   };
 
+  /** Workflow field/button selection: no user message shown, backend injects it */
+  const handleWorkflowFieldSelect = async (runId: string, fieldKey: string, value: string) => {
+    if (isLoading || !conversationId) return;
+    setIsLoading(true);
+    const assistantMessageId = `assistant-${Date.now()}`;
+    setMessages((prev) => [...prev, { id: assistantMessageId, role: "assistant", content: "" }]);
+    try {
+      abortControllerRef.current = new AbortController();
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          model,
+          workflowFieldSelection: { runId, fieldKey, value },
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+      const newConversationId = res.headers.get("X-Conversation-Id");
+      if (newConversationId && !conversationId) {
+        setConversationId(newConversationId);
+        loadConversations();
+      }
+      if (!res.ok) throw new Error("Failed to get response");
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+      if (reader) {
+        while (true) {
+          const { done, value: chunk } = await reader.read();
+          if (done) break;
+          fullContent += decoder.decode(chunk, { stream: true });
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId ? { ...msg, content: fullContent } : msg
+            )
+          );
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        console.error("Chat error:", err);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: "Sorry, something went wrong. Please try again." }
+              : msg
+          )
+        );
+      }
+    } finally {
+      setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  /** Follow-up action (email/script): no user message shown */
+  const handleWorkflowFollowUpSelect = async (runId: string, type: "email" | "script") => {
+    if (isLoading || !conversationId) return;
+    setIsLoading(true);
+    const assistantMessageId = `assistant-${Date.now()}`;
+    setMessages((prev) => [...prev, { id: assistantMessageId, role: "assistant", content: "" }]);
+    try {
+      abortControllerRef.current = new AbortController();
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          model,
+          workflowFollowUp: { runId, type },
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+      if (!res.ok) throw new Error("Failed to get response");
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+      if (reader) {
+        while (true) {
+          const { done, value: chunk } = await reader.read();
+          if (done) break;
+          fullContent += decoder.decode(chunk, { stream: true });
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId ? { ...msg, content: fullContent } : msg
+            )
+          );
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        console.error("Chat error:", err);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: "Sorry, something went wrong. Please try again." }
+              : msg
+          )
+        );
+      }
+    } finally {
+      setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
   const handleSuggestionClick = (suggestion: string) => {
     setInput(suggestion);
   };
@@ -231,6 +343,9 @@ function ChatContent({
                       index === messages.length - 1 &&
                       message.role === "assistant"
                     }
+                    onWorkflowOptionSelect={handleWorkflowFieldSelect}
+                    onFollowUpSelect={handleWorkflowFollowUpSelect}
+                    onFollowUpOther={(value) => handleSubmit(value)}
                   />
                 ))}
                 <div ref={messagesEndRef} className="h-4" />
@@ -247,7 +362,7 @@ function ChatContent({
               <ChatInput
                 value={input}
                 onChange={setInput}
-                onSubmit={handleSubmit}
+                onSubmit={() => handleSubmit()}
                 onStop={handleStop}
                 isLoading={isLoading}
                 model={model}

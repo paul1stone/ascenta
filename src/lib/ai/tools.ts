@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { tool } from "ai";
 import { searchKnowledgeBase } from "@/lib/rag/search";
+import { searchEmployees } from "@/lib/db/employees";
+import {
+  startCorrectiveActionTool,
+  updateWorkflowFieldTool,
+  generateCorrectiveActionDocumentTool,
+  generateWorkflowFollowUpTool,
+} from "./workflow-tools";
 
 /**
  * Tool Definitions
@@ -105,16 +112,40 @@ export const getEmployeeInfoTool = tool({
     name: z.string().optional().describe("The employee name to search for"),
   }),
   execute: async ({ employeeId, email, name }) => {
-    // In a real implementation, this would query your HRIS
-    // For now, return a placeholder indicating the feature
+    const query = name || email || employeeId || "";
+    if (!query.trim()) {
+      return {
+        found: false,
+        message: "Please provide an employee name, email, or ID to search",
+        results: [],
+      };
+    }
+    const results = await searchEmployees(query);
+    if (results.length === 0) {
+      return {
+        found: false,
+        message: `No employees found matching "${query}"`,
+        results: [],
+      };
+    }
     return {
-      found: false,
-      message: "Employee lookup requires HRIS integration",
-      searchCriteria: {
-        employeeId: employeeId || null,
-        email: email || null,
-        name: name || null,
-      },
+      found: true,
+      message: `Found ${results.length} employee(s)`,
+      results: results.map((e) => ({
+        id: e.id,
+        employeeId: e.employeeId,
+        fullName: e.fullName,
+        email: e.email,
+        department: e.department,
+        jobTitle: e.jobTitle,
+        managerName: e.managerName,
+        notes: e.notes.map((n) => ({
+          type: n.noteType,
+          title: n.title,
+          severity: n.severity,
+          occurredAt: n.occurredAt,
+        })),
+      })),
     };
   },
 });
@@ -196,6 +227,11 @@ export function getTools(toolNames: (keyof typeof allTools)[]) {
 export const defaultChatTools = {
   searchKnowledgeBase: searchKnowledgeBaseTool,
   createTask: createTaskTool,
+  getEmployeeInfo: getEmployeeInfoTool,
+  startCorrectiveAction: startCorrectiveActionTool,
+  updateWorkflowField: updateWorkflowFieldTool,
+  generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
+  generateWorkflowFollowUp: generateWorkflowFollowUpTool,
 };
 
 /**

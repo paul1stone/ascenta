@@ -8,6 +8,7 @@ import {
   integer,
   boolean,
 } from "drizzle-orm/pg-core";
+import { employees } from "./employee-schema";
 
 // ============================================================================
 // WORKFLOW DEFINITIONS
@@ -335,6 +336,53 @@ export const guidedActions = pgTable(
 );
 
 // ============================================================================
+// TRACKED DOCUMENTS (Progress tracker / Kanban)
+// ============================================================================
+
+export const TRACKED_DOCUMENT_STAGES = [
+  "draft",
+  "on_us_to_send",
+  "sent",
+  "in_review",
+  "acknowledged",
+  "completed",
+] as const;
+export type TrackedDocumentStage = (typeof TRACKED_DOCUMENT_STAGES)[number];
+
+/**
+ * Tracked Documents - Generated workflow documents in a delivery pipeline
+ * Used for agile-style board: On us to send, Sent, In review, etc.
+ */
+export const trackedDocuments = pgTable(
+  "tracked_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workflowRunId: uuid("workflow_run_id")
+      .references(() => workflowRuns.id, { onDelete: "cascade" })
+      .notNull(),
+    workflowOutputId: uuid("workflow_output_id").references(
+      () => workflowOutputs.id,
+      { onDelete: "set null" }
+    ),
+    title: text("title").notNull(),
+    documentType: text("document_type").notNull().default("corrective_action"),
+    employeeName: text("employee_name"),
+    /** Link to employees.id so we can update employee file (notes) and query by employee */
+    employeeId: uuid("employee_id").references(() => employees.id, { onDelete: "set null" }),
+    stage: text("stage").notNull().default("draft"),
+    /** Which action items are done: { "sent_email": true, "scheduled_meeting": true } */
+    completedActions: jsonb("completed_actions").default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("tracked_documents_workflow_run_idx").on(table.workflowRunId),
+    index("tracked_documents_stage_idx").on(table.stage),
+    index("tracked_documents_employee_id_idx").on(table.employeeId),
+  ]
+);
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -364,3 +412,6 @@ export type NewAuditEvent = typeof auditEvents.$inferInsert;
 
 export type GuidedAction = typeof guidedActions.$inferSelect;
 export type NewGuidedAction = typeof guidedActions.$inferInsert;
+
+export type TrackedDocument = typeof trackedDocuments.$inferSelect;
+export type NewTrackedDocument = typeof trackedDocuments.$inferInsert;
