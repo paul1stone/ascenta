@@ -17,17 +17,12 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { AI_CONFIG } from "@/lib/ai/config";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import type { ConversationSummary } from "@/lib/types";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
-}
-
-interface Conversation {
-  id: string;
-  title: string;
-  updatedAt: string;
 }
 
 // Default to Anthropic Claude Sonnet 4
@@ -67,7 +62,7 @@ function ChatContent({
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   conversationId: string | undefined;
   setConversationId: React.Dispatch<React.SetStateAction<string | undefined>>;
-  conversations: Conversation[];
+  conversations: ConversationSummary[];
   model: string;
   setModel: React.Dispatch<React.SetStateAction<string>>;
   showResourceSidebar: boolean;
@@ -384,7 +379,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [showResourceSidebar, setShowResourceSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);

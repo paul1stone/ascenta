@@ -33,18 +33,20 @@ import {
   UserCog,
   Settings,
   Sparkles,
-  FileText,
 } from "lucide-react";
 import Link from "next/link";
+import type { ConversationSummary } from "@/lib/types";
 
-interface Conversation {
-  id: string;
-  title: string;
-  updatedAt: string;
-}
+// TODO: Replace with real auth user once authentication is implemented
+const CURRENT_USER = {
+  name: "Paul Stone",
+  email: "paul@ascenta.ai",
+  initials: "PS",
+  avatarUrl: "/avatars/user.jpg",
+};
 
 interface AppSidebarProps {
-  conversations: Conversation[];
+  conversations: ConversationSummary[];
   currentConversationId?: string;
   onNewChat: () => void;
   onSelectConversation: (id: string) => void;
@@ -101,18 +103,6 @@ export function AppSidebar({
               <span>New Chat</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="HR Workflows"
-              className="mt-1"
-            >
-              <Link href="/workflows">
-                <FileText className="size-4" />
-                <span>HR Workflows</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroup>
 
@@ -157,15 +147,15 @@ export function AppSidebar({
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src="/avatars/user.jpg" alt="User" />
+                    <AvatarImage src={CURRENT_USER.avatarUrl} alt={CURRENT_USER.name} />
                     <AvatarFallback className="rounded-lg bg-gradient-to-br from-summit to-summit-hover text-white font-medium">
-                      PS
+                      {CURRENT_USER.initials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Paul Stone</span>
+                    <span className="truncate font-semibold">{CURRENT_USER.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
-                      paul@ascenta.ai
+                      {CURRENT_USER.email}
                     </span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
@@ -180,15 +170,15 @@ export function AppSidebar({
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src="/avatars/user.jpg" alt="User" />
+                      <AvatarImage src={CURRENT_USER.avatarUrl} alt={CURRENT_USER.name} />
                       <AvatarFallback className="rounded-lg bg-gradient-to-br from-summit to-summit-hover text-white font-medium">
-                        PS
+                        {CURRENT_USER.initials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">Paul Stone</span>
+                      <span className="truncate font-semibold">{CURRENT_USER.name}</span>
                       <span className="truncate text-xs text-muted-foreground">
-                        paul@ascenta.ai
+                        {CURRENT_USER.email}
                       </span>
                     </div>
                   </div>

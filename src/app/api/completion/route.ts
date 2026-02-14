@@ -175,7 +175,6 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "Failed to generate completion",
-        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

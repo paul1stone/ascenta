@@ -118,14 +118,3 @@ ${JSON.stringify(schema, null, 2)}
 
 Important: Return ONLY the JSON object, no additional text or markdown code blocks.`;
 }
-
-/**
- * Error message templates
- */
-export const ERROR_MESSAGES = {
-  noApiKey: "API key not configured. Please add your API key to continue.",
-  rateLimited: "Too many requests. Please wait a moment and try again.",
-  modelError: "Error communicating with the AI model. Please try again.",
-  contextTooLong: "Your conversation is too long. Consider starting a new conversation.",
-  invalidInput: "Invalid input. Please check your message and try again.",
-} as const;

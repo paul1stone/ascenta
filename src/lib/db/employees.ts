@@ -50,12 +50,13 @@ export async function searchEmployees(query: string): Promise<EmployeeWithNotes[
   if (words.length >= 2) {
     const firstWord = `%${words[0]}%`;
     const lastWord = `%${words[words.length - 1]}%`;
-    conditions.push(
-      and(
-        ilike(employees.firstName, firstWord),
-        ilike(employees.lastName, lastWord)
-      )!
+    const combined = and(
+      ilike(employees.firstName, firstWord),
+      ilike(employees.lastName, lastWord)
     );
+    if (combined) {
+      conditions.push(combined);
+    }
   }
 
   const results = await db

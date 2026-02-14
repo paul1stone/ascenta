@@ -176,12 +176,3 @@
   --tw-prose-th-borders: #d1d5db;
   --tw-prose-td-borders: #e5e7eb;
 }
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}

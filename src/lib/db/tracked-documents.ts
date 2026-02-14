@@ -12,6 +12,14 @@ export type { TrackedDocumentStage };
 
 export type TrackedDocumentWithRun = Awaited<ReturnType<typeof listTrackedDocuments>>[number];
 
+/** Safely parse completedActions JSON column into a typed record */
+function parseCompletedActions(value: unknown): Record<string, boolean> {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, boolean>;
+  }
+  return {};
+}
+
 export async function createTrackedDocument(
   data: Omit<NewTrackedDocument, "id" | "createdAt" | "updatedAt">
 ): Promise<{ id: string; workflowRunId: string; stage: string }> {
@@ -56,7 +64,7 @@ export async function getTrackedDocumentWithContent(id: string) {
   return {
     ...doc,
     renderedContent,
-    completedActions: (doc.completedActions as Record<string, boolean>) ?? {},
+    completedActions: parseCompletedActions(doc.completedActions),
   };
 }
 
@@ -162,7 +170,7 @@ export async function listTrackedDocuments(): Promise<
     .orderBy(desc(trackedDocuments.updatedAt));
   return docs.map((d) => ({
     ...d,
-    completedActions: (d.completedActions as Record<string, boolean>) ?? {},
+    completedActions: parseCompletedActions(d.completedActions),
   }));
 }
 

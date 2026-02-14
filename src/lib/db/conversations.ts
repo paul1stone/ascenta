@@ -17,7 +17,7 @@ export async function getConversation(id: string) {
     .select()
     .from(conversations)
     .where(eq(conversations.id, id));
-  return conversation;
+  return conversation ?? null;
 }
 
 /**

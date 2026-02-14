@@ -692,8 +692,7 @@ export async function exportWorkflowArtifact(
   // Log the review/approval
   await logReviewed(runId, userId, run.workflowVersion, true, reviewNotes);
 
-  // In a real implementation, this would generate the PDF/DOCX
-  // For now, we'll return a placeholder URL
+  // TODO: This URL doesn't resolve to a real route — implement download endpoint or remove
   const exportUrl = `/api/workflows/runs/${runId}/download/${format}`;
   const exportedAt = new Date();
 

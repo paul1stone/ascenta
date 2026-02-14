@@ -7,7 +7,8 @@ import { searchKnowledgeBase } from "@/lib/rag/search";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { query, limit = 5, similarityThreshold = 0.7 } = body;
+    const { query, limit: rawLimit = 5, similarityThreshold = 0.7 } = body;
+    const limit = Math.min(rawLimit, 50);
 
     if (!query) {
       return NextResponse.json(

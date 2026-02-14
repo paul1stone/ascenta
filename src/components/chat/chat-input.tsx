@@ -6,6 +6,8 @@ import { ArrowUp, Paperclip, Square } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { ModelSelector } from "./model-selector";
 
+const MAX_TEXTAREA_HEIGHT = 200;
+
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -34,7 +36,7 @@ export function ChatInput({
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
     }
   }, [value]);
 
