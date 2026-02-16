@@ -85,3 +85,6 @@ export * from "./workflow-schema";
 
 // Re-export employee schema
 export * from "./employee-schema";
+
+// Re-export demo requests schema
+export * from "./demo-requests-schema";

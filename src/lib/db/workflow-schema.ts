@@ -372,6 +372,18 @@ export const trackedDocuments = pgTable(
     stage: text("stage").notNull().default("draft"),
     /** Which action items are done: { "sent_email": true, "scheduled_meeting": true } */
     completedActions: jsonb("completed_actions").default({}),
+    /** Recipient email for automated delivery */
+    employeeEmail: text("employee_email"),
+    /** When the document email was sent */
+    sentAt: timestamp("sent_at"),
+    /** When the employee acknowledged receipt */
+    acknowledgedAt: timestamp("acknowledged_at"),
+    /** HMAC token for stateless acknowledgment verification */
+    ackToken: text("ack_token"),
+    /** When the last reminder was sent */
+    reminderSentAt: timestamp("reminder_sent_at"),
+    /** Number of reminders sent */
+    reminderCount: integer("reminder_count").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Loader2, ArrowLeft, Mail, Download, Check } from "lucide-react";
+import { FileText, Loader2, ArrowLeft, Mail, Download, Check, Send } from "lucide-react";
 
 type ActionItem = {
   id: string;
@@ -18,10 +18,14 @@ type DocDetail = {
   title: string;
   documentType: string;
   employeeName: string | null;
+  employeeEmail: string | null;
   stage: string;
   renderedContent: string | null;
   completedActions: Record<string, boolean>;
   actionItems: ActionItem[];
+  sentAt: string | null;
+  acknowledgedAt: string | null;
+  reminderCount: number;
 };
 
 const STAGE_LABELS: Record<string, string> = {
@@ -42,6 +46,9 @@ export default function TrackerDocumentPage({
   const [doc, setDoc] = useState<DocDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingAction, setSavingAction] = useState<string | null>(null);
+  const [employeeEmail, setEmployeeEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   useEffect(() => {
     params.then((p) => setId(p.id));
@@ -55,6 +62,7 @@ export default function TrackerDocumentPage({
         if (res.ok) {
           const data = await res.json();
           setDoc(data);
+          if (data.employeeEmail) setEmployeeEmail(data.employeeEmail);
         }
       } catch (e) {
         console.error(e);
@@ -79,6 +87,34 @@ export default function TrackerDocumentPage({
       console.error(e);
     } finally {
       setSavingAction(null);
+    }
+  }
+
+  async function sendDocument() {
+    if (!doc || !employeeEmail) return;
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch(`/api/tracked-documents/${doc.id}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeEmail }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDoc((d) =>
+          d
+            ? { ...d, stage: "sent", sentAt: data.sentAt, employeeEmail }
+            : d
+        );
+      } else {
+        const data = await res.json();
+        setSendError(data.error || "Failed to send");
+      }
+    } catch {
+      setSendError("Network error");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -141,9 +177,21 @@ export default function TrackerDocumentPage({
             {doc.employeeName && (
               <p className="text-muted-foreground mt-1">{doc.employeeName}</p>
             )}
-            <span className="inline-block mt-2 text-xs font-medium text-summit bg-summit/10 px-2 py-1 rounded">
-              {STAGE_LABELS[doc.stage] ?? doc.stage}
-            </span>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className="inline-block text-xs font-medium text-summit bg-summit/10 px-2 py-1 rounded">
+                {STAGE_LABELS[doc.stage] ?? doc.stage}
+              </span>
+              {doc.sentAt && (
+                <span className="inline-block text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                  Sent at {new Date(doc.sentAt).toLocaleDateString()}
+                </span>
+              )}
+              {doc.acknowledgedAt && (
+                <span className="inline-block text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
+                  Acknowledged at {new Date(doc.acknowledgedAt).toLocaleDateString()}
+                </span>
+              )}
+            </div>
           </div>
 
           {doc.renderedContent && (
@@ -167,6 +215,43 @@ export default function TrackerDocumentPage({
                   <Download className="size-4" />
                   Download document (.md)
                 </a>
+              </CardContent>
+            </Card>
+          )}
+
+          {(doc.stage === "draft" || doc.stage === "on_us_to_send") && (
+            <Card className="mb-8 bg-white border-border">
+              <CardHeader className="py-3">
+                <h2 className="font-semibold text-deep-blue flex items-center gap-2">
+                  <Send className="size-4" />
+                  Send Document via Email
+                </h2>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    placeholder="Employee email address"
+                    value={employeeEmail}
+                    onChange={(e) => setEmployeeEmail(e.target.value)}
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <Button
+                    onClick={sendDocument}
+                    disabled={sending || !employeeEmail}
+                    className="gap-1.5 bg-summit text-white hover:bg-summit/90"
+                  >
+                    {sending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Mail className="size-4" />
+                    )}
+                    {sending ? "Sending..." : "Send Document via Email"}
+                  </Button>
+                </div>
+                {sendError && (
+                  <p className="mt-2 text-sm text-red-600">{sendError}</p>
+                )}
               </CardContent>
             </Card>
           )}

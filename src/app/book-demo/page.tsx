@@ -1,17 +1,8 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CheckIcon } from "@/components/icons";
+import { DemoForm } from "@/components/book-demo/demo-form";
 
 const benefits = [
   "Personalized product walkthrough",
@@ -139,117 +130,7 @@ export default function BookDemoPage() {
               </div>
 
               {/* Form */}
-              <Card className="border-slate-200 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-deep-blue">
-                    Request Your Demo
-                  </CardTitle>
-                  <CardDescription>
-                    Fill out the form and we&apos;ll be in touch within 24 hours.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          placeholder="John"
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          placeholder="Doe"
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="workEmail">Work Email</Label>
-                      <Input
-                        id="workEmail"
-                        type="email"
-                        placeholder="john@company.com"
-                        className="h-11"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Company Name</Label>
-                      <Input
-                        id="company"
-                        placeholder="Acme Inc."
-                        className="h-11"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Your Role</Label>
-                      <select
-                        id="role"
-                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="">Select...</option>
-                        <option value="hr-leader">HR Leader / CHRO</option>
-                        <option value="hr-manager">HR Manager / Director</option>
-                        <option value="hr-specialist">HR Specialist / Coordinator</option>
-                        <option value="it">IT / Technical</option>
-                        <option value="executive">Executive / C-Suite</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="employees">Number of Employees</Label>
-                      <select
-                        id="employees"
-                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="">Select...</option>
-                        <option value="1-50">1-50</option>
-                        <option value="51-200">51-200</option>
-                        <option value="201-500">201-500</option>
-                        <option value="501-1000">501-1000</option>
-                        <option value="1000+">1000+</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number (Optional)</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
-                        className="h-11"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full h-12 bg-summit hover:bg-summit-hover text-white font-bold uppercase tracking-wide"
-                    >
-                      Schedule My Demo
-                    </Button>
-
-                    <p className="text-xs text-slate-500 text-center">
-                      By submitting this form, you agree to our{" "}
-                      <a href="/terms" className="text-summit hover:underline">
-                        Terms
-                      </a>{" "}
-                      and{" "}
-                      <a href="/privacy" className="text-summit hover:underline">
-                        Privacy Policy
-                      </a>
-                      .
-                    </p>
-                  </form>
-                </CardContent>
-              </Card>
+              <DemoForm />
             </div>
           </div>
         </section>
