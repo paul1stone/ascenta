@@ -6,17 +6,13 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { AppSidebar } from "@/components/chat/app-sidebar";
 import { ChatWelcome } from "@/components/chat/chat-welcome";
 import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
-import { ResourceSidebar } from "@/components/chat/resource-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { AI_CONFIG } from "@/lib/ai/config";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { ConversationSummary } from "@/lib/types";
 
 interface Message {
@@ -27,11 +23,6 @@ interface Message {
 
 // Default to Anthropic Claude Sonnet 4
 const DEFAULT_MODEL = AI_CONFIG.defaultModels.anthropic;
-
-// Sidebar widths (matching Shadcn sidebar defaults)
-const LEFT_SIDEBAR_EXPANDED = 256; // 16rem
-const LEFT_SIDEBAR_COLLAPSED = 48; // 3rem
-const RIGHT_SIDEBAR_WIDTH = 320; // w-80 = 20rem
 
 // Inner component that can use useSidebar hook
 function ChatContent({
@@ -46,8 +37,6 @@ function ChatContent({
   conversations,
   model,
   setModel,
-  showResourceSidebar,
-  setShowResourceSidebar,
   messagesEndRef,
   abortControllerRef,
   handleNewChat,
@@ -65,16 +54,12 @@ function ChatContent({
   conversations: ConversationSummary[];
   model: string;
   setModel: React.Dispatch<React.SetStateAction<string>>;
-  showResourceSidebar: boolean;
-  setShowResourceSidebar: React.Dispatch<React.SetStateAction<boolean>>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   abortControllerRef: React.MutableRefObject<AbortController | null>;
   handleNewChat: () => void;
   loadConversation: (id: string) => Promise<void>;
   loadConversations: () => Promise<void>;
 }) {
-  const { state: leftSidebarState } = useSidebar();
-
   const handleSubmit = async (overrideValue?: string) => {
     const content = (overrideValue ?? input).trim();
     if (!content || isLoading) return;
@@ -286,14 +271,8 @@ function ChatContent({
     setInput(suggestion);
   };
 
-  // Calculate offset to center chat bar between the two sidebars
-  // Offset = (rightSidebarWidth - leftSidebarWidth) / 2
-  const leftSidebarWidth =
-    leftSidebarState === "expanded"
-      ? LEFT_SIDEBAR_EXPANDED
-      : LEFT_SIDEBAR_COLLAPSED;
-  const rightSidebarWidth = showResourceSidebar ? RIGHT_SIDEBAR_WIDTH : 0;
-  const centerOffset = (rightSidebarWidth - leftSidebarWidth) / 2;
+  // No offset needed — right sidebar is removed, SidebarInset already
+  // accounts for the left sidebar width via its own CSS.
 
   return (
     <SidebarInset className="bg-glacier flex flex-col">
@@ -304,18 +283,6 @@ function ChatContent({
         <h1 className="flex-1 font-display font-semibold text-deep-blue">
           {conversationId ? "Chat" : "New Chat"}
         </h1>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowResourceSidebar(!showResourceSidebar)}
-          className="text-muted-foreground hover:text-deep-blue"
-        >
-          {showResourceSidebar ? (
-            <PanelRightClose className="size-5" />
-          ) : (
-            <PanelRightOpen className="size-5" />
-          )}
-        </Button>
       </header>
 
       {/* Main Content Area - fills remaining height */}
@@ -348,12 +315,9 @@ function ChatContent({
             )}
           </div>
 
-          {/* Input Area - centered between the two sidebars */}
+          {/* Input Area */}
           <div className="shrink-0 border-t border-border bg-gradient-to-t from-glacier to-transparent p-4">
-            <div
-              className="mx-auto max-w-3xl transition-transform duration-200 ease-out"
-              style={{ transform: `translateX(${centerOffset}px)` }}
-            >
+            <div className="mx-auto max-w-3xl">
               <ChatInput
                 value={input}
                 onChange={setInput}
@@ -367,8 +331,6 @@ function ChatContent({
           </div>
         </div>
 
-        {/* Right Sidebar - extends full height */}
-        {showResourceSidebar && <ResourceSidebar />}
       </div>
     </SidebarInset>
   );
@@ -381,7 +343,6 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
-  const [showResourceSidebar, setShowResourceSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -456,8 +417,6 @@ export default function ChatPage() {
         conversations={conversations}
         model={model}
         setModel={setModel}
-        showResourceSidebar={showResourceSidebar}
-        setShowResourceSidebar={setShowResourceSidebar}
         messagesEndRef={messagesEndRef}
         abortControllerRef={abortControllerRef}
         handleNewChat={handleNewChat}

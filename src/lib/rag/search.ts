@@ -22,7 +22,7 @@ export async function searchKnowledgeBase(
     similarityThreshold?: number;
   } = {}
 ): Promise<SearchResult[]> {
-  const { limit = 5, similarityThreshold = 0.7 } = options;
+  const { limit = 5, similarityThreshold = 0.3 } = options;
 
   // Generate embedding for the query
   const queryEmbedding = await generateEmbedding(query);

@@ -1,4 +1,4 @@
-import { AltitudeIcon, LocationSearchingIcon, LandscapeIcon } from "@/components/icons";
+import { AltitudeIcon, LocationSearchingIcon, LandscapeIcon, AutoAwesomeIcon } from "@/components/icons";
 
 const features = [
   {
@@ -13,6 +13,18 @@ const features = [
     description:
       "Never lose track of your path. From onboarding to investigations, every step is logged with surgical precision.",
   },
+  {
+    icon: AutoAwesomeIcon,
+    title: "AI That Learns Your Culture",
+    description:
+      "Our models adapt to your organization's tone, policies, and workflows — giving recommendations that feel native, not generic.",
+  },
+];
+
+const metrics = [
+  { value: "500+", label: "Companies" },
+  { value: "2M+", label: "Employees Managed" },
+  { value: "12M+", label: "Workflows Completed" },
 ];
 
 export function ExpeditionLeader() {
@@ -46,6 +58,20 @@ export function ExpeditionLeader() {
                   <div>
                     <h4 className="text-white font-bold mb-1">{feature.title}</h4>
                     <p>{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-3 gap-6 mt-12 pt-10 border-t border-white/10">
+              {metrics.map((metric) => (
+                <div key={metric.label}>
+                  <div className="text-3xl font-black text-summit">
+                    {metric.value}
+                  </div>
+                  <div className="text-slate-400 text-sm font-medium mt-1">
+                    {metric.label}
                   </div>
                 </div>
               ))}

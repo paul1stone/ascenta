@@ -76,7 +76,7 @@ export async function deleteDocumentEmbeddings(documentId: string) {
 export async function searchSimilarChunks(
   queryEmbedding: number[],
   limit: number = 5,
-  similarityThreshold: number = 0.7
+  similarityThreshold: number = 0.3
 ) {
   // Use pgvector's cosine distance operator <=>
   // Lower distance = more similar, so we use 1 - distance for similarity

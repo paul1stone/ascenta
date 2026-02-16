@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { FilterHdrIcon } from "@/components/icons";
+import Link from "next/link";
 
 export function CTA() {
   return (
@@ -27,11 +28,17 @@ export function CTA() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <Button className="bg-summit hover:bg-summit-hover text-white px-12 py-6 h-auto rounded-xl font-black text-xl uppercase tracking-widest shadow-2xl shadow-orange-900/30 transform hover:scale-105 transition-all">
-            Book Your Expedition
+          <Button
+            asChild
+            className="bg-summit hover:bg-summit-hover text-white px-12 py-6 h-auto rounded-xl font-black text-xl uppercase tracking-widest shadow-2xl shadow-orange-900/30 transform hover:scale-105 transition-all"
+          >
+            <Link href="/book-demo">Book Your Expedition</Link>
           </Button>
-          <Button className="bg-deep-blue hover:bg-slate-900 text-white px-12 py-6 h-auto rounded-xl font-black text-xl uppercase tracking-widest shadow-xl">
-            Pricing
+          <Button
+            asChild
+            className="bg-deep-blue hover:bg-slate-900 text-white px-12 py-6 h-auto rounded-xl font-black text-xl uppercase tracking-widest shadow-xl"
+          >
+            <Link href="/pricing">Pricing</Link>
           </Button>
         </div>
       </div>

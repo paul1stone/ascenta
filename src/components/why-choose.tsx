@@ -16,7 +16,10 @@ export function WhyChoose() {
           <h2 className="text-3xl md:text-4xl font-display font-black mb-4 uppercase tracking-tight text-deep-blue">
             Why Choose Ascenta?
           </h2>
-          <div className="w-16 h-1.5 bg-summit mx-auto" />
+          <div className="w-16 h-1.5 bg-summit mx-auto mb-6" />
+          <p className="text-slate-500 max-w-2xl mx-auto text-lg">
+            See how AI-driven HR stacks up against the old way of doing things.
+          </p>
         </div>
 
         {/* Comparison Cards */}
@@ -45,12 +48,24 @@ export function WhyChoose() {
 
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-slate-500 font-medium">
-                <CloseIcon className="text-red-400 size-5" />
+                <CloseIcon className="text-red-400 size-5 flex-shrink-0" />
                 High administrative drag
               </li>
               <li className="flex items-center gap-3 text-slate-500 font-medium">
-                <CloseIcon className="text-red-400 size-5" />
+                <CloseIcon className="text-red-400 size-5 flex-shrink-0" />
                 Escalation blind spots
+              </li>
+              <li className="flex items-center gap-3 text-slate-500 font-medium">
+                <CloseIcon className="text-red-400 size-5 flex-shrink-0" />
+                Inconsistent documentation
+              </li>
+              <li className="flex items-center gap-3 text-slate-500 font-medium">
+                <CloseIcon className="text-red-400 size-5 flex-shrink-0" />
+                Compliance gaps and audit risk
+              </li>
+              <li className="flex items-center gap-3 text-slate-500 font-medium">
+                <CloseIcon className="text-red-400 size-5 flex-shrink-0" />
+                Scattered data across systems
               </li>
             </ul>
           </div>
@@ -77,12 +92,24 @@ export function WhyChoose() {
 
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-slate-200 font-medium">
-                <CheckIcon className="text-summit size-5" />
+                <CheckIcon className="text-summit size-5 flex-shrink-0" />
                 Smart risk flagging
               </li>
               <li className="flex items-center gap-3 text-slate-200 font-medium">
-                <CheckIcon className="text-summit size-5" />
+                <CheckIcon className="text-summit size-5 flex-shrink-0" />
                 Consistent human control
+              </li>
+              <li className="flex items-center gap-3 text-slate-200 font-medium">
+                <CheckIcon className="text-summit size-5 flex-shrink-0" />
+                Automated audit trails
+              </li>
+              <li className="flex items-center gap-3 text-slate-200 font-medium">
+                <CheckIcon className="text-summit size-5 flex-shrink-0" />
+                Built-in compliance frameworks
+              </li>
+              <li className="flex items-center gap-3 text-slate-200 font-medium">
+                <CheckIcon className="text-summit size-5 flex-shrink-0" />
+                Single source of truth
               </li>
             </ul>
           </div>

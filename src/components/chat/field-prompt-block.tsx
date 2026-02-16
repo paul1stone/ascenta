@@ -20,7 +20,8 @@ export function FieldPromptBlock({
   onSelect,
 }: FieldPromptBlockProps) {
   const letters = OPTION_LABELS;
-  const hasOptions = data.options.length > 0;
+  const options = data.options ?? [];
+  const hasOptions = options.length > 0;
   const isTextInput = !hasOptions || ["text", "textarea", "date"].includes(data.fieldType);
 
   return (
@@ -28,7 +29,7 @@ export function FieldPromptBlock({
       <p className="mb-3 font-medium text-deep-blue">{data.question}</p>
       {hasOptions && !isTextInput ? (
         <div className="flex flex-wrap gap-2 items-center">
-          {data.options.map((opt, i) => (
+          {options.map((opt, i) => (
             <Button
               key={opt.value}
               variant="outline"
@@ -42,7 +43,7 @@ export function FieldPromptBlock({
           {data.allowOther && (
             <div className="flex flex-1 min-w-[200px] items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {letters[data.options.length]}. Other:
+                {letters[options.length]}. Other:
               </span>
               <Input
                 placeholder={data.placeholder ?? "Specify..."}

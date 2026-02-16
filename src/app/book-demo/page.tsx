@@ -15,10 +15,45 @@ import { CheckIcon } from "@/components/icons";
 
 const benefits = [
   "Personalized product walkthrough",
-  "See AI features in action",
+  "See AI features in action with your use cases",
   "Get pricing tailored to your needs",
   "Q&A with HR technology experts",
   "No commitment required",
+];
+
+const nextSteps = [
+  {
+    step: "1",
+    title: "Book a Time",
+    description: "Pick a 30-minute slot that works for you.",
+  },
+  {
+    step: "2",
+    title: "Meet Your Guide",
+    description: "A product expert will tailor the demo to your needs.",
+  },
+  {
+    step: "3",
+    title: "See the Summit",
+    description: "Experience how Ascenta can transform your HR operations.",
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      "The demo was incredibly insightful. Within 30 minutes, I understood exactly how Ascenta could solve our biggest HR challenges.",
+    author: "Jennifer Davis",
+    role: "HR Director, TechStart Inc.",
+    initials: "JD",
+  },
+  {
+    quote:
+      "I've sat through dozens of HR tool demos. Ascenta was the only one that felt like it was built by people who actually understand HR.",
+    author: "Robert Kim",
+    role: "Chief People Officer, ScaleUp Co.",
+    initials: "RK",
+  },
 ];
 
 export default function BookDemoPage() {
@@ -51,23 +86,55 @@ export default function BookDemoPage() {
                   ))}
                 </ul>
 
-                <div className="bg-deep-blue text-white rounded-2xl p-8">
-                  <h3 className="text-xl font-bold mb-4">
-                    &ldquo;The demo was incredibly insightful. Within 30 minutes,
-                    I understood exactly how Ascenta could solve our biggest HR
-                    challenges.&rdquo;
+                {/* What Happens Next */}
+                <div className="mb-10">
+                  <h3 className="text-lg font-bold text-deep-blue mb-6">
+                    How It Works
                   </h3>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-summit/20 rounded-full flex items-center justify-center text-summit font-bold">
-                      JD
-                    </div>
-                    <div>
-                      <div className="font-semibold">Jennifer Davis</div>
-                      <div className="text-slate-400 text-sm">
-                        HR Director, TechStart Inc.
+                  <div className="space-y-6">
+                    {nextSteps.map((item) => (
+                      <div key={item.step} className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-deep-blue flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {item.step}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-deep-blue">
+                            {item.title}
+                          </h4>
+                          <p className="text-slate-500 text-sm">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Testimonials */}
+                <div className="space-y-6">
+                  {testimonials.map((testimonial) => (
+                    <div
+                      key={testimonial.author}
+                      className="bg-deep-blue text-white rounded-2xl p-6"
+                    >
+                      <p className="text-sm leading-relaxed mb-4 text-slate-200">
+                        &ldquo;{testimonial.quote}&rdquo;
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-summit/20 rounded-full flex items-center justify-center text-summit font-bold text-sm">
+                          {testimonial.initials}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-sm">
+                            {testimonial.author}
+                          </div>
+                          <div className="text-slate-400 text-xs">
+                            {testimonial.role}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -122,10 +189,26 @@ export default function BookDemoPage() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="role">Your Role</Label>
+                      <select
+                        id="role"
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">Select...</option>
+                        <option value="hr-leader">HR Leader / CHRO</option>
+                        <option value="hr-manager">HR Manager / Director</option>
+                        <option value="hr-specialist">HR Specialist / Coordinator</option>
+                        <option value="it">IT / Technical</option>
+                        <option value="executive">Executive / C-Suite</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="employees">Number of Employees</Label>
                       <select
                         id="employees"
-                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         <option value="">Select...</option>
                         <option value="1-50">1-50</option>

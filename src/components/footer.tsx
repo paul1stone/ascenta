@@ -9,6 +9,7 @@ const footerLinks = {
       { label: "Workflow Maps", href: "/product" },
       { label: "Oxygen Integrations", href: "/product" },
       { label: "Logbooks", href: "/product" },
+      { label: "Pricing", href: "/pricing" },
     ],
   },
   journey: {
@@ -17,6 +18,7 @@ const footerLinks = {
       { label: "About the Range", href: "/about" },
       { label: "Safety Protocol", href: "/security" },
       { label: "Expeditions", href: "/customers" },
+      { label: "Book a Demo", href: "/book-demo" },
     ],
   },
   baseCamp: {
@@ -93,7 +95,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs uppercase tracking-widest font-bold">
-          <p>© 2024 Ascenta AI. Conquer the Peak.</p>
+          <p>&copy; 2025 Ascenta AI. Conquer the Peak.</p>
           <div className="flex gap-8 mt-6 md:mt-0">
             <Link href="/terms" className="hover:text-white transition-colors">
               Terms

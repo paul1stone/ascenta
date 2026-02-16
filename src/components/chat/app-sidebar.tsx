@@ -33,7 +33,9 @@ import {
   UserCog,
   Settings,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
+import { KnowledgeBasePanel } from "@/components/chat/knowledge-base-panel";
 import Link from "next/link";
 import type { ConversationSummary } from "@/lib/types";
 
@@ -132,6 +134,16 @@ export function AppSidebar({
                 </div>
               )}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            <BookOpen className="mr-1 size-3" />
+            Knowledge Base
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <KnowledgeBasePanel />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

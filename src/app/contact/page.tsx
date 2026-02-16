@@ -33,6 +33,24 @@ const contactMethods = [
   },
 ];
 
+const offices = [
+  {
+    city: "San Francisco",
+    address: "548 Market Street, Suite 300",
+    region: "HQ — Americas",
+  },
+  {
+    city: "London",
+    address: "71 Beak Street, Soho",
+    region: "EMEA",
+  },
+  {
+    city: "Singapore",
+    address: "1 Raffles Place, Tower 2",
+    region: "APAC",
+  },
+];
+
 export default function ContactPage() {
   return (
     <>
@@ -132,6 +150,7 @@ export default function ContactPage() {
                         <option value="support">Technical Support</option>
                         <option value="billing">Billing Question</option>
                         <option value="partnership">Partnership</option>
+                        <option value="security">Security Question</option>
                         <option value="other">Other</option>
                       </select>
                     </div>
@@ -155,6 +174,31 @@ export default function ContactPage() {
                   </form>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Offices */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-display font-black text-deep-blue text-center mb-10 uppercase tracking-tight">
+              Our Offices
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {offices.map((office) => (
+                <div
+                  key={office.city}
+                  className="text-center p-6 rounded-2xl bg-glacier border border-slate-100"
+                >
+                  <p className="text-xs font-bold text-summit uppercase tracking-widest mb-2">
+                    {office.region}
+                  </p>
+                  <h3 className="text-xl font-bold text-deep-blue mb-2">
+                    {office.city}
+                  </h3>
+                  <p className="text-slate-500 text-sm">{office.address}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
