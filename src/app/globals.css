@@ -157,6 +157,18 @@
   }
 }
 
+/* Dark sidebar theme */
+.sidebar-dark {
+  --sidebar: #0c1e3d;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #ff6b35;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgba(255, 255, 255, 0.2);
+}
+
 /* Custom prose styling for markdown */
 .prose-ascenta {
   --tw-prose-body: #0c1e3d;
