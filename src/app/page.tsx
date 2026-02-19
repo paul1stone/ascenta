@@ -2,7 +2,7 @@ import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { PathToTop } from "@/components/path-to-top";
 import { ExpeditionLeader } from "@/components/expedition-leader";
-import { WhyChoose } from "@/components/why-choose";
+import { CompassSection } from "@/components/compass-section";
 import { CTA } from "@/components/cta";
 import { Footer } from "@/components/footer";
 
@@ -14,7 +14,7 @@ export default function Home() {
         <Hero />
         <PathToTop />
         <ExpeditionLeader />
-        <WhyChoose />
+        <CompassSection />
         <CTA />
       </main>
       <Footer />

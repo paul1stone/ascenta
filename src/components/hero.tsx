@@ -1,22 +1,25 @@
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ExploreIcon, ChevronDownIcon } from "@/components/icons";
 
 export function Hero() {
   return (
     <header className="relative min-h-screen flex items-center justify-center text-center px-4 pt-20 overflow-hidden">
-      {/* Background Image with Gradient Overlay */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-fixed"
-        style={{
-          backgroundImage: `linear-gradient(rgba(12, 30, 61, 0.4), rgba(12, 30, 61, 0.85)), url(https://lh3.googleusercontent.com/aida-public/AB6AXuAp6A42-aLN7jIYswjKYkPBK0z1oMGRztj7Uuve6SA-EYabjCvZ4-Yre-r2RyIC7aIzsfnFfvMdiPz8pN7nzetYbigOwVkRVWU1xxwEBGeGCdC3-WPIP-KdmzVdng1w0a2rlojLSSe0ddArBFz4LIPNBtEUbwz_twq1q00VR7De59KGHOSmNYisr5jHWT7pKPiDPdRXS2DhphdqFORNOLk13HoQAmzkilGsqx9skWehZulfqg3vQMS8EQYB8hDXKUhuhUU7sOjCu6I)`,
-        }}
+      {/* Background Image */}
+      <Image
+        src="/front_bgrd.jpg"
+        alt=""
+        fill
+        priority
+        quality={90}
+        className="object-cover object-center"
       />
 
-      {/* Topographic Pattern Overlay */}
+      {/* Gradient Overlay */}
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
+        className="absolute inset-0"
         style={{
-          backgroundImage: `url(https://lh3.googleusercontent.com/aida-public/AB6AXuAmnd1F1cebgikhiqvhcW2Tsis8UzDEybY-J6wjJTS9L6_BO7bgtHyKSiyyav5EfLAd_vgOEOSo23lzoQGAb_kitqTGDdDHXsAA-_v6HhUEn21AwGzYx82J3bOkxyAPyAzk6MRjUshw0-jHnI82HZHzulH247KmZvcj7VyxnltBSHYMLy0QTquTfxYCOVG7nyZ_uCm8znxedzBmU33e5AjuG2ezeJ2MH_ufPLrB0B-QO9qrL56el3NXVLItwWOs1zqELLRlvpNAOeI)`,
+          background: "linear-gradient(rgba(12, 30, 61, 0.35), rgba(12, 30, 61, 0.7))",
         }}
       />
 
