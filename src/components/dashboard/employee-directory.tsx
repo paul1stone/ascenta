@@ -5,6 +5,7 @@ import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmployeeSheet } from "@/components/dashboard/employee-sheet";
 
 interface Employee {
   id: string;
@@ -96,6 +97,7 @@ export function EmployeeDirectory() {
   const [page, setPage] = useState(1);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -251,9 +253,12 @@ export function EmployeeDirectory() {
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-deep-blue/10 text-xs font-medium text-deep-blue">
                         {getInitials(`${employee.firstName} ${employee.lastName}`)}
                       </div>
-                      <span className="font-medium text-deep-blue">
+                      <button
+                        onClick={() => setSelectedEmployeeId(employee.id)}
+                        className="font-medium text-deep-blue hover:text-summit hover:underline text-left"
+                      >
                         {employee.firstName} {employee.lastName}
-                      </span>
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-3 text-muted-foreground">
@@ -314,6 +319,12 @@ export function EmployeeDirectory() {
           </Button>
         </div>
       )}
+
+      <EmployeeSheet
+        employeeId={selectedEmployeeId}
+        open={!!selectedEmployeeId}
+        onOpenChange={(open) => { if (!open) setSelectedEmployeeId(null); }}
+      />
     </div>
   );
 }

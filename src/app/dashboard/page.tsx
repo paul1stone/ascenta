@@ -6,6 +6,8 @@ import { StatsOverview } from "@/components/dashboard/stats-overview";
 import { EmployeeDirectory } from "@/components/dashboard/employee-directory";
 import { DocumentPipeline } from "@/components/dashboard/document-pipeline";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { NeedsAttention } from "@/components/dashboard/needs-attention";
+import { QuickActions } from "@/components/dashboard/quick-actions";
 
 export default function DashboardPage() {
   return (
@@ -18,6 +20,8 @@ export default function DashboardPage() {
         </header>
         <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
           <StatsOverview />
+          <NeedsAttention />
+          <QuickActions />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <EmployeeDirectory />

@@ -162,42 +162,59 @@ export function AppSidebar({
         ))}
 
         {/* Conversations List */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {conversations.map((conversation) => (
-                <SidebarMenuItem key={conversation.id}>
-                  <SidebarMenuButton
-                    onClick={() => onSelectConversation(conversation.id)}
-                    isActive={conversation.id === currentConversationId}
-                    tooltip={conversation.title}
-                  >
-                    <MessagesSquare className="size-4" />
-                    <span className="truncate">{conversation.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              {conversations.length === 0 && !isCollapsed && (
-                <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                  <Sparkles className="mx-auto mb-2 size-5 text-summit/50" />
-                  <p>No conversations yet</p>
-                  <p className="text-xs">Start a new chat to begin</p>
-                </div>
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center gap-2">
+                <MessagesSquare className="size-4" />
+                <span className="flex-1 text-left">Recent Chats</span>
+                <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {conversations.map((conversation) => (
+                    <SidebarMenuItem key={conversation.id}>
+                      <SidebarMenuButton
+                        onClick={() => onSelectConversation(conversation.id)}
+                        isActive={conversation.id === currentConversationId}
+                        tooltip={conversation.title}
+                      >
+                        <MessagesSquare className="size-4" />
+                        <span className="truncate">{conversation.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  {conversations.length === 0 && !isCollapsed && (
+                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      <Sparkles className="mx-auto mb-2 size-5 text-summit/50" />
+                      <p>No conversations yet</p>
+                      <p className="text-xs">Start a new chat to begin</p>
+                    </div>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            <BookOpen className="mr-1 size-3" />
-            Knowledge Base
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <KnowledgeBasePanel />
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center gap-2">
+                <BookOpen className="size-4" />
+                <span className="flex-1 text-left">Knowledge Base</span>
+                <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <KnowledgeBasePanel />
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
       </SidebarContent>
 
       {/* Footer with User Profile */}
