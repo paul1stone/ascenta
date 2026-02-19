@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { FollowUpData } from "./workflow-blocks";
+import { MarkdownRenderer } from "./markdown-renderer";
 
 interface FollowUpBlockProps {
   data: FollowUpData;
@@ -29,9 +30,9 @@ export function FollowUpBlock({
           {showDoc ? "Hide document" : "View generated document"}
         </button>
         {showDoc && (
-          <pre className="mt-3 max-h-64 overflow-auto rounded-lg bg-white p-3 text-xs text-deep-blue whitespace-pre-wrap">
-            {data.documentContent}
-          </pre>
+          <div className="mt-3 max-h-64 overflow-auto rounded-lg bg-white p-3 text-xs text-deep-blue">
+            <MarkdownRenderer content={data.documentContent} />
+          </div>
         )}
       </div>
       <p className="text-sm text-muted-foreground">

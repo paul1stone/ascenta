@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, ArrowLeft, Mail, Download, Check, Send } from "lucide-react";
+import { MarkdownRenderer } from "@/components/chat/markdown-renderer";
 
 type ActionItem = {
   id: string;
@@ -203,9 +204,9 @@ export default function TrackerDocumentPage({
                 </h2>
               </CardHeader>
               <CardContent className="pt-0">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-deep-blue/90 bg-muted/30 p-4 rounded-lg max-h-80 overflow-y-auto">
-                  {doc.renderedContent}
-                </pre>
+                <div className="text-sm text-deep-blue/90 bg-muted/30 p-4 rounded-lg max-h-80 overflow-y-auto">
+                  <MarkdownRenderer content={doc.renderedContent} />
+                </div>
                 <a
                   href={`/api/tracked-documents/${doc.id}/download`}
                   target="_blank"

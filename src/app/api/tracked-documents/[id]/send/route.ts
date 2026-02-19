@@ -43,7 +43,7 @@ export async function POST(
 
     // Send delivery email via Resend
     await resend.emails.send({
-      from: "Ascenta <noreply@ascenta.ai>",
+      from: "Paul <paul@zaymo.com>",
       to: email,
       subject: `Document for your review: ${doc.title}`,
       html: documentDeliveryEmail({
