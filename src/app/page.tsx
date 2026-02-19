@@ -12,9 +12,9 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+        <CompassSection />
         <PathToTop />
         <ExpeditionLeader />
-        <CompassSection />
         <CTA />
       </main>
       <Footer />

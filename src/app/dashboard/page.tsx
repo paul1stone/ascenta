@@ -1,31 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { DashboardContent } from "@/components/dashboard/dashboard-content";
-import type { TabKey } from "@/components/dashboard/dashboard-nav-tabs";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppNavbar } from "@/components/app-navbar";
+import { StatsOverview } from "@/components/dashboard/stats-overview";
+import { EmployeeDirectory } from "@/components/dashboard/employee-directory";
+import { DocumentPipeline } from "@/components/dashboard/document-pipeline";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
 
 export default function DashboardPage() {
-  const [activeSubPage, setActiveSubPage] = useState("");
-  const [activeTab, setActiveTab] = useState<TabKey>("do");
-
-  const handleSubPageChange = (key: string) => {
-    setActiveSubPage(key);
-    setActiveTab("do");
-  };
-
   return (
     <SidebarProvider>
-      <DashboardSidebar
-        activeSubPage={activeSubPage}
-        onSubPageChange={handleSubPageChange}
-      />
-      <DashboardContent
-        activeSubPage={activeSubPage}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      <SidebarInset className="bg-glacier">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white px-6">
+          <h1 className="font-display text-lg font-semibold text-deep-blue">Dashboard</h1>
+          <div className="flex-1" />
+          <AppNavbar />
+        </header>
+        <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+          <StatsOverview />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <EmployeeDirectory />
+            </div>
+            <div className="space-y-6">
+              <DocumentPipeline />
+              <RecentActivity />
+            </div>
+          </div>
+        </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }

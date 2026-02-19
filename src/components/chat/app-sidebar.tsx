@@ -11,9 +11,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,10 +42,12 @@ import {
   Settings,
   Sparkles,
   BookOpen,
+  ChevronRight,
 } from "lucide-react";
 import { KnowledgeBasePanel } from "@/components/chat/knowledge-base-panel";
 import Link from "next/link";
 import type { ConversationSummary } from "@/lib/types";
+import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
 
 // TODO: Replace with real auth user once authentication is implemented
 const CURRENT_USER = {
@@ -52,6 +62,8 @@ interface AppSidebarProps {
   currentConversationId?: string;
   onNewChat: () => void;
   onSelectConversation: (id: string) => void;
+  activeSubPage?: string;
+  onSubPageChange?: (key: string) => void;
 }
 
 export function AppSidebar({
@@ -59,9 +71,12 @@ export function AppSidebar({
   currentConversationId,
   onNewChat,
   onSelectConversation,
+  activeSubPage = "",
+  onSubPageChange,
 }: AppSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const activeCategory = activeSubPage ? activeSubPage.split("/")[0] : "";
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -108,8 +123,45 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarGroup>
 
-      {/* Conversations List */}
+      {/* Navigation Groups (Launch / Protect / Attract) */}
       <SidebarContent>
+        {DASHBOARD_NAV.map((category) => (
+          <Collapsible
+            key={category.key}
+            defaultOpen={category.key === activeCategory}
+            className="group/collapsible"
+          >
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center gap-2">
+                  <category.icon className="size-4" />
+                  <span className="flex-1 text-left">{category.label}</span>
+                  <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenuSub>
+                    {category.subPages.map((subPage) => (
+                      <SidebarMenuSubItem key={subPage.key}>
+                        <SidebarMenuSubButton
+                          isActive={activeSubPage === subPage.key}
+                          onClick={() => onSubPageChange?.(subPage.key)}
+                          className="cursor-pointer"
+                        >
+                          <subPage.icon className="size-4" />
+                          <span>{subPage.label}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ))}
+
+        {/* Conversations List */}
         <SidebarGroup>
           <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
           <SidebarGroupContent>

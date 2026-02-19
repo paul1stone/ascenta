@@ -12,7 +12,25 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { AppNavbar } from "@/components/app-navbar";
 import { AI_CONFIG } from "@/lib/ai/config";
+import { cn } from "@/lib/utils";
+import {
+  SUB_PAGE_TITLES,
+  type TabKey,
+} from "@/lib/constants/dashboard-nav";
+import {
+  MessageSquare,
+  BookOpen as BookOpenIcon,
+  KanbanSquare,
+  BarChart3,
+  Users,
+  FileCheck,
+  Clock,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import type { ConversationSummary } from "@/lib/types";
 
 interface Message {
@@ -24,7 +42,160 @@ interface Message {
 // Default to Anthropic Claude Sonnet 4
 const DEFAULT_MODEL = AI_CONFIG.defaultModels.anthropic;
 
-// Inner component that can use useSidebar hook
+const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: "do", label: "Do", icon: MessageSquare },
+  { key: "learn", label: "Learn", icon: BookOpenIcon },
+  { key: "status", label: "Status", icon: KanbanSquare },
+  { key: "insights", label: "Insights", icon: BarChart3 },
+];
+
+// ============================================================================
+// LEARN / STATUS / INSIGHTS CONTENT PANELS
+// ============================================================================
+
+function LearnContent({ subPage }: { subPage: string }) {
+  const title = SUB_PAGE_TITLES[subPage] || "HR";
+  const isGeneral = !subPage;
+
+  const cards = isGeneral
+    ? [
+        {
+          title: "Getting Started with Ascenta",
+          description: "Learn how to use the platform to manage HR workflows end-to-end.",
+          icon: BookOpenIcon,
+        },
+        {
+          title: "Company Policies",
+          description: "Review your organization's HR policies and compliance requirements.",
+          icon: FileCheck,
+        },
+        {
+          title: "Best Practices",
+          description: "Proven approaches for employee relations, performance management, and more.",
+          icon: Clock,
+        },
+      ]
+    : [
+        {
+          title: `${title} Basics`,
+          description: "Get started with foundational concepts and best practices.",
+          icon: BookOpenIcon,
+        },
+        {
+          title: "Policy Guidelines",
+          description: "Review company policies and regulatory requirements.",
+          icon: FileCheck,
+        },
+        {
+          title: "Recent Updates",
+          description: "Stay current with the latest process changes and announcements.",
+          icon: Clock,
+        },
+      ];
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((card) => (
+          <div
+            key={card.title}
+            className="rounded-xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-deep-blue/5">
+                <card.icon className="size-5 text-deep-blue" />
+              </div>
+              <h3 className="font-semibold text-deep-blue">{card.title}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">{card.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatusContent({ subPage }: { subPage: string }) {
+  const title = SUB_PAGE_TITLES[subPage] || "All Workflows";
+
+  const stages = [
+    { label: "Draft", count: 3, icon: FileCheck, color: "bg-slate-100 text-slate-600" },
+    { label: "In Review", count: 2, icon: AlertCircle, color: "bg-amber-50 text-amber-600" },
+    { label: "Sent", count: 4, icon: KanbanSquare, color: "bg-blue-50 text-blue-600" },
+    { label: "Completed", count: 8, icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600" },
+  ];
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stages.map((stage) => (
+          <div key={stage.label} className="rounded-xl border bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-muted-foreground">{stage.label}</span>
+              <div className={`flex size-8 items-center justify-center rounded-lg ${stage.color}`}>
+                <stage.icon className="size-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-deep-blue">{stage.count}</div>
+            <p className="text-xs text-muted-foreground mt-1">documents</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <KanbanSquare className="size-5 text-deep-blue" />
+          <h3 className="font-semibold text-deep-blue">{title} Pipeline</h3>
+        </div>
+        <div className="flex items-center justify-center h-48 text-muted-foreground text-sm border border-dashed rounded-lg">
+          Document pipeline view — connect to tracked documents
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InsightsContent({ subPage }: { subPage: string }) {
+  const title = SUB_PAGE_TITLES[subPage] || "Organization";
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Active Cases", value: "12", icon: Users, change: "+2 this week" },
+          { label: "Completed", value: "47", icon: FileCheck, change: "+5 this month" },
+          { label: "Avg. Resolution", value: "8.3d", icon: Clock, change: "-1.2d vs last month" },
+          { label: "Compliance Rate", value: "96%", icon: TrendingUp, change: "+2% this quarter" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl border bg-white p-5 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">{stat.label}</span>
+              <stat.icon className="size-4 text-muted-foreground" />
+            </div>
+            <div className="text-2xl font-bold text-deep-blue">{stat.value}</div>
+            <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="size-5 text-deep-blue" />
+          <h3 className="font-semibold text-deep-blue">{title} Analytics</h3>
+        </div>
+        <div className="flex items-center justify-center h-48 text-muted-foreground text-sm border border-dashed rounded-lg">
+          Chart placeholder — connect analytics data source
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// CHAT CONTENT (inner component using sidebar context)
+// ============================================================================
+
 function ChatContent({
   messages,
   setMessages,
@@ -42,6 +213,9 @@ function ChatContent({
   handleNewChat,
   loadConversation,
   loadConversations,
+  activeSubPage,
+  activeTab,
+  onTabChange,
 }: {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -59,6 +233,9 @@ function ChatContent({
   handleNewChat: () => void;
   loadConversation: (id: string) => Promise<void>;
   loadConversations: () => Promise<void>;
+  activeSubPage: string;
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
 }) {
   const handleSubmit = async (overrideValue?: string) => {
     const content = (overrideValue ?? input).trim();
@@ -271,8 +448,11 @@ function ChatContent({
     setInput(suggestion);
   };
 
-  // No offset needed — right sidebar is removed, SidebarInset already
-  // accounts for the left sidebar width via its own CSS.
+  const pageTitle = activeSubPage
+    ? SUB_PAGE_TITLES[activeSubPage] ?? "Chat"
+    : conversationId
+      ? "Chat"
+      : "New Chat";
 
   return (
     <SidebarInset className="bg-glacier flex flex-col">
@@ -280,61 +460,100 @@ function ChatContent({
       <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
-        <h1 className="flex-1 font-display font-semibold text-deep-blue">
-          {conversationId ? "Chat" : "New Chat"}
+        <h1 className="font-display font-semibold text-deep-blue">
+          {pageTitle}
         </h1>
+        <div className="flex-1" />
+        <AppNavbar />
       </header>
 
-      {/* Main Content Area - fills remaining height */}
-      <div className="flex flex-1 min-h-0">
-        {/* Chat Area (messages + input) */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto">
-            {messages.length === 0 ? (
-              <ChatWelcome onSuggestionClick={handleSuggestionClick} />
-            ) : (
-              <div className="mx-auto max-w-3xl px-4">
-                {messages.map((message, index) => (
-                  <ChatMessage
-                    key={message.id}
-                    role={message.role}
-                    content={message.content}
-                    isStreaming={
-                      isLoading &&
-                      index === messages.length - 1 &&
-                      message.role === "assistant"
-                    }
-                    onWorkflowOptionSelect={handleWorkflowFieldSelect}
-                    onFollowUpSelect={handleWorkflowFollowUpSelect}
-                    onFollowUpOther={(value) => handleSubmit(value)}
-                  />
-                ))}
-                <div ref={messagesEndRef} className="h-4" />
-              </div>
-            )}
-          </div>
+      {/* Tab Bar */}
+      <div className="flex items-center gap-1 border-b bg-white px-4">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => onTabChange(tab.key)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors relative",
+                "hover:text-deep-blue",
+                isActive
+                  ? "text-deep-blue after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-summit"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="size-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-          {/* Input Area */}
-          <div className="shrink-0 border-t border-border bg-gradient-to-t from-glacier to-transparent p-4">
-            <div className="mx-auto max-w-3xl">
-              <ChatInput
-                value={input}
-                onChange={setInput}
-                onSubmit={() => handleSubmit()}
-                onStop={handleStop}
-                isLoading={isLoading}
-                model={model}
-                onModelChange={setModel}
-              />
+      {/* Content — DO tab shows chat, others show their panels */}
+      {activeTab === "do" ? (
+        <div className="flex flex-1 min-h-0">
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto">
+              {messages.length === 0 ? (
+                <ChatWelcome
+                  onSuggestionClick={handleSuggestionClick}
+                  subPage={activeSubPage || undefined}
+                />
+              ) : (
+                <div className="mx-auto max-w-3xl px-4">
+                  {messages.map((message, index) => (
+                    <ChatMessage
+                      key={message.id}
+                      role={message.role}
+                      content={message.content}
+                      isStreaming={
+                        isLoading &&
+                        index === messages.length - 1 &&
+                        message.role === "assistant"
+                      }
+                      onWorkflowOptionSelect={handleWorkflowFieldSelect}
+                      onFollowUpSelect={handleWorkflowFollowUpSelect}
+                      onFollowUpOther={(value) => handleSubmit(value)}
+                    />
+                  ))}
+                  <div ref={messagesEndRef} className="h-4" />
+                </div>
+              )}
+            </div>
+
+            {/* Input Area */}
+            <div className="shrink-0 border-t border-border bg-gradient-to-t from-glacier to-transparent p-4">
+              <div className="mx-auto max-w-3xl">
+                <ChatInput
+                  value={input}
+                  onChange={setInput}
+                  onSubmit={() => handleSubmit()}
+                  onStop={handleStop}
+                  isLoading={isLoading}
+                  model={model}
+                  onModelChange={setModel}
+                />
+              </div>
             </div>
           </div>
         </div>
-
-      </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "learn" && <LearnContent subPage={activeSubPage} />}
+          {activeTab === "status" && <StatusContent subPage={activeSubPage} />}
+          {activeTab === "insights" && <InsightsContent subPage={activeSubPage} />}
+        </div>
+      )}
     </SidebarInset>
   );
 }
+
+// ============================================================================
+// MAIN PAGE
+// ============================================================================
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -343,6 +562,8 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
+  const [activeSubPage, setActiveSubPage] = useState("");
+  const [activeTab, setActiveTab] = useState<TabKey>("do");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -355,6 +576,16 @@ export default function ChatPage() {
   useEffect(() => {
     loadConversations();
   }, []);
+
+  // Reset chat when activeSubPage changes
+  useEffect(() => {
+    abortControllerRef.current?.abort();
+    setMessages([]);
+    setInput("");
+    setConversationId(undefined);
+    setIsLoading(false);
+    setActiveTab("do");
+  }, [activeSubPage]);
 
   const loadConversations = async () => {
     try {
@@ -381,6 +612,8 @@ export default function ChatPage() {
           )
         );
         setConversationId(id);
+        setActiveSubPage("");
+        setActiveTab("do");
         if (data.conversation?.model) {
           setModel(data.conversation.model);
         }
@@ -395,6 +628,12 @@ export default function ChatPage() {
     setConversationId(undefined);
     setInput("");
     setModel(DEFAULT_MODEL);
+    setActiveSubPage("");
+    setActiveTab("do");
+  }, []);
+
+  const handleSubPageChange = useCallback((key: string) => {
+    setActiveSubPage(key);
   }, []);
 
   return (
@@ -404,6 +643,8 @@ export default function ChatPage() {
         currentConversationId={conversationId}
         onNewChat={handleNewChat}
         onSelectConversation={loadConversation}
+        activeSubPage={activeSubPage}
+        onSubPageChange={handleSubPageChange}
       />
       <ChatContent
         messages={messages}
@@ -422,6 +663,9 @@ export default function ChatPage() {
         handleNewChat={handleNewChat}
         loadConversation={loadConversation}
         loadConversations={loadConversations}
+        activeSubPage={activeSubPage}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
     </SidebarProvider>
   );

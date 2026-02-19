@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Mountain } from "lucide-react";
+import { PAGE_CONFIG, type PageConfig } from "@/lib/constants/dashboard-nav";
 
 const tabs = ["Employee Relations", "Workflows", "Leadership Library"] as const;
 type Tab = (typeof tabs)[number];
@@ -67,11 +68,58 @@ const leadershipLibraryItems = [
 
 interface ChatWelcomeProps {
   onSuggestionClick: (suggestion: string) => void;
+  subPage?: string;
 }
 
-export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
+function SubPageWelcome({
+  config,
+  onSuggestionClick,
+}: {
+  config: PageConfig;
+  onSuggestionClick: (suggestion: string) => void;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+      <div className="mb-8 flex flex-col items-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-blue to-deep-blue/80 shadow-lg shadow-deep-blue/20">
+          <Mountain className="h-8 w-8 text-white" />
+        </div>
+        <h1 className="font-display text-2xl font-bold text-deep-blue">
+          {config.title}
+        </h1>
+        <p className="mt-2 text-center text-muted-foreground max-w-md">
+          {config.description}
+        </p>
+      </div>
+      <div className="w-full max-w-2xl grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {config.suggestions.map((item) => (
+          <button
+            key={item.title}
+            onClick={() => onSuggestionClick(item.prompt)}
+            className="group flex flex-col gap-1 rounded-2xl border border-border bg-white p-4 text-left transition-all hover:border-summit/30 hover:shadow-lg hover:shadow-summit/5 hover:-translate-y-0.5"
+          >
+            <p className="font-medium text-deep-blue">{item.title}</p>
+            <p className="text-sm text-muted-foreground">{item.prompt}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ChatWelcome({ onSuggestionClick, subPage }: ChatWelcomeProps) {
   const [activeTab, setActiveTab] = useState<Tab>("Employee Relations");
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+
+  // If a sub-page is active, show contextual suggestions
+  if (subPage && PAGE_CONFIG[subPage]) {
+    return (
+      <SubPageWelcome
+        config={PAGE_CONFIG[subPage]}
+        onSuggestionClick={onSuggestionClick}
+      />
+    );
+  }
 
   const toggleChecked = (id: string) => {
     setChecked((prev) => ({ ...prev, [id]: !prev[id] }));

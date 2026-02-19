@@ -19,7 +19,7 @@ export function CompassSection() {
 
         {/* Compass */}
         <div className="flex justify-center">
-          <CompassMenu size={680} />
+          <CompassMenu size={1020} />
         </div>
       </div>
     </section>
