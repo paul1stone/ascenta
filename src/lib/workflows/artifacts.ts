@@ -169,6 +169,7 @@ ${textLibraryContent ? `## Reference Text (use as appropriate):\n${textLibraryCo
 - Do not include any PHI (Protected Health Information)
 - Use objective language without emotional content
 - Reference specific facts from the provided information
+- Do NOT include a section heading — just output the body content directly
 
 Generate the content for this section now:`;
 }
@@ -316,8 +317,14 @@ export function renderArtifact(
   const parts: string[] = [];
 
   for (const section of template.sections) {
-    const content = sections[section.key];
+    let content = sections[section.key];
     if (content) {
+      // Strip leading duplicate heading if the AI repeated the section title
+      const headingPattern = new RegExp(
+        `^##\\s*${section.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\n+`,
+        "i"
+      );
+      content = content.replace(headingPattern, "");
       parts.push(`## ${section.title}\n\n${content}`);
     }
   }

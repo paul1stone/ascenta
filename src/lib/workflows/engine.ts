@@ -626,8 +626,18 @@ export async function generateWorkflowArtifact(
     })
     .where(eq(workflowRuns.id, runId));
 
+  // Enrich inputs with auto-generated values
+  const enrichedInputs = {
+    ...run.inputs,
+    currentDate: new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+  };
+
   // Generate the artifact
-  const artifact = await generateArtifact(template, run.inputs, textLibrary, {
+  const artifact = await generateArtifact(template, enrichedInputs, textLibrary, {
     customPrompts,
   });
 

@@ -1,37 +1,33 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import * as d3 from "d3";
 import type { PieArcDatum } from "d3";
 import type { LucideIcon } from "lucide-react";
 import {
-  Home,
-  Search,
-  User,
-  Settings,
-  Mail,
-  BarChart3,
   LayoutDashboard,
-  Rss,
-  Star,
-  FolderOpen,
-  Users,
-  Hash,
+  ListChecks,
+  Activity,
+  MessageSquare,
+  Plus,
   History,
-  Pencil,
-  Smile,
+  FileText,
+  ClipboardList,
+  BarChart3,
+  BookOpen,
+  Rocket,
+  Workflow,
+  Code2,
   ShieldCheck,
-  SlidersHorizontal,
-  Palette,
-  Volume2,
-  Keyboard,
-  Inbox,
-  Send,
-  FileEdit,
+  Mountain,
+  UserPlus,
   TrendingUp,
-  DollarSign,
-  UserCheck,
-  Download,
+  Plug,
+  GraduationCap,
+  User,
+  Wrench,
+  Sparkles,
 } from "lucide-react";
 
 const SUMMIT = "#ff6b35";
@@ -57,77 +53,83 @@ function lighten(hex: string, amt = 0.2) {
 interface SubItem {
   label: string;
   Icon: LucideIcon;
+  href: string;
 }
 
 interface MenuItem {
   label: string;
   Icon: LucideIcon;
   color: string;
+  href: string;
   subs: SubItem[];
 }
 
 const MENU_ITEMS: MenuItem[] = [
   {
-    label: "Home",
-    Icon: Home,
+    label: "Dashboard",
+    Icon: LayoutDashboard,
     color: SUMMIT,
+    href: "/dashboard",
     subs: [
-      { label: "Dashboard", Icon: LayoutDashboard },
-      { label: "Feed", Icon: Rss },
-      { label: "Favorites", Icon: Star },
+      { label: "Overview", Icon: BarChart3, href: "/dashboard" },
+      { label: "Tasks", Icon: ListChecks, href: "/dashboard" },
+      { label: "Activity", Icon: Activity, href: "/dashboard" },
     ],
   },
   {
-    label: "Search",
-    Icon: Search,
+    label: "Chat",
+    Icon: MessageSquare,
     color: "#1a73e8",
+    href: "/chat",
     subs: [
-      { label: "Files", Icon: FolderOpen },
-      { label: "People", Icon: Users },
-      { label: "Tags", Icon: Hash },
-      { label: "Recent", Icon: History },
+      { label: "New Chat", Icon: Plus, href: "/chat" },
+      { label: "History", Icon: History, href: "/chat" },
+      { label: "Templates", Icon: Sparkles, href: "/chat" },
     ],
   },
   {
-    label: "Profile",
-    Icon: User,
+    label: "Tracker",
+    Icon: ClipboardList,
     color: "#7c3aed",
+    href: "/tracker",
     subs: [
-      { label: "Edit", Icon: Pencil },
-      { label: "Avatar", Icon: Smile },
-      { label: "Privacy", Icon: ShieldCheck },
+      { label: "Pipeline", Icon: Workflow, href: "/tracker" },
+      { label: "Documents", Icon: FileText, href: "/tracker" },
+      { label: "Reports", Icon: BarChart3, href: "/tracker" },
     ],
   },
   {
-    label: "Settings",
-    Icon: Settings,
+    label: "Docs",
+    Icon: BookOpen,
     color: "#059669",
+    href: "/docs",
     subs: [
-      { label: "General", Icon: SlidersHorizontal },
-      { label: "Theme", Icon: Palette },
-      { label: "Audio", Icon: Volume2 },
-      { label: "Keys", Icon: Keyboard },
+      { label: "Start", Icon: Rocket, href: "/docs" },
+      { label: "Workflows", Icon: Workflow, href: "/docs" },
+      { label: "API", Icon: Code2, href: "/docs" },
+      { label: "Compliance", Icon: ShieldCheck, href: "/docs" },
     ],
   },
   {
-    label: "Messages",
-    Icon: Mail,
-    color: "#dc2626",
-    subs: [
-      { label: "Inbox", Icon: Inbox },
-      { label: "Sent", Icon: Send },
-      { label: "Drafts", Icon: FileEdit },
-    ],
-  },
-  {
-    label: "Analytics",
-    Icon: BarChart3,
+    label: "Product",
+    Icon: Mountain,
     color: "#0891b2",
+    href: "/product",
     subs: [
-      { label: "Traffic", Icon: TrendingUp },
-      { label: "Revenue", Icon: DollarSign },
-      { label: "Users", Icon: UserCheck },
-      { label: "Export", Icon: Download },
+      { label: "Onboarding", Icon: UserPlus, href: "/product" },
+      { label: "Performance", Icon: TrendingUp, href: "/product" },
+      { label: "Integrations", Icon: Plug, href: "/product" },
+    ],
+  },
+  {
+    label: "Learn AI",
+    Icon: GraduationCap,
+    color: "#dc2626",
+    href: "/learn-ai",
+    subs: [
+      { label: "HR Leader", Icon: User, href: "/learn-ai" },
+      { label: "HR Ops", Icon: Wrench, href: "/learn-ai" },
+      { label: "IT Admin", Icon: ShieldCheck, href: "/learn-ai" },
     ],
   },
 ];
@@ -141,8 +143,9 @@ const SUB_HOVER_OUTER = 260;
 const PAD_ANGLE = 0.04;
 const SUB_PAD = 0.012;
 const CORNER_RADIUS = 5;
-const SIZE = 580;
-const CENTER = SIZE / 2;
+const VIEWBOX = 580;
+const SIZE = 1160;
+const CENTER = VIEWBOX / 2;
 
 function LucideInSvg({
   Icon,
@@ -192,11 +195,13 @@ interface SubHover {
 }
 
 export default function CircleMenuPage() {
+  const router = useRouter();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [hoveredSub, setHoveredSub] = useState<SubHover | null>(null);
   const [activeSub, setActiveSub] = useState<SubHover | null>(null);
   const [needleAngle, setNeedleAngle] = useState(-90);
+  const needleRef = useRef(-90);
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -207,8 +212,16 @@ export default function CircleMenuPage() {
       const cy = rect.top + rect.height / 2;
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
-      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-      setNeedleAngle(angle);
+      const rawAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+      // Take shortest rotation path to avoid 360-degree spins
+      const prev = needleRef.current;
+      let delta = rawAngle - (prev % 360);
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+      const next = prev + delta;
+      needleRef.current = next;
+      setNeedleAngle(next);
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
@@ -265,13 +278,15 @@ export default function CircleMenuPage() {
 
   const handleSubClick = (parentIdx: number, subIdx: number) => {
     setActiveSub({ parent: parentIdx, sub: subIdx });
+    const sub = MENU_ITEMS[parentIdx].subs[subIdx];
+    router.push(sub.href);
   };
 
   const activeLabel =
     activeSub !== null
-      ? `${MENU_ITEMS[activeSub.parent].label} → ${MENU_ITEMS[activeSub.parent].subs[activeSub.sub].label}`
+      ? `${MENU_ITEMS[activeSub.parent].label} \u2192 ${MENU_ITEMS[activeSub.parent].subs[activeSub.sub].label}`
       : hoveredSub !== null
-        ? `${MENU_ITEMS[hoveredSub.parent].label} → ${MENU_ITEMS[hoveredSub.parent].subs[hoveredSub.sub].label}`
+        ? `${MENU_ITEMS[hoveredSub.parent].label} \u2192 ${MENU_ITEMS[hoveredSub.parent].subs[hoveredSub.sub].label}`
         : hoveredIndex !== null
           ? MENU_ITEMS[hoveredIndex].label
           : selectedIndex !== null
@@ -314,7 +329,7 @@ export default function CircleMenuPage() {
             opacity: 0.45,
           }}
         >
-          Navigation
+          Ascenta Navigator
         </h1>
       </div>
 
@@ -322,7 +337,7 @@ export default function CircleMenuPage() {
         ref={svgRef}
         width={SIZE}
         height={SIZE}
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
         style={{ overflow: "visible" }}
       >
         <defs>
@@ -540,36 +555,31 @@ export default function CircleMenuPage() {
                   }}
                 />
 
-                {/* Sub-count dots */}
+                {/* Sub-count dots — aligned to where sub-arcs would appear */}
                 {isHovered &&
                   !isSelected &&
-                  item.subs.map((_, si) => {
-                    const span = arcData.endAngle - arcData.startAngle - PAD_ANGLE;
-                    const a =
-                      arcData.startAngle +
-                      PAD_ANGLE / 2 +
-                      (si + 0.5) * (span / item.subs.length);
-                    const dr = EXPAND_OUTER + 8;
-                    return (
-                      <circle
-                        key={`dot-${si}`}
-                        cx={
-                          Math.cos(a - Math.PI / 2 + Math.PI / MENU_ITEMS.length) * dr
-                        }
-                        cy={
-                          Math.sin(a - Math.PI / 2 + Math.PI / MENU_ITEMS.length) * dr
-                        }
-                        r={2.5}
-                        fill={item.color}
-                        opacity={0.5}
-                        style={{
-                          transition: "all 0.15s ease",
-                          transitionDelay: `${si * 30}ms`,
-                          pointerEvents: "none",
-                        }}
-                      />
-                    );
-                  })}
+                  (() => {
+                    const subArcs = getSubArcs(arcData, item.subs.length);
+                    return subArcs.map((subArcData, si) => {
+                      const midAngle = (subArcData.startAngle + subArcData.endAngle) / 2 - Math.PI / 2;
+                      const dr = EXPAND_OUTER + 10;
+                      return (
+                        <circle
+                          key={`dot-${si}`}
+                          cx={Math.cos(midAngle) * dr}
+                          cy={Math.sin(midAngle) * dr}
+                          r={2.5}
+                          fill={item.color}
+                          opacity={0.5}
+                          style={{
+                            transition: "all 0.15s ease",
+                            transitionDelay: `${si * 30}ms`,
+                            pointerEvents: "none",
+                          }}
+                        />
+                      );
+                    });
+                  })()}
 
                 <LucideInSvg
                   Icon={item.Icon}
