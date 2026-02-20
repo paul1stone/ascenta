@@ -9,7 +9,6 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/chat", label: "Chat" },
   { href: "/tracker", label: "Tracker" },
-  { href: "/docs", label: "Docs" },
 ];
 
 export function AppNavbar() {
