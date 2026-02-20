@@ -1,41 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { NotificationCenter } from "@/components/notification-center";
+import { LayoutDashboard } from "lucide-react";
 
-const navLinks = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/chat", label: "Chat" },
-  { href: "/tracker", label: "Tracker" },
-];
+interface AppNavbarProps {
+  onDashboardClick?: () => void;
+  isDashboardActive?: boolean;
+}
 
-export function AppNavbar() {
-  const pathname = usePathname();
+export function AppNavbar({ onDashboardClick, isDashboardActive }: AppNavbarProps) {
+  const className = cn(
+    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors",
+    isDashboardActive
+      ? "bg-deep-blue/8 text-deep-blue"
+      : "text-muted-foreground hover:text-deep-blue hover:bg-slate-100"
+  );
+
+  if (onDashboardClick) {
+    return (
+      <button onClick={onDashboardClick} className={className}>
+        <LayoutDashboard className="size-3.5" />
+        Dashboard
+      </button>
+    );
+  }
 
   return (
-    <div className="flex items-center gap-2">
-      <nav className="flex items-center gap-1">
-        {navLinks.map((link) => {
-          const isActive = pathname === link.href;
-          return (
-            <Link
-              key={link.label}
-              href={link.href}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-full transition-colors",
-                isActive
-                  ? "bg-deep-blue/8 text-deep-blue"
-                  : "text-muted-foreground hover:text-deep-blue hover:bg-slate-100"
-              )}
-            >
-              {link.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <NotificationCenter />
-    </div>
+    <Link href="/dashboard" className={className}>
+      <LayoutDashboard className="size-3.5" />
+      Dashboard
+    </Link>
   );
 }

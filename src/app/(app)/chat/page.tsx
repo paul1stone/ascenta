@@ -8,10 +8,16 @@ import { ChatWelcome } from "@/components/chat/chat-welcome";
 import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
 import {
   SidebarInset,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import { AppNavbar } from "@/components/app-navbar";
+import { DocumentTracker } from "@/components/document-tracker";
+import { StatsOverview } from "@/components/dashboard/stats-overview";
+import { NeedsAttention } from "@/components/dashboard/needs-attention";
+import { QuickActions } from "@/components/dashboard/quick-actions";
+import { EmployeeDirectory } from "@/components/dashboard/employee-directory";
+import { DocumentPipeline } from "@/components/dashboard/document-pipeline";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { AI_CONFIG } from "@/lib/ai/config";
 import { cn } from "@/lib/utils";
 import {
@@ -22,13 +28,8 @@ import {
   MessageSquare,
   BookOpen as BookOpenIcon,
   KanbanSquare,
-  BarChart3,
-  Users,
   FileCheck,
   Clock,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle2,
 } from "lucide-react";
 import type { ConversationSummary } from "@/lib/types";
 
@@ -45,7 +46,6 @@ const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?
   { key: "do", label: "Do", icon: MessageSquare },
   { key: "learn", label: "Learn", icon: BookOpenIcon },
   { key: "status", label: "Status", icon: KanbanSquare },
-  { key: "insights", label: "Insights", icon: BarChart3 },
 ];
 
 // ============================================================================
@@ -93,8 +93,7 @@ function LearnContent({ subPage }: { subPage: string }) {
       ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <div
             key={card.title}
@@ -110,84 +109,30 @@ function LearnContent({ subPage }: { subPage: string }) {
           </div>
         ))}
       </div>
-    </div>
   );
 }
 
-function StatusContent({ subPage }: { subPage: string }) {
-  const title = SUB_PAGE_TITLES[subPage] || "All Workflows";
 
-  const stages = [
-    { label: "Draft", count: 3, icon: FileCheck, color: "bg-slate-100 text-slate-600" },
-    { label: "In Review", count: 2, icon: AlertCircle, color: "bg-amber-50 text-amber-600" },
-    { label: "Sent", count: 4, icon: KanbanSquare, color: "bg-blue-50 text-blue-600" },
-    { label: "Completed", count: 8, icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600" },
-  ];
+// ============================================================================
+// DASHBOARD CONTENT PANEL
+// ============================================================================
 
+function DashboardContent() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stages.map((stage) => (
-          <div key={stage.label} className="rounded-xl border bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">{stage.label}</span>
-              <div className={`flex size-8 items-center justify-center rounded-lg ${stage.color}`}>
-                <stage.icon className="size-4" />
-              </div>
-            </div>
-            <div className="text-3xl font-bold text-deep-blue">{stage.count}</div>
-            <p className="text-xs text-muted-foreground mt-1">documents</p>
-          </div>
-        ))}
-      </div>
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <KanbanSquare className="size-5 text-deep-blue" />
-          <h3 className="font-semibold text-deep-blue">{title} Pipeline</h3>
+    <main className="space-y-6">
+      <StatsOverview />
+      <NeedsAttention />
+      <QuickActions />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <EmployeeDirectory />
         </div>
-        <div className="flex items-center justify-center h-48 text-muted-foreground text-sm border border-dashed rounded-lg">
-          Document pipeline view — connect to tracked documents
+        <div className="space-y-6">
+          <DocumentPipeline />
+          <RecentActivity />
         </div>
       </div>
-    </div>
-  );
-}
-
-function InsightsContent({ subPage }: { subPage: string }) {
-  const title = SUB_PAGE_TITLES[subPage] || "Organization";
-
-  return (
-    <div className="p-6 space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Active Cases", value: "12", icon: Users, change: "+2 this week" },
-          { label: "Completed", value: "47", icon: FileCheck, change: "+5 this month" },
-          { label: "Avg. Resolution", value: "8.3d", icon: Clock, change: "-1.2d vs last month" },
-          { label: "Compliance Rate", value: "96%", icon: TrendingUp, change: "+2% this quarter" },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">{stat.label}</span>
-              <stat.icon className="size-4 text-muted-foreground" />
-            </div>
-            <div className="text-2xl font-bold text-deep-blue">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
-          </div>
-        ))}
-      </div>
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="size-5 text-deep-blue" />
-          <h3 className="font-semibold text-deep-blue">{title} Analytics</h3>
-        </div>
-        <div className="flex items-center justify-center h-48 text-muted-foreground text-sm border border-dashed rounded-lg">
-          Chart placeholder — connect analytics data source
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }
 
@@ -212,7 +157,6 @@ function ChatContent({
   handleNewChat,
   loadConversation,
   loadConversations,
-  activeSubPage,
   activeTab,
   onTabChange,
 }: {
@@ -232,10 +176,24 @@ function ChatContent({
   handleNewChat: () => void;
   loadConversation: (id: string) => Promise<void>;
   loadConversations: () => Promise<void>;
-  activeSubPage: string;
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
 }) {
+  const { setOpen } = useSidebar();
+  const prevTabRef = useRef<TabKey>(activeTab);
+
+  // Auto-close sidebar when leaving "do" tab, re-open when returning
+  useEffect(() => {
+    const prev = prevTabRef.current;
+    prevTabRef.current = activeTab;
+
+    if (activeTab !== "do" && prev === "do") {
+      setOpen(false);
+    } else if (activeTab === "do" && prev !== "do") {
+      setOpen(true);
+    }
+  }, [activeTab, setOpen]);
+
   const handleSubmit = async (overrideValue?: string) => {
     const content = (overrideValue ?? input).trim();
     if (!content || isLoading) return;
@@ -447,48 +405,37 @@ function ChatContent({
     setInput(suggestion);
   };
 
-  const pageTitle = activeSubPage
-    ? SUB_PAGE_TITLES[activeSubPage] ?? "Chat"
-    : conversationId
-      ? "Chat"
-      : "New Chat";
-
   return (
     <SidebarInset className="bg-glacier flex flex-col">
-      {/* Header */}
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <h1 className="font-display font-semibold text-deep-blue">
-          {pageTitle}
-        </h1>
+      {/* Header with inline tabs */}
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white px-6">
+        <nav className="flex items-center gap-1">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => onTabChange(tab.key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors",
+                  isActive
+                    ? "bg-deep-blue/8 text-deep-blue"
+                    : "text-muted-foreground hover:text-deep-blue hover:bg-slate-100"
+                )}
+              >
+                <Icon className="size-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
         <div className="flex-1" />
-        <AppNavbar />
+        <AppNavbar
+          onDashboardClick={() => onTabChange("dashboard")}
+          isDashboardActive={activeTab === "dashboard"}
+        />
       </header>
-
-      {/* Tab Bar */}
-      <div className="flex items-center gap-1 border-b bg-white px-4">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => onTabChange(tab.key)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors relative",
-                "hover:text-deep-blue",
-                isActive
-                  ? "text-deep-blue after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-summit"
-                  : "text-muted-foreground"
-              )}
-            >
-              <Icon className="size-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
 
       {/* Content — DO tab shows chat, others show their panels */}
       {activeTab === "do" ? (
@@ -499,7 +446,6 @@ function ChatContent({
               {messages.length === 0 ? (
                 <ChatWelcome
                   onSuggestionClick={handleSuggestionClick}
-                  subPage={activeSubPage || undefined}
                 />
               ) : (
                 <div className="mx-auto max-w-3xl px-4">
@@ -541,9 +487,33 @@ function ChatContent({
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          {activeTab === "learn" && <LearnContent subPage={activeSubPage} />}
-          {activeTab === "status" && <StatusContent subPage={activeSubPage} />}
-          {activeTab === "insights" && <InsightsContent subPage={activeSubPage} />}
+          {activeTab === "learn" && (
+            <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-deep-blue">HR Knowledge Base</h1>
+                <p className="mt-1 text-muted-foreground">Guides, policies, and best practices for your organization.</p>
+              </div>
+              <LearnContent subPage="" />
+            </div>
+          )}
+          {activeTab === "status" && (
+            <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-deep-blue">Document Tracker</h1>
+                <p className="mt-1 text-muted-foreground">Track and manage HR documents through their delivery lifecycle.</p>
+              </div>
+              <DocumentTracker />
+            </div>
+          )}
+          {activeTab === "dashboard" && (
+            <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-deep-blue">Dashboard</h1>
+                <p className="mt-1 text-muted-foreground">Overview of your HR operations and team activity.</p>
+              </div>
+              <DashboardContent />
+            </div>
+          )}
         </div>
       )}
     </SidebarInset>
@@ -561,7 +531,6 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
-  const [activeSubPage, setActiveSubPage] = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("do");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -575,16 +544,6 @@ export default function ChatPage() {
   useEffect(() => {
     loadConversations();
   }, []);
-
-  // Reset chat when activeSubPage changes
-  useEffect(() => {
-    abortControllerRef.current?.abort();
-    setMessages([]);
-    setInput("");
-    setConversationId(undefined);
-    setIsLoading(false);
-    setActiveTab("do");
-  }, [activeSubPage]);
 
   const loadConversations = async () => {
     try {
@@ -611,7 +570,6 @@ export default function ChatPage() {
           )
         );
         setConversationId(id);
-        setActiveSubPage("");
         setActiveTab("do");
         if (data.conversation?.model) {
           setModel(data.conversation.model);
@@ -627,12 +585,7 @@ export default function ChatPage() {
     setConversationId(undefined);
     setInput("");
     setModel(DEFAULT_MODEL);
-    setActiveSubPage("");
     setActiveTab("do");
-  }, []);
-
-  const handleSubPageChange = useCallback((key: string) => {
-    setActiveSubPage(key);
   }, []);
 
   return (
@@ -642,8 +595,6 @@ export default function ChatPage() {
         currentConversationId={conversationId}
         onNewChat={handleNewChat}
         onSelectConversation={loadConversation}
-        activeSubPage={activeSubPage}
-        onSubPageChange={handleSubPageChange}
       />
       <ChatContent
         messages={messages}
@@ -662,7 +613,6 @@ export default function ChatPage() {
         handleNewChat={handleNewChat}
         loadConversation={loadConversation}
         loadConversations={loadConversations}
-        activeSubPage={activeSubPage}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />

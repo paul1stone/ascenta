@@ -40,7 +40,7 @@ export default function LoginPage() {
                 className="space-y-4"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  router.push("/dashboard");
+                  router.push("/chat");
                 }}
               >
                 <div className="space-y-2">

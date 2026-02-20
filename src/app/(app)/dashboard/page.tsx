@@ -13,11 +13,14 @@ export default function DashboardPage() {
   return (
     <SidebarInset className="bg-glacier">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white px-6">
-          <h1 className="font-display text-lg font-semibold text-deep-blue">Dashboard</h1>
           <div className="flex-1" />
           <AppNavbar />
         </header>
-        <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+        <main className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
+          <div>
+            <h1 className="font-display text-2xl font-bold text-deep-blue">Dashboard</h1>
+            <p className="mt-1 text-muted-foreground">Overview of your HR operations and team activity.</p>
+          </div>
           <StatsOverview />
           <NeedsAttention />
           <QuickActions />
