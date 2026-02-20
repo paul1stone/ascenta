@@ -16,7 +16,7 @@ import {
 } from "@/lib/db/workflow-schema";
 import { eq, and, desc } from "drizzle-orm";
 import { evaluateGuardrails, canProceed } from "./guardrails";
-import { generateArtifact, createArtifactVersion } from "./artifacts";
+import { generateArtifact } from "./artifacts";
 import {
   logWorkflowCreated,
   logWorkflowUpdated,
@@ -26,7 +26,6 @@ import {
   logReviewed,
   logExported,
   logCancelled,
-  generateInputHash,
 } from "./audit";
 import type {
   WorkflowDefinitionConfig,

@@ -93,12 +93,6 @@ function ResourceItem({ icon, name, description, onClick }: ResourceItemProps) {
   );
 }
 
-function EmptyState({ message }: { message: string }) {
-  return (
-    <p className="text-xs text-muted-foreground/60 italic py-2">{message}</p>
-  );
-}
-
 export function ResourceSidebar() {
   const [mode, setMode] = useState<ResourceMode>("prompts");
 

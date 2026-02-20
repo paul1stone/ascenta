@@ -6,7 +6,7 @@ import {
   workflowDefinitions,
   trackedDocuments,
 } from "@/lib/db/workflow-schema";
-import { eq, sql, desc, or, isNotNull } from "drizzle-orm";
+import { eq, desc, or, isNotNull } from "drizzle-orm";
 
 interface ActivityItem {
   id: string;

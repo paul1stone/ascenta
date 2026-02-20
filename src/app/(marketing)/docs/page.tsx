@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckIcon } from "@/components/icons";
 import Link from "next/link";
 
 const quickStart = [

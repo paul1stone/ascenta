@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 import { tool } from "ai";
-import { searchEmployees, getEmployeeById } from "@/lib/db/employees";
+import { searchEmployees } from "@/lib/db/employees";
 import {
   startWorkflowRun,
   updateWorkflowRun,

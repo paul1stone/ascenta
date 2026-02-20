@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { employees, employeeNotes } from "@/lib/db/employee-schema";
-import { trackedDocuments } from "@/lib/db/workflow-schema";
+import { employees } from "@/lib/db/employee-schema";
 import { eq, sql, count, ilike, or, and } from "drizzle-orm";
 
 export async function GET(request: Request) {

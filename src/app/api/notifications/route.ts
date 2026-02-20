@@ -6,7 +6,7 @@ import {
   workflowDefinitions,
   auditEvents,
 } from "@/lib/db/workflow-schema";
-import { eq, desc, sql, and, isNotNull, isNull } from "drizzle-orm";
+import { eq, desc, sql, and, isNotNull } from "drizzle-orm";
 
 interface Notification {
   id: string;

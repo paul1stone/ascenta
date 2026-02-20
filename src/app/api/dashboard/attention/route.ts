@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { employees } from "@/lib/db/employee-schema";
 import { trackedDocuments, workflowRuns } from "@/lib/db/workflow-schema";
-import { eq, and, lt, isNotNull, isNull, sql, count } from "drizzle-orm";
+import { eq, and, isNotNull, isNull, sql } from "drizzle-orm";
 
 interface AttentionItem {
   id: string;

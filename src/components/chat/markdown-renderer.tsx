@@ -153,7 +153,6 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
         inline,
         className: codeClassName,
         children,
-        ...props
       }: {
         inline?: boolean;
         className?: string;

@@ -149,13 +149,10 @@ function ChatContent({
   setIsLoading,
   conversationId,
   setConversationId,
-  conversations,
   model,
   setModel,
   messagesEndRef,
   abortControllerRef,
-  handleNewChat,
-  loadConversation,
   loadConversations,
   activeTab,
   onTabChange,
@@ -168,13 +165,10 @@ function ChatContent({
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   conversationId: string | undefined;
   setConversationId: React.Dispatch<React.SetStateAction<string | undefined>>;
-  conversations: ConversationSummary[];
   model: string;
   setModel: React.Dispatch<React.SetStateAction<string>>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  abortControllerRef: React.MutableRefObject<AbortController | null>;
-  handleNewChat: () => void;
-  loadConversation: (id: string) => Promise<void>;
+  abortControllerRef: React.RefObject<AbortController | null>;
   loadConversations: () => Promise<void>;
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
@@ -269,7 +263,7 @@ function ChatContent({
       }
     } catch (error) {
       if ((error as Error).name === "AbortError") {
-        console.log("Request aborted");
+        // Request was intentionally aborted
       } else {
         console.error("Chat error:", error);
         setMessages((prev) =>
@@ -540,11 +534,6 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load conversations on mount
-  useEffect(() => {
-    loadConversations();
-  }, []);
-
   const loadConversations = async () => {
     try {
       const res = await fetch("/api/conversations?userId=anonymous");
@@ -554,6 +543,14 @@ export default function ChatPage() {
       console.error("Failed to load conversations:", error);
     }
   };
+
+  // Load conversations on mount
+  useEffect(() => {
+    fetch("/api/conversations?userId=anonymous")
+      .then((res) => res.json())
+      .then((data) => setConversations(data.conversations || []))
+      .catch((error) => console.error("Failed to load conversations:", error));
+  }, []);
 
   const loadConversation = async (id: string) => {
     try {
@@ -605,13 +602,10 @@ export default function ChatPage() {
         setIsLoading={setIsLoading}
         conversationId={conversationId}
         setConversationId={setConversationId}
-        conversations={conversations}
         model={model}
         setModel={setModel}
         messagesEndRef={messagesEndRef}
         abortControllerRef={abortControllerRef}
-        handleNewChat={handleNewChat}
-        loadConversation={loadConversation}
         loadConversations={loadConversations}
         activeTab={activeTab}
         onTabChange={setActiveTab}
