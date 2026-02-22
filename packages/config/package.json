@@ -1,0 +1,10 @@
+{
+  "name": "@ascenta/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./postcss": "./postcss.mjs",
+    "./tsconfig/base": "./tsconfig/base.json",
+    "./tsconfig/nextjs": "./tsconfig/nextjs.json"
+  }
+}
