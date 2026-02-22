@@ -21,47 +21,33 @@ export default function AcknowledgmentPage({
   const [doc, setDoc] = useState<DocInfo | null>(null);
   const [status, setStatus] = useState<
     "loading" | "ready" | "submitting" | "done" | "error"
-  >("loading");
-  const [errorMsg, setErrorMsg] = useState("");
+  >(!token ? "error" : "loading");
+  const [errorMsg, setErrorMsg] = useState(!token ? "Missing verification token." : "");
 
   useEffect(() => {
     params.then((p) => setDocId(p.id));
   }, [params]);
 
   useEffect(() => {
-    if (!docId || !token) {
-      if (!token) {
-        setStatus("error");
-        setErrorMsg("Missing verification token.");
-      }
-      return;
-    }
+    if (!docId || !token) return;
 
-    (async () => {
-      try {
-        const res = await fetch(`/api/tracked-documents/${docId}`);
-        if (!res.ok) {
-          setStatus("error");
-          setErrorMsg("Document not found.");
-          return;
-        }
-        const data = await res.json();
+    fetch(`/api/tracked-documents/${docId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Document not found.");
+        return res.json();
+      })
+      .then((data) => {
         setDoc({
           title: data.title,
           documentType: data.documentType,
           createdAt: data.createdAt,
         });
-
-        if (data.acknowledgedAt) {
-          setStatus("done");
-        } else {
-          setStatus("ready");
-        }
-      } catch {
+        setStatus(data.acknowledgedAt ? "done" : "ready");
+      })
+      .catch((err) => {
         setStatus("error");
-        setErrorMsg("Failed to load document.");
-      }
-    })();
+        setErrorMsg(err.message || "Failed to load document.");
+      });
   }, [docId, token]);
 
   async function handleAcknowledge() {

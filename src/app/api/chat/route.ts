@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       content: msg.content,
     }));
 
-    let allMessages: ModelMessage[] = [...contextMessages];
+    const allMessages: ModelMessage[] = [...contextMessages];
 
     if (isWorkflowAction) {
       // Inject synthetic user message for the model only; do not store it

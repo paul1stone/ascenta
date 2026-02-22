@@ -227,14 +227,21 @@ export function EmployeeSheet({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open || !employeeId) {
-      return;
+  // Reset state during render when fetch inputs change (React-supported pattern)
+  const [fetchKey, setFetchKey] = useState<string | null>(null);
+  const currentKey = open && employeeId ? employeeId : null;
+  if (currentKey !== fetchKey) {
+    setFetchKey(currentKey);
+    if (currentKey) {
+      setLoading(true);
+      setError(null);
+      setData(null);
     }
+  }
 
-    setLoading(true);
-    setError(null);
-    setData(null);
+  useEffect(() => {
+    if (!open || !employeeId) return;
+    let cancelled = false;
 
     fetch(`/api/dashboard/employees/${employeeId}`)
       .then((res) => {
@@ -242,15 +249,17 @@ export function EmployeeSheet({
         return res.json();
       })
       .then((result: EmployeeResponse) => {
-        setData(result);
+        if (!cancelled) setData(result);
       })
       .catch((err) => {
         console.error("Failed to fetch employee detail:", err);
-        setError("Failed to load employee details.");
+        if (!cancelled) setError("Failed to load employee details.");
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
+
+    return () => { cancelled = true; };
   }, [open, employeeId]);
 
   return (

@@ -5,7 +5,7 @@ import {
   trackedDocuments,
   workflowRuns,
 } from "@/lib/db/workflow-schema";
-import { eq, sql, count } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 
 export async function GET() {
   try {

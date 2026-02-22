@@ -12,6 +12,15 @@ import {
   Target,
   Heart,
   Award,
+  TrendingUp,
+  BarChart3,
+  MessageSquare,
+  ArrowRightLeft,
+  UserMinus,
+  Briefcase,
+  Search,
+  PieChart,
+  CalendarCheck,
 } from "lucide-react";
 
 // ============================================================================
@@ -66,6 +75,36 @@ export const DASHBOARD_NAV: NavCategory[] = [
       { key: "attract/recognition", label: "Recognition", icon: Award },
     ],
   },
+  {
+    key: "develop",
+    label: "Develop",
+    icon: TrendingUp,
+    subPages: [
+      { key: "develop/reviews", label: "Performance Reviews", icon: ClipboardCheck },
+      { key: "develop/goals", label: "Goal Setting", icon: Target },
+      { key: "develop/feedback", label: "360 Feedback", icon: MessageSquare },
+    ],
+  },
+  {
+    key: "transition",
+    label: "Transition",
+    icon: ArrowRightLeft,
+    subPages: [
+      { key: "transition/offboarding", label: "Offboarding", icon: UserMinus },
+      { key: "transition/transfers", label: "Transfers", icon: Briefcase },
+      { key: "transition/succession", label: "Succession Planning", icon: CalendarCheck },
+    ],
+  },
+  {
+    key: "analyze",
+    label: "Analyze",
+    icon: PieChart,
+    subPages: [
+      { key: "analyze/turnover", label: "Turnover Analytics", icon: BarChart3 },
+      { key: "analyze/headcount", label: "Headcount Planning", icon: Search },
+      { key: "analyze/compensation", label: "Compensation Review", icon: Scale },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -82,6 +121,15 @@ export const SUB_PAGE_TITLES: Record<string, string> = {
   "attract/recruitment": "Recruitment",
   "attract/engagement": "Engagement",
   "attract/recognition": "Recognition",
+  "develop/reviews": "Performance Reviews",
+  "develop/goals": "Goal Setting",
+  "develop/feedback": "360 Feedback",
+  "transition/offboarding": "Offboarding",
+  "transition/transfers": "Transfers",
+  "transition/succession": "Succession Planning",
+  "analyze/turnover": "Turnover Analytics",
+  "analyze/headcount": "Headcount Planning",
+  "analyze/compensation": "Compensation Review",
 };
 
 // ============================================================================
@@ -185,6 +233,96 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
       { title: "Peer recognition", prompt: "Design a peer-to-peer recognition program" },
     ],
   },
+  "develop/reviews": {
+    title: "Performance Reviews",
+    description: "Conduct fair, structured performance evaluations.",
+    suggestions: [
+      { title: "Review template", prompt: "Create a performance review template for my team" },
+      { title: "Self-assessment", prompt: "Draft a self-assessment guide for employees" },
+      { title: "Rating calibration", prompt: "Help me prepare for a rating calibration session" },
+      { title: "Review summary", prompt: "Write a performance review summary for an employee" },
+    ],
+  },
+  "develop/goals": {
+    title: "Goal Setting",
+    description: "Set clear, measurable goals aligned with business objectives.",
+    suggestions: [
+      { title: "OKR framework", prompt: "Help me set up OKRs for my department" },
+      { title: "SMART goals", prompt: "Draft SMART goals for a team member" },
+      { title: "Mid-year check-in", prompt: "Prepare a mid-year goal progress check-in" },
+      { title: "Development plan", prompt: "Create an individual development plan for an employee" },
+    ],
+  },
+  "develop/feedback": {
+    title: "360 Feedback",
+    description: "Gather multi-directional feedback for holistic employee development.",
+    suggestions: [
+      { title: "Feedback survey", prompt: "Design a 360-degree feedback survey" },
+      { title: "Peer questions", prompt: "Generate peer feedback questions for a review cycle" },
+      { title: "Feedback summary", prompt: "Summarize 360 feedback results for an employee" },
+      { title: "Action items", prompt: "Create development action items from feedback results" },
+    ],
+  },
+  "transition/offboarding": {
+    title: "Offboarding",
+    description: "Manage employee departures with structured offboarding workflows.",
+    suggestions: [
+      { title: "Exit checklist", prompt: "Generate an offboarding checklist for a departing employee" },
+      { title: "Exit interview", prompt: "Draft exit interview questions" },
+      { title: "Knowledge transfer", prompt: "Create a knowledge transfer plan for a departing employee" },
+      { title: "Final communications", prompt: "Write a team announcement about an employee departure" },
+    ],
+  },
+  "transition/transfers": {
+    title: "Transfers",
+    description: "Facilitate smooth internal transfers and role changes.",
+    suggestions: [
+      { title: "Transfer letter", prompt: "Draft an internal transfer offer letter" },
+      { title: "Transition plan", prompt: "Create a role transition plan for an internal move" },
+      { title: "Handoff checklist", prompt: "Build a responsibility handoff checklist" },
+      { title: "Team notification", prompt: "Write a team announcement about an internal transfer" },
+    ],
+  },
+  "transition/succession": {
+    title: "Succession Planning",
+    description: "Identify and develop future leaders for critical roles.",
+    suggestions: [
+      { title: "Succession map", prompt: "Help me create a succession plan for key roles" },
+      { title: "Readiness assessment", prompt: "Assess succession readiness for a leadership position" },
+      { title: "Talent pipeline", prompt: "Build a talent pipeline for critical roles" },
+      { title: "Development roadmap", prompt: "Create a leadership development roadmap for a successor" },
+    ],
+  },
+  "analyze/turnover": {
+    title: "Turnover Analytics",
+    description: "Understand attrition patterns and identify retention risks.",
+    suggestions: [
+      { title: "Turnover report", prompt: "Help me analyze our quarterly turnover data" },
+      { title: "Flight risk", prompt: "Identify flight risk indicators for my team" },
+      { title: "Exit trends", prompt: "Summarize common themes from recent exit interviews" },
+      { title: "Retention strategy", prompt: "Draft a retention strategy for high-turnover departments" },
+    ],
+  },
+  "analyze/headcount": {
+    title: "Headcount Planning",
+    description: "Plan workforce capacity and forecast hiring needs.",
+    suggestions: [
+      { title: "Headcount forecast", prompt: "Help me forecast headcount needs for next quarter" },
+      { title: "Org structure", prompt: "Review our current org structure for optimization" },
+      { title: "Hiring plan", prompt: "Draft a hiring plan based on projected growth" },
+      { title: "Budget analysis", prompt: "Analyze headcount budget vs. actual spend" },
+    ],
+  },
+  "analyze/compensation": {
+    title: "Compensation Review",
+    description: "Evaluate pay equity and maintain competitive compensation.",
+    suggestions: [
+      { title: "Pay equity audit", prompt: "Help me run a pay equity analysis for my department" },
+      { title: "Market comparison", prompt: "Compare our compensation to market benchmarks" },
+      { title: "Raise recommendations", prompt: "Draft merit increase recommendations for my team" },
+      { title: "Total rewards", prompt: "Summarize our total rewards package for a role" },
+    ],
+  },
 };
 
 export const DEFAULT_PAGE_CONFIG: PageConfig = {
@@ -202,4 +340,4 @@ export const DEFAULT_PAGE_CONFIG: PageConfig = {
 // TAB TYPES
 // ============================================================================
 
-export type TabKey = "do" | "learn" | "status" | "insights";
+export type TabKey = "do" | "learn" | "status" | "dashboard";

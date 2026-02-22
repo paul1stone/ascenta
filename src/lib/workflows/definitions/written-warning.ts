@@ -4,7 +4,7 @@
  */
 
 import type { WorkflowDefinitionConfig } from "../types";
-import { and, isTrue, isEmpty, equals } from "../guardrails";
+import { and, isEmpty, equals } from "../guardrails";
 
 export const writtenWarningWorkflow: WorkflowDefinitionConfig = {
   slug: "written-warning",
