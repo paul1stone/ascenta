@@ -5,7 +5,7 @@ import {
   FIELD_PROMPT_SUFFIX,
   FOLLOW_UP_PREFIX,
   FOLLOW_UP_SUFFIX,
-} from "@/lib/ai/workflow-tools";
+} from "@/lib/ai/workflow-constants";
 
 export interface FieldPromptData {
   fieldKey: string;
