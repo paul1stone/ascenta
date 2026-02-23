@@ -8,16 +8,19 @@ Ascenta is an AI-first HR workflow execution platform — not a chatbot, not a s
 
 ## Commands
 
+This is a **pnpm monorepo** managed with Turborepo. Always use `pnpm` (or `npx pnpm` if not globally installed) to run commands.
+
 ```bash
-npm run dev              # Start dev server (http://localhost:3000)
-npm run build            # Production build
-npm run lint             # ESLint
-npm test                 # Run tests (vitest run)
-npm run test:watch       # Run tests in watch mode
-npm run db:push          # Push schema changes to database
-npm run db:generate      # Generate a new migration
-npm run db:migrate       # Run pending migrations
-npm run db:studio        # Open Drizzle Studio (database GUI)
+pnpm dev                           # Start all dev servers
+pnpm dev --filter=@ascenta/platform  # Start only the platform app (http://localhost:3051)
+pnpm build                         # Production build
+pnpm lint                          # ESLint
+pnpm test                          # Run tests (vitest run)
+pnpm test:watch                    # Run tests in watch mode
+pnpm db:push                       # Push schema changes to database
+pnpm db:generate                   # Generate a new migration
+pnpm db:migrate                    # Run pending migrations
+pnpm db:studio                     # Open Drizzle Studio (database GUI)
 npm run db:seed          # Seed employee data (scripts/seed-employees.ts)
 ```
 
