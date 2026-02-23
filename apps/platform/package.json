@@ -11,15 +11,16 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.23",
+    "@ai-sdk/openai": "^3.0.18",
     "@ascenta/db": "workspace:*",
     "@ascenta/email": "workspace:*",
     "@ascenta/types": "workspace:*",
     "@ascenta/ui": "workspace:*",
-    "@ai-sdk/anthropic": "^3.0.23",
-    "@ai-sdk/openai": "^3.0.18",
     "@vercel/analytics": "^1.6.1",
     "ai": "^6.0.49",
     "d3": "^7.9.0",
+    "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.562.0",
     "mammoth": "^1.11.0",
     "next": "16.1.4",

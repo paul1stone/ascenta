@@ -20,13 +20,20 @@ import { getModel } from "@/lib/ai/providers";
 import { AI_CONFIG } from "@/lib/ai/config";
 import type { IntakeFieldDefinition, WorkflowInputs } from "@/lib/workflows/types";
 
+import {
+  FIELD_PROMPT_PREFIX,
+  FIELD_PROMPT_SUFFIX,
+  FOLLOW_UP_PREFIX,
+  FOLLOW_UP_SUFFIX,
+} from "./workflow-constants";
+
 // Re-export constants so existing server-side imports keep working
 export {
   FIELD_PROMPT_PREFIX,
   FIELD_PROMPT_SUFFIX,
   FOLLOW_UP_PREFIX,
   FOLLOW_UP_SUFFIX,
-} from "./workflow-constants";
+};
 
 function fieldToPromptPayload(
   field: IntakeFieldDefinition,

@@ -12,6 +12,7 @@ import {
 import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
 import { AI_CONFIG } from "@/lib/ai/config";
 import type { ConversationSummary } from "@ascenta/types";
+import type { TabKey } from "@/lib/constants/dashboard-nav";
 
 interface Message {
   id: string;
@@ -28,11 +29,13 @@ interface ChatPanelContextValue {
   conversations: ConversationSummary[];
   model: string;
   isPanelOpen: boolean;
+  activeTab: TabKey;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 
   // Setters
   setInput: (value: string) => void;
   setModel: (model: string) => void;
+  setActiveTab: (tab: TabKey) => void;
 
   // Handlers
   handleSubmit: (overrideValue?: string) => Promise<void>;
@@ -60,6 +63,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("do");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -305,6 +309,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setConversationId(undefined);
     setInput("");
     setModel(DEFAULT_MODEL);
+    setActiveTab("do");
   }, []);
 
   const loadConversation = useCallback(
@@ -348,9 +353,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         conversations,
         model,
         isPanelOpen,
+        activeTab,
         messagesEndRef,
         setInput,
         setModel,
+        setActiveTab,
         handleSubmit,
         handleWorkflowFieldSelect,
         handleWorkflowFollowUpSelect,
