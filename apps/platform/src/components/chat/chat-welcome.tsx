@@ -32,7 +32,7 @@ export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
       {/* Category icon cards (replaces logo) */}
-      <div className="mb-6 grid w-full max-w-3xl grid-cols-3 gap-3 lg:grid-cols-6">
+      <div className="mb-6 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
         {DASHBOARD_NAV.map((category) => {
           const isSelected = selectedCategoryKey === category.key;
           return (
