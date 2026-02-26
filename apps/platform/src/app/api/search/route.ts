@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
 import { searchKnowledgeBase } from "@/lib/rag/search";
 
 /**
@@ -6,6 +7,7 @@ import { searchKnowledgeBase } from "@/lib/rag/search";
  */
 export async function POST(req: Request) {
   try {
+    await connectDB();
     const body = await req.json();
     const { query, limit: rawLimit = 5, similarityThreshold = 0.7 } = body;
     const limit = Math.min(rawLimit, 50);

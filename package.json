@@ -9,10 +9,6 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
-    "db:generate": "turbo db:generate --filter=@ascenta/db",
-    "db:migrate": "turbo db:migrate --filter=@ascenta/db",
-    "db:push": "turbo db:push --filter=@ascenta/db",
-    "db:studio": "pnpm --filter @ascenta/db db:studio",
     "db:seed": "pnpm --filter @ascenta/db db:seed"
   },
   "devDependencies": {

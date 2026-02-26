@@ -1,12 +1,15 @@
 /**
- * Seed script: Populates employees and employee_notes with fake data
+ * Seed script: Populates employees with embedded notes using Mongoose
  * Run: npx tsx scripts/seed-employees.ts
  */
 
-import "dotenv/config";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import { employees, employeeNotes } from "../src/employee-schema";
+import dotenv from "dotenv";
+import { resolve } from "path";
+// Load .env.local from monorepo root
+dotenv.config({ path: resolve(__dirname, "../../../.env.local") });
+dotenv.config({ path: resolve(__dirname, "../../../.env") });
+import mongoose from "mongoose";
+import { Employee } from "../src/employee-schema";
 
 const FIRST_NAMES = [
   "John", "Sarah", "Michael", "Emily", "David", "Jessica", "James", "Ashley",
@@ -67,23 +70,20 @@ function randomDateWithinYears(years: number): Date {
 }
 
 async function main() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    console.error("DATABASE_URL is required");
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error("MONGODB_URI is required");
     process.exit(1);
   }
 
-  const sql = neon(databaseUrl);
-  const db = drizzle(sql);
-
-  console.log("Seeding employees...");
+  await mongoose.connect(uri);
+  console.log("Connected to MongoDB. Seeding employees...");
 
   // Clear existing
-  await db.delete(employeeNotes);
-  await db.delete(employees);
+  await Employee.deleteMany({});
 
   const employeeCount = 80;
-  const createdEmployees: { id: string; employeeId: string; firstName: string; lastName: string; department: string }[] = [];
+  const employeeDocs = [];
 
   for (let i = 0; i < employeeCount; i++) {
     const firstName = random(FIRST_NAMES);
@@ -94,7 +94,33 @@ async function main() {
     const empId = `EMP${1000 + i}`;
     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${i}@company.com`.replace(/\s/g, "");
 
-    const [emp] = await db.insert(employees).values({
+    // Build embedded notes for ~60% of employees
+    const notes: Record<string, unknown>[] = [];
+    if (Math.random() < 0.6) {
+      const numNotes = Math.floor(Math.random() * 3) + 1;
+      const usedTypes = new Set<string>();
+
+      for (let n = 0; n < numNotes; n++) {
+        const noteType = random([...NOTE_TYPES]);
+        if (usedTypes.has(noteType) && usedTypes.size < NOTE_TYPES.length) continue;
+        usedTypes.add(noteType);
+
+        const titles = NOTE_TITLES[noteType];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        const severity = noteType.includes("warning") || noteType === "pip" ? random(["low", "medium", "high"]) : undefined;
+
+        notes.push({
+          noteType,
+          title,
+          content: `Documentation from ${randomDateWithinYears(2).toLocaleDateString()}. Details on file.`,
+          severity,
+          occurredAt: randomDateWithinYears(1),
+          createdAt: new Date(),
+        });
+      }
+    }
+
+    employeeDocs.push({
       employeeId: empId,
       firstName,
       lastName,
@@ -104,44 +130,18 @@ async function main() {
       managerName,
       hireDate: randomDateWithinYears(5),
       status: "active",
-    }).returning({ id: employees.id, employeeId: employees.employeeId, firstName: employees.firstName, lastName: employees.lastName, department: employees.department });
-
-    if (emp) {
-      createdEmployees.push(emp);
-    }
+      notes,
+    });
   }
 
-  console.log(`Created ${createdEmployees.length} employees. Adding notes...`);
+  const created = await Employee.insertMany(employeeDocs);
+  const withNotes = created.filter((e) => e.notes && e.notes.length > 0);
 
-  // Add notes to ~60% of employees - varied mix
-  const employeesWithNotes = [...createdEmployees].sort(() => Math.random() - 0.5).slice(0, Math.floor(createdEmployees.length * 0.6));
-
-  for (const emp of employeesWithNotes) {
-    const numNotes = Math.floor(Math.random() * 3) + 1;
-    const usedTypes = new Set<string>();
-
-    for (let n = 0; n < numNotes; n++) {
-      const noteType = random([...NOTE_TYPES]);
-      if (usedTypes.has(noteType) && usedTypes.size < NOTE_TYPES.length) continue;
-      usedTypes.add(noteType);
-
-      const titles = NOTE_TITLES[noteType];
-      const title = titles[Math.floor(Math.random() * titles.length)];
-      const severity = noteType.includes("warning") || noteType === "pip" ? random(["low", "medium", "high"]) : undefined;
-
-      await db.insert(employeeNotes).values({
-        employeeId: emp.id,
-        noteType,
-        title,
-        content: `Documentation from ${randomDateWithinYears(2).toLocaleDateString()}. Details on file.`,
-        severity,
-        occurredAt: randomDateWithinYears(1),
-      });
-    }
-  }
-
-  console.log(`Added notes to ${employeesWithNotes.length} employees.`);
+  console.log(`Created ${created.length} employees.`);
+  console.log(`${withNotes.length} employees have notes.`);
   console.log("Seed complete!");
+
+  await mongoose.disconnect();
 }
 
 main().catch((err) => {

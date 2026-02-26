@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@ascenta/db";
+import { connectDB } from "@ascenta/db";
 import {
-  auditEvents,
-  workflowRuns,
-  workflowDefinitions,
-  trackedDocuments,
+  AuditEvent,
+  TrackedDocument,
+  WorkflowRun,
+  WorkflowDefinition,
 } from "@ascenta/db/workflow-schema";
-import { eq, desc, or, isNotNull } from "drizzle-orm";
 
 interface ActivityItem {
   id: string;
@@ -19,70 +18,64 @@ interface ActivityItem {
 
 export async function GET() {
   try {
+    await connectDB();
+
     // --------------- Audit Events ---------------
 
-    const auditRows = await db
-      .select({
-        id: auditEvents.id,
-        action: auditEvents.action,
-        description: auditEvents.description,
-        actorId: auditEvents.actorId,
-        actorType: auditEvents.actorType,
-        metadata: auditEvents.metadata,
-        timestamp: auditEvents.timestamp,
-        workflowName: workflowDefinitions.name,
-      })
-      .from(auditEvents)
-      .leftJoin(workflowRuns, eq(auditEvents.workflowRunId, workflowRuns.id))
-      .leftJoin(
-        workflowDefinitions,
-        eq(workflowRuns.workflowDefinitionId, workflowDefinitions.id)
-      )
-      .orderBy(desc(auditEvents.timestamp))
-      .limit(20);
+    const auditRows = await AuditEvent.find()
+      .sort({ timestamp: -1 })
+      .limit(20)
+      .lean();
 
-    const auditActivities: ActivityItem[] = auditRows.map((row) => ({
-      id: row.id,
-      type: row.action,
-      description:
-        row.description ||
-        `${row.action}${row.workflowName ? ` - ${row.workflowName}` : ""}`,
-      actor: row.actorId,
-      timestamp: row.timestamp.toISOString(),
-      metadata: row.metadata ?? undefined,
-    }));
+    const auditActivities: ActivityItem[] = [];
+
+    for (const row of auditRows) {
+      let workflowName: string | null = null;
+      if (row.workflowRunId) {
+        const run = await WorkflowRun.findById(row.workflowRunId)
+          .select("workflowDefinitionId")
+          .lean() as Record<string, unknown> | null;
+        if (run?.workflowDefinitionId) {
+          const def = await WorkflowDefinition.findById(run.workflowDefinitionId)
+            .select("name")
+            .lean() as Record<string, unknown> | null;
+          workflowName = (def?.name as string) ?? null;
+        }
+      }
+
+      auditActivities.push({
+        id: String(row._id),
+        type: row.action as string,
+        description:
+          (row.description as string) ||
+          `${row.action}${workflowName ? ` - ${workflowName}` : ""}`,
+        actor: row.actorId as string,
+        timestamp: (row.timestamp as Date).toISOString(),
+        metadata: row.metadata ?? undefined,
+      });
+    }
 
     // --------------- Recent Document Events ---------------
 
-    const documentRows = await db
-      .select({
-        id: trackedDocuments.id,
-        title: trackedDocuments.title,
-        stage: trackedDocuments.stage,
-        employeeName: trackedDocuments.employeeName,
-        sentAt: trackedDocuments.sentAt,
-        acknowledgedAt: trackedDocuments.acknowledgedAt,
-        updatedAt: trackedDocuments.updatedAt,
-      })
-      .from(trackedDocuments)
-      .where(
-        or(
-          isNotNull(trackedDocuments.sentAt),
-          isNotNull(trackedDocuments.acknowledgedAt)
-        )
-      )
-      .orderBy(desc(trackedDocuments.updatedAt))
-      .limit(20);
+    const documentRows = await TrackedDocument.find({
+      $or: [
+        { sentAt: { $ne: null } },
+        { acknowledgedAt: { $ne: null } },
+      ],
+    })
+      .sort({ updatedAt: -1 })
+      .limit(20)
+      .lean();
 
     const documentActivities: ActivityItem[] = documentRows.map((row) => {
-      // Use the most recent meaningful timestamp
-      const timestamp = row.acknowledgedAt || row.sentAt || row.updatedAt;
+      const timestamp =
+        (row.acknowledgedAt as Date) || (row.sentAt as Date) || (row.updatedAt as Date);
 
       return {
-        id: row.id,
+        id: String(row._id),
         type: "document_update",
         description: `Document '${row.title}' moved to ${row.stage}`,
-        actor: row.employeeName || "System",
+        actor: (row.employeeName as string) || "System",
         timestamp: timestamp.toISOString(),
       };
     });

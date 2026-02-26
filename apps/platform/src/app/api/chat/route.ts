@@ -1,4 +1,5 @@
 import { streamText, stepCountIs, type ModelMessage } from "ai";
+import { connectDB } from "@ascenta/db";
 import { getModel, checkProviderConfig } from "@/lib/ai/providers";
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
@@ -41,6 +42,7 @@ interface ChatRequest {
 
 export async function POST(req: Request) {
   try {
+    await connectDB();
     const body: ChatRequest = await req.json();
     const {
       messages = [],
@@ -207,6 +209,7 @@ export async function POST(req: Request) {
  */
 export async function GET(req: Request) {
   try {
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const conversationId = searchParams.get("conversationId");
 

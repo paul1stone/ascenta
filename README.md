@@ -6,6 +6,7 @@ AI-first HR workflow execution platform. Collects structured inputs, enforces gu
 
 - [Node.js](https://nodejs.org/) v20+
 - [pnpm](https://pnpm.io/) v10+ (`npm install -g pnpm`)
+- [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (free tier works)
 
 ## Getting Started
 
@@ -13,12 +14,11 @@ AI-first HR workflow execution platform. Collects structured inputs, enforces gu
 # Install dependencies
 pnpm install
 
-# Copy environment variables
-cp .env.example .env
-# Then fill in DATABASE_URL, OPENAI_API_KEY or ANTHROPIC_API_KEY, etc.
-
-# Push database schema (first time)
-pnpm db:push
+# Create env files (Next.js loads from each app directory, not the monorepo root)
+cp .env.example .env.local
+cp .env.local apps/platform/.env.local
+cp .env.local apps/marketing/.env.local
+# Then fill in MONGODB_URI, OPENAI_API_KEY or ANTHROPIC_API_KEY, etc.
 
 # Seed employee data (optional)
 pnpm db:seed
@@ -38,6 +38,33 @@ pnpm dev --filter=@ascenta/platform
 pnpm dev --filter=@ascenta/marketing
 ```
 
+## MongoDB Atlas Setup
+
+1. Create a free cluster at [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create a database user with read/write access
+3. Add your IP to the Network Access list (or use `0.0.0.0/0` for development)
+4. Get your connection string from **Connect > Drivers** and add it to `.env.local`:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/ascenta?appName=Cluster0
+```
+
+5. **(For RAG/semantic search)** Create an Atlas Vector Search index named `embedding_index` on the `embeddings` collection:
+   - Go to **Atlas Search** > **Create Search Index** > **JSON Editor**
+   - Collection: `embeddings`
+   - Index name: `embedding_index`
+   - Definition:
+   ```json
+   {
+     "fields": [{
+       "type": "vector",
+       "path": "embedding",
+       "numDimensions": 1536,
+       "similarity": "cosine"
+     }]
+   }
+   ```
+
 ## Monorepo Structure
 
 This is a **pnpm monorepo** managed with [Turborepo](https://turbo.build/).
@@ -49,7 +76,7 @@ ascenta/
 │   └── marketing/       # Public marketing site (Next.js 16, port 3050)
 ├── packages/
 │   ├── ui/              # Shared shadcn/ui components + globals.css
-│   ├── db/              # Drizzle ORM schemas, migrations, query helpers
+│   ├── db/              # Mongoose schemas, models, query helpers
 │   ├── email/           # Resend integration + email templates
 │   ├── types/           # Shared TypeScript types
 │   └── config/          # Shared tsconfig + PostCSS config
@@ -67,22 +94,21 @@ pnpm build            # Production build (all apps)
 pnpm lint             # ESLint (all packages)
 pnpm test             # Run tests (vitest)
 pnpm test:watch       # Run tests in watch mode
-
-# Database (runs in packages/db)
-pnpm db:push          # Push schema changes to database
-pnpm db:generate      # Generate a new migration
-pnpm db:migrate       # Run pending migrations
-pnpm db:studio        # Open Drizzle Studio (database GUI)
 pnpm db:seed          # Seed employee data
 ```
 
 ## Environment Variables
 
-Create a `.env` file at the repo root. Required variables:
+`.env.local` must exist in **three places** (Next.js loads env from each app's directory, not the monorepo root):
+- `/` (root) — used by `pnpm db:seed` and turbo cache keys
+- `apps/platform/` — used by the platform Next.js dev server
+- `apps/marketing/` — used by the marketing Next.js dev server
+
+Required variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | Neon Postgres connection string |
+| `MONGODB_URI` | Yes | MongoDB Atlas connection string |
 | `OPENAI_API_KEY` | One of these | OpenAI API key (needed for RAG/embeddings) |
 | `ANTHROPIC_API_KEY` | One of these | Anthropic API key |
 | `RESEND_API_KEY` | For email | Resend transactional email |
@@ -92,4 +118,4 @@ Create a `.env` file at the repo root. Required variables:
 
 ## Tech Stack
 
-Next.js 16 (App Router, RSC, React Compiler) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · Drizzle ORM · Neon serverless Postgres · Vercel AI SDK · Resend · Vitest
+Next.js 16 (App Router, RSC, React Compiler) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · Mongoose ODM · MongoDB Atlas · Vercel AI SDK · Resend · Vitest

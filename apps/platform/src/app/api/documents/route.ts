@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
 import {
   createDocument,
   getDocument,
@@ -16,6 +17,7 @@ export const maxDuration = 60; // Allow longer for embedding generation
  */
 export async function GET(req: Request) {
   try {
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -46,6 +48,7 @@ export async function GET(req: Request) {
  */
 export async function POST(req: Request) {
   try {
+    await connectDB();
     const body = await req.json();
     const { title, content, source, metadata } = body;
 
@@ -97,6 +100,7 @@ export async function POST(req: Request) {
  */
 export async function DELETE(req: Request) {
   try {
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 

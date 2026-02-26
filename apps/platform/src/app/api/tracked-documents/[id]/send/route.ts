@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { createHmac } from "crypto";
+import { connectDB } from "@ascenta/db";
+import { TrackedDocument } from "@ascenta/db/workflow-schema";
 import { getTrackedDocument } from "@ascenta/db/tracked-documents";
-import { db } from "@ascenta/db";
-import { trackedDocuments } from "@ascenta/db/workflow-schema";
-import { eq } from "drizzle-orm";
 import { resend } from "@ascenta/email";
 import { documentDeliveryEmail } from "@ascenta/email/templates/document-delivery";
 
@@ -14,6 +13,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await connectDB();
     const { id: docId } = await params;
     const body = await req.json();
     const { employeeEmail } = body as { employeeEmail?: string };
@@ -57,16 +57,14 @@ export async function POST(
     const sentAt = new Date();
 
     // Update document with sent info
-    await db
-      .update(trackedDocuments)
-      .set({
+    await TrackedDocument.findByIdAndUpdate(docId, {
+      $set: {
         employeeEmail: email,
         sentAt,
         ackToken,
         stage: "sent",
-        updatedAt: new Date(),
-      })
-      .where(eq(trackedDocuments.id, docId));
+      },
+    });
 
     return NextResponse.json({ sent: true, sentAt });
   } catch (error) {

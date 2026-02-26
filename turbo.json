@@ -1,8 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env"],
+  "globalDependencies": [".env", ".env.local"],
   "globalEnv": [
-    "DATABASE_URL",
+    "MONGODB_URI",
     "OPENAI_API_KEY",
     "ANTHROPIC_API_KEY",
     "RESEND_API_KEY"
@@ -22,13 +22,7 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "db:generate": {
-      "cache": false
-    },
-    "db:migrate": {
-      "cache": false
-    },
-    "db:push": {
+    "db:seed": {
       "cache": false
     }
   }

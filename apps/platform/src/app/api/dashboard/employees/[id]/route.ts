@@ -1,8 +1,7 @@
-import { db } from "@ascenta/db";
-import { employees, employeeNotes } from "@ascenta/db/employee-schema";
-import { trackedDocuments } from "@ascenta/db/workflow-schema";
-import { eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
+import { Employee } from "@ascenta/db/employee-schema";
+import { TrackedDocument } from "@ascenta/db/workflow-schema";
 
 export async function GET(
   request: Request,
@@ -11,33 +10,36 @@ export async function GET(
   const { id } = await params;
 
   try {
-    // Fetch the employee record
-    const [employee] = await db
-      .select()
-      .from(employees)
-      .where(eq(employees.id, id))
-      .limit(1);
+    await connectDB();
 
-    if (!employee) {
+    // Fetch the employee record
+    const employeeDoc = await Employee.findById(id);
+    if (!employeeDoc) {
       return NextResponse.json(
         { error: "Employee not found" },
         { status: 404 }
       );
     }
 
-    // Fetch notes ordered by occurredAt desc
-    const notes = await db
-      .select()
-      .from(employeeNotes)
-      .where(eq(employeeNotes.employeeId, id))
-      .orderBy(desc(employeeNotes.occurredAt));
+    const employee = employeeDoc.toJSON() as Record<string, unknown>;
+
+    // Extract notes from embedded array, sorted by occurredAt desc
+    const notes = ((employee.notes as Record<string, unknown>[]) ?? [])
+      .sort((a, b) => {
+        const aDate = a.occurredAt ? new Date(a.occurredAt as string).getTime() : 0;
+        const bDate = b.occurredAt ? new Date(b.occurredAt as string).getTime() : 0;
+        return bDate - aDate;
+      });
 
     // Fetch tracked documents ordered by createdAt desc
-    const documents = await db
-      .select()
-      .from(trackedDocuments)
-      .where(eq(trackedDocuments.employeeId, id))
-      .orderBy(desc(trackedDocuments.createdAt));
+    const documentDocs = await TrackedDocument.find({ employeeId: id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const documents = documentDocs.map((d) => ({
+      ...d,
+      id: String(d._id),
+    }));
 
     return NextResponse.json({ employee, notes, documents });
   } catch (error) {

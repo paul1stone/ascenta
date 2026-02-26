@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@ascenta/db";
+import { connectDB } from "@ascenta/db";
 import {
-  trackedDocuments,
-  workflowRuns,
-  workflowDefinitions,
-  auditEvents,
+  TrackedDocument,
+  WorkflowRun,
+  WorkflowDefinition,
+  AuditEvent,
 } from "@ascenta/db/workflow-schema";
-import { eq, desc, sql, and, isNotNull } from "drizzle-orm";
 
 interface Notification {
   id: string;
@@ -20,28 +19,28 @@ interface Notification {
 
 export async function GET() {
   try {
+    await connectDB();
+
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
     const allNotifications: Notification[] = [];
 
     // 1. Documents acknowledged recently (last 7 days)
     try {
-      const acknowledgedDocs = await db
-        .select()
-        .from(trackedDocuments)
-        .where(
-          and(
-            isNotNull(trackedDocuments.acknowledgedAt),
-            sql`${trackedDocuments.acknowledgedAt} > NOW() - INTERVAL '7 days'`
-          )
-        );
+      const acknowledgedDocs = await TrackedDocument.find({
+        acknowledgedAt: { $ne: null, $gt: sevenDaysAgo },
+      }).lean();
 
       for (const doc of acknowledgedDocs) {
         allNotifications.push({
-          id: `doc-ack-${doc.id}`,
+          id: `doc-ack-${doc._id}`,
           type: "document_acknowledged",
           title: "Document Acknowledged",
           message: `${doc.employeeName} acknowledged '${doc.title}'`,
           link: "/tracker",
-          timestamp: doc.acknowledgedAt!,
+          timestamp: doc.acknowledgedAt as Date,
           read: false,
         });
       }
@@ -51,24 +50,18 @@ export async function GET() {
 
     // 2. Documents sent recently (last 7 days)
     try {
-      const sentDocs = await db
-        .select()
-        .from(trackedDocuments)
-        .where(
-          and(
-            isNotNull(trackedDocuments.sentAt),
-            sql`${trackedDocuments.sentAt} > NOW() - INTERVAL '7 days'`
-          )
-        );
+      const sentDocs = await TrackedDocument.find({
+        sentAt: { $ne: null, $gt: sevenDaysAgo },
+      }).lean();
 
       for (const doc of sentDocs) {
         allNotifications.push({
-          id: `doc-sent-${doc.id}`,
+          id: `doc-sent-${doc._id}`,
           type: "document_sent",
           title: "Document Sent",
           message: `'${doc.title}' was sent to ${doc.employeeName}`,
           link: "/tracker",
-          timestamp: doc.sentAt!,
+          timestamp: doc.sentAt as Date,
           read: false,
         });
       }
@@ -78,32 +71,26 @@ export async function GET() {
 
     // 3. Workflows completed recently (last 7 days)
     try {
-      const completedWorkflows = await db
-        .select({
-          id: workflowRuns.id,
-          completedAt: workflowRuns.completedAt,
-          workflowName: workflowDefinitions.name,
-        })
-        .from(workflowRuns)
-        .leftJoin(
-          workflowDefinitions,
-          eq(workflowRuns.workflowDefinitionId, workflowDefinitions.id)
-        )
-        .where(
-          and(
-            eq(workflowRuns.status, "completed"),
-            isNotNull(workflowRuns.completedAt),
-            sql`${workflowRuns.completedAt} > NOW() - INTERVAL '7 days'`
-          )
-        );
+      const completedWorkflows = await WorkflowRun.find({
+        status: "completed",
+        completedAt: { $ne: null, $gt: sevenDaysAgo },
+      }).lean();
 
       for (const run of completedWorkflows) {
+        let workflowName = "Workflow";
+        if (run.workflowDefinitionId) {
+          const def = await WorkflowDefinition.findById(run.workflowDefinitionId)
+            .select("name")
+            .lean() as Record<string, unknown> | null;
+          workflowName = (def?.name as string) ?? "Workflow";
+        }
+
         allNotifications.push({
-          id: `wf-complete-${run.id}`,
+          id: `wf-complete-${run._id}`,
           type: "workflow_completed",
           title: "Workflow Completed",
-          message: `${run.workflowName || "Workflow"} completed successfully`,
-          timestamp: run.completedAt!,
+          message: `${workflowName} completed successfully`,
+          timestamp: run.completedAt as Date,
           read: false,
         });
       }
@@ -113,23 +100,23 @@ export async function GET() {
 
     // 4. Recent audit events (last 3 days, limit 10)
     try {
-      const recentAudits = await db
-        .select()
-        .from(auditEvents)
-        .where(sql`${auditEvents.timestamp} > NOW() - INTERVAL '3 days'`)
-        .orderBy(desc(auditEvents.timestamp))
-        .limit(10);
+      const recentAudits = await AuditEvent.find({
+        timestamp: { $gt: threeDaysAgo },
+      })
+        .sort({ timestamp: -1 })
+        .limit(10)
+        .lean();
 
       for (const event of recentAudits) {
         const capitalize = (s: string) =>
           s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
 
         allNotifications.push({
-          id: `audit-${event.id}`,
+          id: `audit-${event._id}`,
           type: "audit_event",
-          title: capitalize(event.action),
-          message: event.description || `Action: ${event.action}`,
-          timestamp: event.timestamp,
+          title: capitalize(event.action as string),
+          message: (event.description as string) || `Action: ${event.action}`,
+          timestamp: event.timestamp as Date,
           read: false,
         });
       }

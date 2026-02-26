@@ -4,9 +4,8 @@
  */
 
 import { createHash } from "crypto";
-import { db } from "@ascenta/db";
-import { auditEvents } from "@ascenta/db/workflow-schema";
-import { eq, desc } from "drizzle-orm";
+import { connectDB } from "@ascenta/db";
+import { AuditEvent } from "@ascenta/db/workflow-schema";
 import type {
   AuditEventData,
   AuditEventRecord,
@@ -54,26 +53,25 @@ export function verifyHash(content: unknown, expectedHash: string): boolean {
  * Log an audit event
  */
 export async function logAuditEvent(data: AuditEventData): Promise<AuditEventRecord> {
-  const [event] = await db
-    .insert(auditEvents)
-    .values({
-      workflowRunId: data.workflowRunId,
-      actorId: data.actorId,
-      actorType: data.actorType,
-      action: data.action,
-      description: data.description,
-      inputHash: data.inputHash,
-      outputHash: data.outputHash,
-      metadata: data.metadata,
-      rationale: data.rationale,
-      workflowVersion: data.workflowVersion,
-    })
-    .returning();
+  await connectDB();
+  const event = await AuditEvent.create({
+    workflowRunId: data.workflowRunId,
+    actorId: data.actorId,
+    actorType: data.actorType,
+    action: data.action,
+    description: data.description,
+    inputHash: data.inputHash,
+    outputHash: data.outputHash,
+    metadata: data.metadata,
+    rationale: data.rationale,
+    workflowVersion: data.workflowVersion,
+  });
 
+  const obj = event.toJSON() as Record<string, unknown>;
   return {
     ...data,
-    id: event.id,
-    timestamp: event.timestamp,
+    id: obj.id as string,
+    timestamp: obj.timestamp as Date,
   };
 }
 
@@ -291,26 +289,26 @@ export async function logCancelled(
 export async function getAuditTrail(
   workflowRunId: string
 ): Promise<AuditEventRecord[]> {
-  const events = await db
-    .select()
-    .from(auditEvents)
-    .where(eq(auditEvents.workflowRunId, workflowRunId))
-    .orderBy(desc(auditEvents.timestamp));
+  await connectDB();
+  const events = await AuditEvent.find({ workflowRunId }).sort({ timestamp: -1 });
 
-  return events.map((e) => ({
-    id: e.id,
-    workflowRunId: e.workflowRunId,
-    actorId: e.actorId,
-    actorType: e.actorType as "user" | "system",
-    action: e.action as AuditAction,
-    description: e.description ?? undefined,
-    inputHash: e.inputHash ?? undefined,
-    outputHash: e.outputHash ?? undefined,
-    metadata: e.metadata as Record<string, unknown> | undefined,
-    rationale: e.rationale ?? undefined,
-    workflowVersion: e.workflowVersion,
-    timestamp: e.timestamp,
-  }));
+  return events.map((e) => {
+    const obj = e.toJSON() as Record<string, unknown>;
+    return {
+      id: obj.id as string,
+      workflowRunId: String(obj.workflowRunId),
+      actorId: obj.actorId as string,
+      actorType: obj.actorType as "user" | "system",
+      action: obj.action as AuditAction,
+      description: (obj.description as string) ?? undefined,
+      inputHash: (obj.inputHash as string) ?? undefined,
+      outputHash: (obj.outputHash as string) ?? undefined,
+      metadata: obj.metadata as Record<string, unknown> | undefined,
+      rationale: (obj.rationale as string) ?? undefined,
+      workflowVersion: obj.workflowVersion as number,
+      timestamp: obj.timestamp as Date,
+    };
+  });
 }
 
 /**

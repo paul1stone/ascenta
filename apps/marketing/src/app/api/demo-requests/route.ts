@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@ascenta/db";
-import { demoRequests } from "@ascenta/db/demo-requests-schema";
+import { connectDB } from "@ascenta/db";
+import { DemoRequest } from "@ascenta/db/demo-requests-schema";
 import { demoRequestSchema } from "@/lib/validations/demo-request";
 import { resend } from "@ascenta/email";
 import { demoConfirmationEmail } from "@ascenta/email/templates/demo-confirmation";
@@ -11,6 +11,8 @@ const INTERNAL_DEMO_EMAIL =
 
 export async function POST(request: Request) {
   try {
+    await connectDB();
+
     const body = await request.json();
     const parsed = demoRequestSchema.safeParse(body);
 
@@ -23,7 +25,7 @@ export async function POST(request: Request) {
 
     const data = parsed.data;
 
-    await db.insert(demoRequests).values({
+    await DemoRequest.create({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,

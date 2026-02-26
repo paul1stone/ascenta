@@ -1,10 +1,8 @@
 /**
- * Employee data access layer
+ * Employee data access layer (Mongoose)
  */
 
-import { db } from "./index";
-import { employees, employeeNotes } from "./employee-schema";
-import { eq, ilike, or, and, desc } from "drizzle-orm";
+import { Employee } from "./employee-schema";
 
 export interface EmployeeWithNotes {
   id: string;
@@ -27,6 +25,35 @@ export interface EmployeeWithNotes {
   }[];
 }
 
+function toEmployeeWithNotes(doc: InstanceType<typeof Employee>): EmployeeWithNotes {
+  const obj = doc.toJSON() as Record<string, unknown>;
+  const rawNotes = (obj.notes ?? []) as Record<string, unknown>[];
+  const notes = rawNotes
+    .sort((a, b) => new Date(b.occurredAt as string).getTime() - new Date(a.occurredAt as string).getTime())
+    .map((n) => ({
+      id: (n.id as string) ?? String(n._id),
+      noteType: n.noteType as string,
+      title: n.title as string,
+      content: (n.content as string | null) ?? null,
+      severity: (n.severity as string | null) ?? null,
+      occurredAt: n.occurredAt as Date,
+    }));
+
+  return {
+    id: obj.id as string,
+    employeeId: obj.employeeId as string,
+    firstName: obj.firstName as string,
+    lastName: obj.lastName as string,
+    fullName: `${obj.firstName} ${obj.lastName}`,
+    email: obj.email as string,
+    department: obj.department as string,
+    jobTitle: obj.jobTitle as string,
+    managerName: obj.managerName as string,
+    hireDate: obj.hireDate as Date,
+    notes,
+  };
+}
+
 /**
  * Search employees by name (partial match)
  * Handles full names like "Brandon White" by matching firstName + lastName
@@ -35,73 +62,29 @@ export async function searchEmployees(query: string): Promise<EmployeeWithNotes[
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  const term = `%${trimmed}%`;
+  const escapedTerm = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const words = trimmed.split(/\s+/).filter(Boolean);
 
-  // Build conditions: single word OR "First Last" (firstName AND lastName)
-  const conditions = [
-    ilike(employees.firstName, term),
-    ilike(employees.lastName, term),
-    ilike(employees.email, term),
-    ilike(employees.employeeId, term),
+  const conditions: Record<string, unknown>[] = [
+    { firstName: { $regex: escapedTerm, $options: "i" } },
+    { lastName: { $regex: escapedTerm, $options: "i" } },
+    { email: { $regex: escapedTerm, $options: "i" } },
+    { employeeId: { $regex: escapedTerm, $options: "i" } },
   ];
 
-  // For "First Last", match firstName AND lastName (e.g. "Brandon White")
   if (words.length >= 2) {
-    const firstWord = `%${words[0]}%`;
-    const lastWord = `%${words[words.length - 1]}%`;
-    const combined = and(
-      ilike(employees.firstName, firstWord),
-      ilike(employees.lastName, lastWord)
-    );
-    if (combined) {
-      conditions.push(combined);
-    }
-  }
-
-  const results = await db
-    .select()
-    .from(employees)
-    .where(or(...conditions))
-    .limit(10);
-
-  const withNotes: EmployeeWithNotes[] = [];
-  for (const emp of results) {
-    const notes = await db
-      .select({
-        id: employeeNotes.id,
-        noteType: employeeNotes.noteType,
-        title: employeeNotes.title,
-        content: employeeNotes.content,
-        severity: employeeNotes.severity,
-        occurredAt: employeeNotes.occurredAt,
-      })
-      .from(employeeNotes)
-      .where(eq(employeeNotes.employeeId, emp.id))
-      .orderBy(desc(employeeNotes.occurredAt));
-
-    withNotes.push({
-      id: emp.id,
-      employeeId: emp.employeeId,
-      firstName: emp.firstName,
-      lastName: emp.lastName,
-      fullName: `${emp.firstName} ${emp.lastName}`,
-      email: emp.email,
-      department: emp.department,
-      jobTitle: emp.jobTitle,
-      managerName: emp.managerName,
-      hireDate: emp.hireDate,
-      notes: notes.map((n) => ({
-        id: n.id,
-        noteType: n.noteType,
-        title: n.title,
-        content: n.content,
-        severity: n.severity,
-        occurredAt: n.occurredAt,
-      })),
+    const firstWord = words[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const lastWord = words[words.length - 1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    conditions.push({
+      $and: [
+        { firstName: { $regex: firstWord, $options: "i" } },
+        { lastName: { $regex: lastWord, $options: "i" } },
+      ],
     });
   }
-  return withNotes;
+
+  const docs = await Employee.find({ $or: conditions }).limit(10);
+  return docs.map(toEmployeeWithNotes);
 }
 
 /**
@@ -110,90 +93,20 @@ export async function searchEmployees(query: string): Promise<EmployeeWithNotes[
 export async function getEmployeeByEmployeeId(
   employeeIdText: string
 ): Promise<EmployeeWithNotes | null> {
-  const [emp] = await db
-    .select()
-    .from(employees)
-    .where(eq(employees.employeeId, employeeIdText.trim()))
-    .limit(1);
-  if (!emp) return null;
-  const notes = await db
-    .select({
-      id: employeeNotes.id,
-      noteType: employeeNotes.noteType,
-      title: employeeNotes.title,
-      content: employeeNotes.content,
-      severity: employeeNotes.severity,
-      occurredAt: employeeNotes.occurredAt,
-    })
-    .from(employeeNotes)
-    .where(eq(employeeNotes.employeeId, emp.id))
-    .orderBy(desc(employeeNotes.occurredAt));
-  return {
-    id: emp.id,
-    employeeId: emp.employeeId,
-    firstName: emp.firstName,
-    lastName: emp.lastName,
-    fullName: `${emp.firstName} ${emp.lastName}`,
-    email: emp.email,
-    department: emp.department,
-    jobTitle: emp.jobTitle,
-    managerName: emp.managerName,
-    hireDate: emp.hireDate,
-    notes: notes.map((n) => ({
-      id: n.id,
-      noteType: n.noteType,
-      title: n.title,
-      content: n.content,
-      severity: n.severity,
-      occurredAt: n.occurredAt,
-    })),
-  };
+  const doc = await Employee.findOne({ employeeId: employeeIdText.trim() });
+  return doc ? toEmployeeWithNotes(doc) : null;
 }
 
 /**
- * Get employee by ID (uuid)
+ * Get employee by ID (ObjectId string)
  */
 export async function getEmployeeById(id: string): Promise<EmployeeWithNotes | null> {
-  const [emp] = await db.select().from(employees).where(eq(employees.id, id)).limit(1);
-  if (!emp) return null;
-
-  const notes = await db
-    .select({
-      id: employeeNotes.id,
-      noteType: employeeNotes.noteType,
-      title: employeeNotes.title,
-      content: employeeNotes.content,
-      severity: employeeNotes.severity,
-      occurredAt: employeeNotes.occurredAt,
-    })
-    .from(employeeNotes)
-    .where(eq(employeeNotes.employeeId, emp.id))
-    .orderBy(desc(employeeNotes.occurredAt));
-
-  return {
-    id: emp.id,
-    employeeId: emp.employeeId,
-    firstName: emp.firstName,
-    lastName: emp.lastName,
-    fullName: `${emp.firstName} ${emp.lastName}`,
-    email: emp.email,
-    department: emp.department,
-    jobTitle: emp.jobTitle,
-    managerName: emp.managerName,
-    hireDate: emp.hireDate,
-    notes: notes.map((n) => ({
-      id: n.id,
-      noteType: n.noteType,
-      title: n.title,
-      content: n.content,
-      severity: n.severity,
-      occurredAt: n.occurredAt,
-    })),
-  };
+  const doc = await Employee.findById(id);
+  return doc ? toEmployeeWithNotes(doc) : null;
 }
 
 /**
- * Add a note to an employee's file (e.g. written_warning when a corrective action is created)
+ * Add a note to an employee's file (push to embedded array)
  */
 export async function addEmployeeNote(
   employeeId: string,
@@ -206,18 +119,25 @@ export async function addEmployeeNote(
     metadata?: Record<string, unknown> | null;
   }
 ): Promise<{ id: string }> {
-  const [note] = await db
-    .insert(employeeNotes)
-    .values({
-      employeeId,
-      noteType: data.noteType,
-      title: data.title,
-      content: data.content ?? null,
-      severity: data.severity ?? null,
-      occurredAt: data.occurredAt ?? new Date(),
-      metadata: data.metadata ?? null,
-    })
-    .returning({ id: employeeNotes.id });
-  if (!note) throw new Error("Failed to add employee note");
-  return note;
+  const doc = await Employee.findByIdAndUpdate(
+    employeeId,
+    {
+      $push: {
+        notes: {
+          noteType: data.noteType,
+          title: data.title,
+          content: data.content ?? undefined,
+          severity: data.severity ?? undefined,
+          occurredAt: data.occurredAt ?? new Date(),
+          metadata: data.metadata ?? undefined,
+          createdAt: new Date(),
+        },
+      },
+    },
+    { new: true }
+  );
+  if (!doc) throw new Error("Failed to add employee note — employee not found");
+  const notes = (doc as Record<string, unknown>).notes as Record<string, unknown>[];
+  const lastNote = notes[notes.length - 1];
+  return { id: String((lastNote as Record<string, unknown>)._id ?? (lastNote as Record<string, unknown>).id) };
 }
