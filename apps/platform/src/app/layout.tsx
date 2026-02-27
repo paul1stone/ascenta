@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SidebarProvider } from "@ascenta/ui/sidebar";
 import { ChatProvider } from "@/lib/chat/chat-context";
+import { RoleProvider } from "@/lib/role/role-context";
 import { ChatPanelLayout } from "@/components/chat/chat-panel-layout";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { ChatPanelTrigger } from "@/components/chat/chat-panel-trigger";
@@ -21,13 +22,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ChatProvider>
-          <ChatPanelLayout>
-            <SidebarProvider>
-              {children}
-            </SidebarProvider>
-          </ChatPanelLayout>
-          <ChatPanel />
-          <ChatPanelTrigger />
+          <RoleProvider>
+            <ChatPanelLayout>
+              <SidebarProvider>
+                {children}
+              </SidebarProvider>
+            </ChatPanelLayout>
+            <ChatPanel />
+            <ChatPanelTrigger />
+          </RoleProvider>
           <Analytics />
         </ChatProvider>
       </body>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useChatPanel } from "@/lib/chat/chat-context";
+import { useRole } from "@/lib/role/role-context";
 import { ChatWelcome } from "@/components/chat/chat-welcome";
 import { DocumentTracker } from "@/components/document-tracker";
 import { StatsOverview } from "@/components/dashboard/stats-overview";
@@ -104,6 +105,7 @@ const TAB_HEADERS: Record<TabKey, { title: string; description: string }> = {
 
 export default function RootPage() {
   const { activeTab, setActiveTab, openPanel, handleSubmit, setInput } = useChatPanel();
+  const { role, setRole, roles } = useRole();
 
   const handleSuggestionClick = (suggestion: string) => {
     openPanel();
@@ -145,6 +147,20 @@ export default function RootPage() {
             );
           })}
         </nav>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Role:</span>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value as typeof role)}
+            className="rounded-md border bg-white px-2 py-1 text-xs font-medium text-deep-blue capitalize"
+          >
+            {roles.map((r) => (
+              <option key={r} value={r}>
+                {r.charAt(0).toUpperCase() + r.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
       </header>
 
       {/* Tab Content */}
