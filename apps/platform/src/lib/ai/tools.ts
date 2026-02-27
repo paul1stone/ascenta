@@ -8,6 +8,11 @@ import {
   generateCorrectiveActionDocumentTool,
   generateWorkflowFollowUpTool,
 } from "./workflow-tools";
+import {
+  createGoalTool,
+  addPerformanceNoteTool,
+  getGrowStatusTool,
+} from "./grow-tools";
 
 /**
  * Tool Definitions
@@ -210,6 +215,9 @@ export const allTools = {
   getEmployeeInfo: getEmployeeInfoTool,
   calculatePTO: calculatePTOTool,
   generateDocument: generateDocumentTool,
+  createGoal: createGoalTool,
+  addPerformanceNote: addPerformanceNoteTool,
+  getGrowStatus: getGrowStatusTool,
 };
 
 /**
@@ -232,6 +240,9 @@ export const defaultChatTools = {
   updateWorkflowField: updateWorkflowFieldTool,
   generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
   generateWorkflowFollowUp: generateWorkflowFollowUpTool,
+  createGoal: createGoalTool,
+  addPerformanceNote: addPerformanceNoteTool,
+  getGrowStatus: getGrowStatusTool,
 };
 
 /**
