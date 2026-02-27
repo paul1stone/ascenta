@@ -238,7 +238,7 @@ export default function RootPage() {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === "do" ? (
-          <ChatWelcome selectedCategory={selectedCategory} />
+          <ChatWelcome selectedCategory={selectedCategory} onCategorySelect={setSelectedCategory} />
         ) : (
           <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
             {header.title && (
