@@ -1,100 +1,71 @@
 import { NextResponse } from "next/server";
-import { db } from "@ascenta/db";
-import { employees } from "@ascenta/db/employee-schema";
-import {
-  trackedDocuments,
-  workflowRuns,
-} from "@ascenta/db/workflow-schema";
-import { eq, count } from "drizzle-orm";
+import { connectDB } from "@ascenta/db";
+import { Employee } from "@ascenta/db/employee-schema";
+import { TrackedDocument, WorkflowRun } from "@ascenta/db/workflow-schema";
 
 export async function GET() {
   try {
+    await connectDB();
+
     // --------------- Employees ---------------
 
-    const [totalEmployees] = await db
-      .select({ count: count() })
-      .from(employees);
+    const [totalEmployees, activeEmployees, onLeaveEmployees, terminatedEmployees] =
+      await Promise.all([
+        Employee.countDocuments(),
+        Employee.countDocuments({ status: "active" }),
+        Employee.countDocuments({ status: "on_leave" }),
+        Employee.countDocuments({ status: "terminated" }),
+      ]);
 
-    const [activeEmployees] = await db
-      .select({ count: count() })
-      .from(employees)
-      .where(eq(employees.status, "active"));
-
-    const [onLeaveEmployees] = await db
-      .select({ count: count() })
-      .from(employees)
-      .where(eq(employees.status, "on_leave"));
-
-    const [terminatedEmployees] = await db
-      .select({ count: count() })
-      .from(employees)
-      .where(eq(employees.status, "terminated"));
-
-    const departmentRows = await db
-      .select({
-        department: employees.department,
-        count: count(),
-      })
-      .from(employees)
-      .groupBy(employees.department);
+    const departmentRows = await Employee.aggregate([
+      { $group: { _id: "$department", count: { $sum: 1 } } },
+    ]);
 
     const byDepartment: Record<string, number> = {};
     for (const row of departmentRows) {
-      byDepartment[row.department] = row.count;
+      byDepartment[row._id] = row.count;
     }
 
     // --------------- Tracked Documents ---------------
 
-    const [totalDocuments] = await db
-      .select({ count: count() })
-      .from(trackedDocuments);
+    const totalDocuments = await TrackedDocument.countDocuments();
 
-    const documentStageRows = await db
-      .select({
-        stage: trackedDocuments.stage,
-        count: count(),
-      })
-      .from(trackedDocuments)
-      .groupBy(trackedDocuments.stage);
+    const documentStageRows = await TrackedDocument.aggregate([
+      { $group: { _id: "$stage", count: { $sum: 1 } } },
+    ]);
 
     const byStage: Record<string, number> = {};
     for (const row of documentStageRows) {
-      byStage[row.stage] = row.count;
+      byStage[row._id] = row.count;
     }
 
     // --------------- Workflow Runs ---------------
 
-    const [totalWorkflows] = await db
-      .select({ count: count() })
-      .from(workflowRuns);
+    const totalWorkflows = await WorkflowRun.countDocuments();
 
-    const workflowStatusRows = await db
-      .select({
-        status: workflowRuns.status,
-        count: count(),
-      })
-      .from(workflowRuns)
-      .groupBy(workflowRuns.status);
+    const workflowStatusRows = await WorkflowRun.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
 
     const byStatus: Record<string, number> = {};
     for (const row of workflowStatusRows) {
-      byStatus[row.status] = row.count;
+      byStatus[row._id] = row.count;
     }
 
     return NextResponse.json({
       employees: {
-        total: totalEmployees.count,
-        active: activeEmployees.count,
-        onLeave: onLeaveEmployees.count,
-        terminated: terminatedEmployees.count,
+        total: totalEmployees,
+        active: activeEmployees,
+        onLeave: onLeaveEmployees,
+        terminated: terminatedEmployees,
         byDepartment,
       },
       documents: {
-        total: totalDocuments.count,
+        total: totalDocuments,
         byStage,
       },
       workflows: {
-        total: totalWorkflows.count,
+        total: totalWorkflows,
         byStatus,
       },
     });

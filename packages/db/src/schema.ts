@@ -1,90 +1,209 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  jsonb,
-  index,
-  vector,
-} from "drizzle-orm/pg-core";
+import mongoose, { Schema, Types } from "mongoose";
 
-// Conversations table - persistent memory for chat sessions
-export const conversations = pgTable(
-  "conversations",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull(),
-    title: text("title"),
-    model: text("model").default("gpt-4o"),
-    provider: text("provider").default("openai"), // 'openai' | 'anthropic'
-    systemPrompt: text("system_prompt"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+// ============================================================================
+// SHARED SCHEMA OPTIONS
+// ============================================================================
+
+const toJSONOptions = {
+  virtuals: true,
+  transform(_doc: unknown, ret: Record<string, unknown>) {
+    ret.id = String(ret._id);
+    delete ret._id;
+    delete ret.__v;
+    return ret;
   },
-  (table) => [index("conversations_user_id_idx").on(table.userId)]
+};
+
+// ============================================================================
+// MESSAGE (embedded sub-document)
+// ============================================================================
+
+const messageSchema = new Schema(
+  {
+    role: { type: String, required: true },
+    content: { type: String, required: true },
+    toolCalls: { type: Schema.Types.Mixed },
+    toolCallId: { type: String },
+    metadata: { type: Schema.Types.Mixed },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: true }
 );
 
-// Messages table - individual messages in a conversation
-export const messages = pgTable(
-  "messages",
+// ============================================================================
+// CONVERSATION
+// ============================================================================
+
+const conversationSchema = new Schema(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    conversationId: uuid("conversation_id")
-      .references(() => conversations.id, { onDelete: "cascade" })
-      .notNull(),
-    role: text("role").notNull(), // 'user' | 'assistant' | 'system' | 'tool'
-    content: text("content").notNull(),
-    toolCalls: jsonb("tool_calls"), // For assistant tool calls
-    toolCallId: text("tool_call_id"), // For tool responses
-    metadata: jsonb("metadata"), // Token counts, model info, etc.
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    userId: { type: String, required: true, index: true },
+    title: { type: String },
+    aiModel: { type: String, default: "gpt-4o" },
+    provider: { type: String, default: "openai" },
+    systemPrompt: { type: String },
+    messages: [messageSchema],
   },
-  (table) => [index("messages_conversation_id_idx").on(table.conversationId)]
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform(_doc: unknown, ret: Record<string, unknown>) {
+        ret.id = String(ret._id);
+        // Map internal aiModel → model for backward compat
+        ret.model = ret.aiModel;
+        delete ret.aiModel;
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform(_doc: unknown, ret: Record<string, unknown>) {
+        ret.id = String(ret._id);
+        ret.model = ret.aiModel;
+        delete ret.aiModel;
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
-// Documents table - source documents for RAG
-export const documents = pgTable("documents", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title"),
-  content: text("content"),
-  source: text("source"), // URL, file path, etc.
-  metadata: jsonb("metadata"), // Author, date, tags, etc.
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const Conversation =
+  mongoose.models.Conversation ||
+  mongoose.model("Conversation", conversationSchema);
 
-// Embeddings table - vector embeddings for semantic search
-export const embeddings = pgTable(
-  "embeddings",
+// ============================================================================
+// DOCUMENT (RAG source documents)
+// ============================================================================
+
+const documentSchema = new Schema(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    documentId: uuid("document_id")
-      .references(() => documents.id, { onDelete: "cascade" })
-      .notNull(),
-    chunkIndex: text("chunk_index"), // Position in document
-    content: text("content").notNull(), // The text chunk
-    embedding: vector("embedding", { dimensions: 1536 }), // OpenAI embedding
-    metadata: jsonb("metadata"), // Chunk metadata
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    title: { type: String },
+    content: { type: String },
+    source: { type: String },
+    metadata: { type: Schema.Types.Mixed },
   },
-  (table) => [index("embeddings_document_id_idx").on(table.documentId)]
+  {
+    timestamps: true,
+    toJSON: toJSONOptions,
+    toObject: toJSONOptions,
+  }
 );
 
-// Type exports for use in queries
-export type Conversation = typeof conversations.$inferSelect;
-export type NewConversation = typeof conversations.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type NewMessage = typeof messages.$inferInsert;
-export type Document = typeof documents.$inferSelect;
-export type NewDocument = typeof documents.$inferInsert;
-export type Embedding = typeof embeddings.$inferSelect;
-export type NewEmbedding = typeof embeddings.$inferInsert;
+export const DocumentModel =
+  mongoose.models.Document ||
+  mongoose.model("Document", documentSchema);
 
-// Re-export workflow schema
+// ============================================================================
+// EMBEDDING (vector chunks for Atlas Vector Search)
+// ============================================================================
+
+const embeddingSchema = new Schema(
+  {
+    documentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Document",
+      required: true,
+      index: true,
+    },
+    chunkIndex: { type: String },
+    content: { type: String, required: true },
+    embedding: { type: [Number] },
+    metadata: { type: Schema.Types.Mixed },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    toJSON: toJSONOptions,
+    toObject: toJSONOptions,
+  }
+);
+
+export const EmbeddingModel =
+  mongoose.models.Embedding ||
+  mongoose.model("Embedding", embeddingSchema);
+
+// ============================================================================
+// TYPE ALIASES (backward compatibility)
+// ============================================================================
+
+export type Conversation = {
+  id: string;
+  userId: string;
+  title: string | null;
+  model: string | null;
+  provider: string | null;
+  systemPrompt: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type NewConversation = {
+  userId: string;
+  title?: string | null;
+  model?: string | null;
+  provider?: string | null;
+  systemPrompt?: string | null;
+};
+
+export type Message = {
+  id: string;
+  conversationId: string;
+  role: string;
+  content: string;
+  toolCalls?: unknown;
+  toolCallId?: string | null;
+  metadata?: unknown;
+  createdAt: Date;
+};
+
+export type NewMessage = {
+  conversationId: string;
+  role: string;
+  content: string;
+  toolCalls?: unknown;
+  toolCallId?: string | null;
+  metadata?: unknown;
+};
+
+export type Document = {
+  id: string;
+  title: string | null;
+  content: string | null;
+  source: string | null;
+  metadata: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type NewDocument = {
+  title?: string | null;
+  content?: string | null;
+  source?: string | null;
+  metadata?: unknown;
+};
+
+export type Embedding = {
+  id: string;
+  documentId: string;
+  chunkIndex: string | null;
+  content: string;
+  embedding: number[] | null;
+  metadata: unknown;
+  createdAt: Date;
+};
+
+export type NewEmbedding = {
+  documentId: string;
+  chunkIndex?: string | null;
+  content: string;
+  embedding?: number[] | null;
+  metadata?: unknown;
+};
+
+// Re-export sub-schemas
 export * from "./workflow-schema";
-
-// Re-export employee schema
 export * from "./employee-schema";
-
-// Re-export demo requests schema
 export * from "./demo-requests-schema";

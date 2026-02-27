@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
 import {
   getTrackedDocument,
   getTrackedDocumentWithContent,
@@ -14,6 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await connectDB();
     const { id } = await params;
     const doc = await getTrackedDocumentWithContent(id);
     if (!doc) {
@@ -41,6 +43,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await connectDB();
     const { id } = await params;
     const body = await req.json();
     const { stage, completedActions } = body as {

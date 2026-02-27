@@ -3,18 +3,12 @@
  * Core execution orchestrator for workflow operations
  */
 
-import { db } from "@ascenta/db";
+import { connectDB } from "@ascenta/db";
 import {
-  workflowDefinitions,
-  workflowRuns,
-  workflowOutputs,
-  intakeFields,
-  guardrails as guardrailsTable,
-  artifactTemplates,
-  guidedActions,
-  textLibraries,
+  WorkflowDefinition,
+  WorkflowRun,
+  WorkflowOutput,
 } from "@ascenta/db/workflow-schema";
-import { eq, and, desc } from "drizzle-orm";
 import { evaluateGuardrails, canProceed } from "./guardrails";
 import { generateArtifact } from "./artifacts";
 import {
@@ -78,26 +72,18 @@ export function getAllRegisteredWorkflows(): WorkflowDefinitionConfig[] {
 // ============================================================================
 
 /**
- * Sync a code-defined workflow to the database
- * This ensures the database has the latest version
+ * Sync a code-defined workflow to the database.
+ * Single findOneAndUpdate with upsert replaces the multi-table delete/insert pattern.
  */
 export async function syncWorkflowToDatabase(
   config: WorkflowDefinitionConfig
 ): Promise<string> {
-  // Check if workflow exists
-  const existing = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(eq(workflowDefinitions.slug, config.slug))
-    .limit(1);
+  await connectDB();
 
-  let workflowId: string;
-
-  if (existing.length > 0) {
-    // Update existing workflow
-    const [updated] = await db
-      .update(workflowDefinitions)
-      .set({
+  const result = await WorkflowDefinition.findOneAndUpdate(
+    { slug: config.slug },
+    {
+      $set: {
         name: config.name,
         description: config.description,
         category: config.category,
@@ -105,123 +91,68 @@ export async function syncWorkflowToDatabase(
         riskLevel: config.riskLevel,
         estimatedMinutes: config.estimatedMinutes,
         metadata: { icon: config.icon, ...config.metadata },
-        version: existing[0].version + 1,
-        updatedAt: new Date(),
-      })
-      .where(eq(workflowDefinitions.id, existing[0].id))
-      .returning();
-    workflowId = updated.id;
+        isActive: true,
+        // Embedded sub-documents — replaced atomically
+        intakeFields: config.intakeFields.map((field) => ({
+          fieldKey: field.fieldKey,
+          label: field.label,
+          type: field.type,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          required: field.required,
+          validationRules: field.validationRules,
+          options: field.options,
+          sortOrder: field.sortOrder,
+          groupName: field.groupName,
+          conditionalOn: field.conditionalOn,
+        })),
+        guardrails: config.guardrails.map((g) => ({
+          name: g.name,
+          description: g.description,
+          triggerCondition: g.triggerCondition,
+          severity: g.severity,
+          message: g.message,
+          requiredAction: g.requiredAction,
+          escalateTo: g.escalateTo,
+          sortOrder: g.sortOrder,
+          isActive: g.isActive,
+        })),
+        artifactTemplates: config.artifactTemplates.map((t) => ({
+          name: t.name,
+          type: t.type,
+          sections: t.sections,
+          exportFormats: t.exportFormats,
+          metadata: t.metadata,
+        })),
+        guidedActions: config.guidedActions.map((a) => ({
+          label: a.label,
+          description: a.description,
+          icon: a.icon,
+          requiredInputs: a.requiredInputs,
+          outputType: a.outputType,
+          outputTarget: a.outputTarget,
+          promptTemplate: a.promptTemplate,
+          sortOrder: a.sortOrder,
+          isActive: a.isActive,
+        })),
+        textLibraries: (config.textLibraryEntries ?? []).map((t) => ({
+          category: t.category,
+          key: t.key,
+          title: t.title,
+          content: t.content,
+          metadata: t.metadata,
+        })),
+      },
+      $inc: { version: 1 },
+    },
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    }
+  );
 
-    // Clear existing related data (will be recreated)
-    await Promise.all([
-      db.delete(intakeFields).where(eq(intakeFields.workflowDefinitionId, workflowId)),
-      db.delete(guardrailsTable).where(eq(guardrailsTable.workflowDefinitionId, workflowId)),
-      db.delete(artifactTemplates).where(eq(artifactTemplates.workflowDefinitionId, workflowId)),
-      db.delete(guidedActions).where(eq(guidedActions.workflowDefinitionId, workflowId)),
-    ]);
-  } else {
-    // Create new workflow
-    const [created] = await db
-      .insert(workflowDefinitions)
-      .values({
-        slug: config.slug,
-        name: config.name,
-        description: config.description,
-        category: config.category,
-        audience: config.audience,
-        riskLevel: config.riskLevel,
-        estimatedMinutes: config.estimatedMinutes,
-        metadata: { icon: config.icon, ...config.metadata },
-      })
-      .returning();
-    workflowId = created.id;
-  }
-
-  // Insert intake fields
-  if (config.intakeFields.length > 0) {
-    await db.insert(intakeFields).values(
-      config.intakeFields.map((field) => ({
-        workflowDefinitionId: workflowId,
-        fieldKey: field.fieldKey,
-        label: field.label,
-        type: field.type,
-        placeholder: field.placeholder,
-        helpText: field.helpText,
-        required: field.required,
-        validationRules: field.validationRules,
-        options: field.options,
-        sortOrder: field.sortOrder,
-        groupName: field.groupName,
-        conditionalOn: field.conditionalOn,
-      }))
-    );
-  }
-
-  // Insert guardrails
-  if (config.guardrails.length > 0) {
-    await db.insert(guardrailsTable).values(
-      config.guardrails.map((g) => ({
-        workflowDefinitionId: workflowId,
-        name: g.name,
-        description: g.description,
-        triggerCondition: g.triggerCondition,
-        severity: g.severity,
-        message: g.message,
-        requiredAction: g.requiredAction,
-        escalateTo: g.escalateTo,
-        sortOrder: g.sortOrder,
-        isActive: g.isActive,
-      }))
-    );
-  }
-
-  // Insert artifact templates
-  if (config.artifactTemplates.length > 0) {
-    await db.insert(artifactTemplates).values(
-      config.artifactTemplates.map((t) => ({
-        workflowDefinitionId: workflowId,
-        name: t.name,
-        type: t.type,
-        sections: t.sections,
-        exportFormats: t.exportFormats,
-        metadata: t.metadata,
-      }))
-    );
-  }
-
-  // Insert guided actions
-  if (config.guidedActions.length > 0) {
-    await db.insert(guidedActions).values(
-      config.guidedActions.map((a) => ({
-        workflowDefinitionId: workflowId,
-        label: a.label,
-        description: a.description,
-        icon: a.icon,
-        requiredInputs: a.requiredInputs,
-        outputType: a.outputType,
-        outputTarget: a.outputTarget,
-        promptTemplate: a.promptTemplate,
-        sortOrder: a.sortOrder,
-        isActive: a.isActive,
-      }))
-    );
-  }
-
-  // Insert text library entries
-  if (config.textLibraryEntries && config.textLibraryEntries.length > 0) {
-    await db.insert(textLibraries).values(
-      config.textLibraryEntries.map((t) => ({
-        category: t.category,
-        key: t.key,
-        title: t.title,
-        content: t.content,
-        workflowDefinitionId: workflowId,
-        metadata: t.metadata,
-      }))
-    );
-  }
-
-  return workflowId;
+  return String(result._id);
 }
 
 /**
@@ -242,116 +173,94 @@ export async function syncAllWorkflowsToDatabase(): Promise<void> {
  * Get all available workflows (list view)
  */
 export async function listWorkflows(): Promise<WorkflowListItem[]> {
-  const workflows = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(eq(workflowDefinitions.isActive, true))
-    .orderBy(workflowDefinitions.name);
+  await connectDB();
+  const workflows = await WorkflowDefinition.find({ isActive: true }).sort({ name: 1 });
 
-  return workflows.map((w) => ({
-    id: w.id,
-    slug: w.slug,
-    name: w.name,
-    description: w.description ?? undefined,
-    category: w.category as WorkflowListItem["category"],
-    audience: w.audience as WorkflowListItem["audience"],
-    riskLevel: w.riskLevel as WorkflowListItem["riskLevel"],
-    estimatedMinutes: w.estimatedMinutes ?? undefined,
-    icon: (w.metadata as Record<string, unknown>)?.icon as string | undefined,
-  }));
+  return workflows.map((w) => {
+    const obj = w.toJSON() as Record<string, unknown>;
+    return {
+      id: obj.id as string,
+      slug: obj.slug as string,
+      name: obj.name as string,
+      description: (obj.description as string) ?? undefined,
+      category: obj.category as WorkflowListItem["category"],
+      audience: obj.audience as WorkflowListItem["audience"],
+      riskLevel: obj.riskLevel as WorkflowListItem["riskLevel"],
+      estimatedMinutes: (obj.estimatedMinutes as number) ?? undefined,
+      icon: (obj.metadata as Record<string, unknown>)?.icon as string | undefined,
+    };
+  });
 }
 
 /**
- * Get workflow detail by slug
+ * Get workflow detail by slug.
+ * Single query — all sub-docs are embedded in the document.
  */
 export async function getWorkflowBySlug(slug: string): Promise<WorkflowDetail | null> {
-  const [workflow] = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(eq(workflowDefinitions.slug, slug))
-    .limit(1);
+  await connectDB();
+  const workflow = await WorkflowDefinition.findOne({ slug });
+  if (!workflow) return null;
 
-  if (!workflow) {
-    return null;
-  }
-
-  // Fetch related data
-  const [fields, rails, templates, actions] = await Promise.all([
-    db
-      .select()
-      .from(intakeFields)
-      .where(eq(intakeFields.workflowDefinitionId, workflow.id))
-      .orderBy(intakeFields.sortOrder),
-    db
-      .select()
-      .from(guardrailsTable)
-      .where(eq(guardrailsTable.workflowDefinitionId, workflow.id))
-      .orderBy(guardrailsTable.sortOrder),
-    db
-      .select()
-      .from(artifactTemplates)
-      .where(eq(artifactTemplates.workflowDefinitionId, workflow.id)),
-    db
-      .select()
-      .from(guidedActions)
-      .where(eq(guidedActions.workflowDefinitionId, workflow.id))
-      .orderBy(guidedActions.sortOrder),
-  ]);
+  const obj = workflow.toJSON() as Record<string, unknown>;
+  const fields = (obj.intakeFields ?? []) as Record<string, unknown>[];
+  const rails = (obj.guardrails ?? []) as Record<string, unknown>[];
+  const templates = (obj.artifactTemplates ?? []) as Record<string, unknown>[];
+  const actions = (obj.guidedActions ?? []) as Record<string, unknown>[];
 
   return {
-    id: workflow.id,
-    slug: workflow.slug,
-    name: workflow.name,
-    description: workflow.description ?? undefined,
-    category: workflow.category as WorkflowDetail["category"],
-    audience: workflow.audience as WorkflowDetail["audience"],
-    riskLevel: workflow.riskLevel as WorkflowDetail["riskLevel"],
-    estimatedMinutes: workflow.estimatedMinutes ?? undefined,
-    icon: (workflow.metadata as Record<string, unknown>)?.icon as string | undefined,
+    id: obj.id as string,
+    slug: obj.slug as string,
+    name: obj.name as string,
+    description: (obj.description as string) ?? undefined,
+    category: obj.category as WorkflowDetail["category"],
+    audience: obj.audience as WorkflowDetail["audience"],
+    riskLevel: obj.riskLevel as WorkflowDetail["riskLevel"],
+    estimatedMinutes: (obj.estimatedMinutes as number) ?? undefined,
+    icon: (obj.metadata as Record<string, unknown>)?.icon as string | undefined,
     intakeFields: fields.map((f) => ({
-      fieldKey: f.fieldKey,
-      label: f.label,
+      fieldKey: f.fieldKey as string,
+      label: f.label as string,
       type: f.type as IntakeFieldDefinition["type"],
-      placeholder: f.placeholder ?? undefined,
-      helpText: f.helpText ?? undefined,
-      required: f.required,
+      placeholder: (f.placeholder as string) ?? undefined,
+      helpText: (f.helpText as string) ?? undefined,
+      required: f.required as boolean,
       validationRules: f.validationRules as IntakeFieldDefinition["validationRules"],
       options: f.options as IntakeFieldDefinition["options"],
-      sortOrder: f.sortOrder,
-      groupName: f.groupName ?? undefined,
+      sortOrder: f.sortOrder as number,
+      groupName: (f.groupName as string) ?? undefined,
       conditionalOn: f.conditionalOn as IntakeFieldDefinition["conditionalOn"],
     })),
     guardrails: rails.map((g) => ({
-      id: g.id,
-      name: g.name,
-      description: g.description ?? undefined,
+      id: g.id as string,
+      name: g.name as string,
+      description: (g.description as string) ?? undefined,
       triggerCondition: g.triggerCondition as GuardrailDefinition["triggerCondition"],
       severity: g.severity as GuardrailDefinition["severity"],
-      message: g.message,
+      message: g.message as string,
       requiredAction: g.requiredAction as GuardrailDefinition["requiredAction"],
-      escalateTo: g.escalateTo ?? undefined,
-      sortOrder: g.sortOrder,
-      isActive: g.isActive,
+      escalateTo: (g.escalateTo as string) ?? undefined,
+      sortOrder: g.sortOrder as number,
+      isActive: g.isActive as boolean,
     })),
     artifactTemplates: templates.map((t) => ({
-      id: t.id,
-      name: t.name,
+      id: t.id as string,
+      name: t.name as string,
       type: t.type as ArtifactTemplateDefinition["type"],
       sections: t.sections as ArtifactTemplateDefinition["sections"],
       exportFormats: t.exportFormats as ArtifactTemplateDefinition["exportFormats"],
       metadata: t.metadata as ArtifactTemplateDefinition["metadata"],
     })),
     guidedActions: actions.map((a) => ({
-      id: a.id,
-      label: a.label,
-      description: a.description ?? undefined,
-      icon: a.icon ?? undefined,
+      id: a.id as string,
+      label: a.label as string,
+      description: (a.description as string) ?? undefined,
+      icon: (a.icon as string) ?? undefined,
       requiredInputs: a.requiredInputs as GuidedActionDefinition["requiredInputs"],
       outputType: a.outputType as GuidedActionDefinition["outputType"],
-      outputTarget: a.outputTarget ?? undefined,
-      promptTemplate: a.promptTemplate,
-      sortOrder: a.sortOrder,
-      isActive: a.isActive,
+      outputTarget: (a.outputTarget as string) ?? undefined,
+      promptTemplate: a.promptTemplate as string,
+      sortOrder: a.sortOrder as number,
+      isActive: a.isActive as boolean,
     })),
   };
 }
@@ -368,45 +277,42 @@ export async function startWorkflowRun(
   userId: string,
   initialInputs: WorkflowInputs = {}
 ): Promise<WorkflowRunState> {
+  await connectDB();
   const workflow = await getWorkflowBySlug(workflowSlug);
   if (!workflow) {
     throw new Error(`Workflow not found: ${workflowSlug}`);
   }
 
-  // Get the current version
-  const [def] = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(eq(workflowDefinitions.slug, workflowSlug))
-    .limit(1);
+  // Get the definition for version/id
+  const def = await WorkflowDefinition.findOne({ slug: workflowSlug });
+  if (!def) throw new Error(`Workflow definition not found: ${workflowSlug}`);
+  const defObj = def.toJSON() as Record<string, unknown>;
 
   // Create the run
-  const [run] = await db
-    .insert(workflowRuns)
-    .values({
-      workflowDefinitionId: def.id,
-      workflowVersion: def.version,
-      userId,
-      inputsSnapshot: initialInputs,
-      status: "intake",
-      currentStep: "intake",
-    })
-    .returning();
+  const run = await WorkflowRun.create({
+    workflowDefinitionId: def._id,
+    workflowVersion: defObj.version as number,
+    userId,
+    inputsSnapshot: initialInputs,
+    status: "intake",
+    currentStep: "intake",
+  });
+  const runObj = run.toJSON() as Record<string, unknown>;
 
   // Log the creation
-  await logWorkflowCreated(run.id, userId, def.version, initialInputs);
+  await logWorkflowCreated(runObj.id as string, userId, defObj.version as number, initialInputs);
 
   return {
-    id: run.id,
+    id: runObj.id as string,
     workflowSlug,
-    workflowVersion: def.version,
+    workflowVersion: defObj.version as number,
     userId,
     status: "intake",
     currentStep: "intake",
     inputs: initialInputs,
     rationales: {},
-    createdAt: run.createdAt,
-    updatedAt: run.updatedAt,
+    createdAt: runObj.createdAt as Date,
+    updatedAt: runObj.updatedAt as Date,
   };
 }
 
@@ -414,57 +320,50 @@ export async function startWorkflowRun(
  * Get workflow run by ID
  */
 export async function getWorkflowRun(runId: string): Promise<WorkflowRunState | null> {
-  const [run] = await db
-    .select()
-    .from(workflowRuns)
-    .where(eq(workflowRuns.id, runId))
-    .limit(1);
-
-  if (!run) {
-    return null;
-  }
+  await connectDB();
+  const run = await WorkflowRun.findById(runId);
+  if (!run) return null;
+  const runObj = run.toJSON() as Record<string, unknown>;
 
   // Get the workflow slug
-  const [def] = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(eq(workflowDefinitions.id, run.workflowDefinitionId))
-    .limit(1);
+  const def = await WorkflowDefinition.findById(run.workflowDefinitionId);
+  if (!def) return null;
+  const defObj = def.toJSON() as Record<string, unknown>;
 
   // Get the latest output if any
-  const [output] = await db
-    .select()
-    .from(workflowOutputs)
-    .where(eq(workflowOutputs.workflowRunId, runId))
-    .orderBy(desc(workflowOutputs.version))
-    .limit(1);
+  const output = await WorkflowOutput.findOne({ workflowRunId: runId })
+    .sort({ version: -1 });
+
+  let generatedArtifact: WorkflowRunState["generatedArtifact"];
+  if (output) {
+    const outObj = output.toJSON() as Record<string, unknown>;
+    generatedArtifact = {
+      templateId: outObj.artifactTemplateId ? String(outObj.artifactTemplateId) : "",
+      version: outObj.version as number,
+      sections: outObj.content as Record<string, string>,
+      renderedContent: (outObj.renderedContent as string) ?? "",
+      contentHash: (outObj.contentHash as string) ?? "",
+      generatedAt: outObj.createdAt as Date,
+    };
+  }
 
   return {
-    id: run.id,
-    workflowSlug: def.slug,
-    workflowVersion: run.workflowVersion,
-    userId: run.userId,
-    status: run.status as WorkflowStatus,
-    currentStep: run.currentStep as WorkflowStatus,
-    inputs: run.inputsSnapshot as WorkflowInputs,
-    guardrailResults: run.guardrailsTriggered as GuardrailEvaluationResult | undefined,
-    rationales: {}, // Would need to be stored separately or in inputs
-    generatedArtifact: output
-      ? {
-          templateId: output.artifactTemplateId ?? "",
-          version: output.version,
-          sections: output.content as Record<string, string>,
-          renderedContent: output.renderedContent ?? "",
-          contentHash: output.contentHash ?? "",
-          generatedAt: output.createdAt,
-        }
-      : undefined,
-    reviewerId: run.reviewerId ?? undefined,
-    reviewedAt: run.reviewedAt ?? undefined,
-    reviewNotes: run.reviewNotes ?? undefined,
-    createdAt: run.createdAt,
-    updatedAt: run.updatedAt,
-    completedAt: run.completedAt ?? undefined,
+    id: runObj.id as string,
+    workflowSlug: defObj.slug as string,
+    workflowVersion: runObj.workflowVersion as number,
+    userId: runObj.userId as string,
+    status: runObj.status as WorkflowStatus,
+    currentStep: runObj.currentStep as WorkflowStatus,
+    inputs: runObj.inputsSnapshot as WorkflowInputs,
+    guardrailResults: runObj.guardrailsTriggered as GuardrailEvaluationResult | undefined,
+    rationales: {},
+    generatedArtifact,
+    reviewerId: (runObj.reviewerId as string) ?? undefined,
+    reviewedAt: (runObj.reviewedAt as Date) ?? undefined,
+    reviewNotes: (runObj.reviewNotes as string) ?? undefined,
+    createdAt: runObj.createdAt as Date,
+    updatedAt: runObj.updatedAt as Date,
+    completedAt: (runObj.completedAt as Date) ?? undefined,
   };
 }
 
@@ -503,13 +402,9 @@ export async function updateWorkflowRun(
   const updatedFields = Object.keys(updates.inputs || {});
 
   // Update the run
-  await db
-    .update(workflowRuns)
-    .set({
-      inputsSnapshot: newInputs,
-      updatedAt: new Date(),
-    })
-    .where(eq(workflowRuns.id, runId));
+  await WorkflowRun.findByIdAndUpdate(runId, {
+    $set: { inputsSnapshot: newInputs },
+  });
 
   // Log the update
   if (updatedFields.length > 0) {
@@ -551,12 +446,9 @@ export async function updateWorkflowRun(
   }
 
   // Store guardrail results
-  await db
-    .update(workflowRuns)
-    .set({
-      guardrailsTriggered: guardrailResults,
-    })
-    .where(eq(workflowRuns.id, runId));
+  await WorkflowRun.findByIdAndUpdate(runId, {
+    $set: { guardrailsTriggered: guardrailResults },
+  });
 
   const updatedRun = await getWorkflowRun(runId);
 
@@ -595,35 +487,23 @@ export async function generateWorkflowArtifact(
     throw new Error("No artifact template found");
   }
 
-  // Get text library entries
-  const [def] = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(eq(workflowDefinitions.slug, run.workflowSlug))
-    .limit(1);
+  // Get text library entries from the definition's embedded textLibraries
+  const def = await WorkflowDefinition.findOne({ slug: run.workflowSlug });
+  const defObj = def?.toJSON() as Record<string, unknown> | undefined;
+  const textLibraryDocs = ((defObj?.textLibraries ?? []) as Record<string, unknown>[]);
 
-  const textLibraryEntries = await db
-    .select()
-    .from(textLibraries)
-    .where(eq(textLibraries.workflowDefinitionId, def.id));
-
-  const textLibrary: TextLibraryEntry[] = textLibraryEntries.map((t) => ({
+  const textLibrary: TextLibraryEntry[] = textLibraryDocs.map((t) => ({
     category: t.category as TextLibraryEntry["category"],
-    key: t.key,
-    title: t.title,
-    content: t.content,
+    key: t.key as string,
+    title: t.title as string,
+    content: t.content as string,
     metadata: t.metadata as Record<string, unknown> | undefined,
   }));
 
   // Update status
-  await db
-    .update(workflowRuns)
-    .set({
-      status: "generating",
-      currentStep: "generating",
-      updatedAt: new Date(),
-    })
-    .where(eq(workflowRuns.id, runId));
+  await WorkflowRun.findByIdAndUpdate(runId, {
+    $set: { status: "generating", currentStep: "generating" },
+  });
 
   // Enrich inputs with auto-generated values
   const enrichedInputs = {
@@ -641,7 +521,7 @@ export async function generateWorkflowArtifact(
   });
 
   // Store the output
-  await db.insert(workflowOutputs).values({
+  await WorkflowOutput.create({
     workflowRunId: runId,
     artifactTemplateId: template.id,
     version: artifact.version,
@@ -654,14 +534,9 @@ export async function generateWorkflowArtifact(
   await logArtifactGenerated(runId, userId, run.workflowVersion, artifact);
 
   // Update status to review
-  await db
-    .update(workflowRuns)
-    .set({
-      status: "review",
-      currentStep: "review",
-      updatedAt: new Date(),
-    })
-    .where(eq(workflowRuns.id, runId));
+  await WorkflowRun.findByIdAndUpdate(runId, {
+    $set: { status: "review", currentStep: "review" },
+  });
 
   return artifact;
 }
@@ -701,24 +576,14 @@ export async function exportWorkflowArtifact(
   // Log the review/approval
   await logReviewed(runId, userId, run.workflowVersion, true, reviewNotes);
 
-  // TODO: This URL doesn't resolve to a real route — implement download endpoint or remove
   const exportUrl = `/api/workflows/runs/${runId}/download/${format}`;
   const exportedAt = new Date();
 
   // Update the output record
-  await db
-    .update(workflowOutputs)
-    .set({
-      exportedAt,
-      exportFormat: format,
-      exportUrl,
-    })
-    .where(
-      and(
-        eq(workflowOutputs.workflowRunId, runId),
-        eq(workflowOutputs.version, run.generatedArtifact.version)
-      )
-    );
+  await WorkflowOutput.findOneAndUpdate(
+    { workflowRunId: runId, version: run.generatedArtifact.version },
+    { $set: { exportedAt, exportFormat: format, exportUrl } }
+  );
 
   // Log the export
   await logExported(
@@ -731,18 +596,16 @@ export async function exportWorkflowArtifact(
   );
 
   // Update run status
-  await db
-    .update(workflowRuns)
-    .set({
+  await WorkflowRun.findByIdAndUpdate(runId, {
+    $set: {
       status: "completed",
       currentStep: "completed",
       reviewerId: userId,
       reviewedAt: exportedAt,
       reviewNotes,
       completedAt: exportedAt,
-      updatedAt: exportedAt,
-    })
-    .where(eq(workflowRuns.id, runId));
+    },
+  });
 
   return { exportUrl, exportedAt };
 }
@@ -764,14 +627,9 @@ export async function cancelWorkflowRun(
   await logCancelled(runId, userId, run.workflowVersion, reason);
 
   // Update the run
-  await db
-    .update(workflowRuns)
-    .set({
-      status: "cancelled",
-      currentStep: "cancelled",
-      updatedAt: new Date(),
-    })
-    .where(eq(workflowRuns.id, runId));
+  await WorkflowRun.findByIdAndUpdate(runId, {
+    $set: { status: "cancelled", currentStep: "cancelled" },
+  });
 }
 
 /**
@@ -785,63 +643,53 @@ export async function getUserWorkflowRuns(
     offset?: number;
   }
 ): Promise<WorkflowRunState[]> {
-  let query = db
-    .select()
-    .from(workflowRuns)
-    .where(eq(workflowRuns.userId, userId))
-    .orderBy(desc(workflowRuns.updatedAt));
+  await connectDB();
 
+  const filter: Record<string, unknown> = { userId };
   if (options?.status) {
-    query = db
-      .select()
-      .from(workflowRuns)
-      .where(
-        and(
-          eq(workflowRuns.userId, userId),
-          eq(workflowRuns.status, options.status)
-        )
-      )
-      .orderBy(desc(workflowRuns.updatedAt));
+    filter.status = options.status;
   }
 
+  let query = WorkflowRun.find(filter).sort({ updatedAt: -1 });
+
   if (options?.limit) {
-    query = query.limit(options.limit) as typeof query;
+    query = query.limit(options.limit);
   }
 
   if (options?.offset) {
-    query = query.offset(options.offset) as typeof query;
+    query = query.skip(options.offset);
   }
 
   const runs = await query;
 
   // Get workflow slugs for all runs
-  const workflowIds = [...new Set(runs.map((r) => r.workflowDefinitionId))];
-  const workflows = await db
-    .select()
-    .from(workflowDefinitions)
-    .where(
-      workflowIds.length > 0
-        ? eq(workflowDefinitions.id, workflowIds[0]) // Simplified - would need better query
-        : undefined
-    );
+  const workflowIds = [...new Set(runs.map((r) => String(r.workflowDefinitionId)))];
+  const workflows = workflowIds.length > 0
+    ? await WorkflowDefinition.find({ _id: { $in: workflowIds } })
+    : [];
 
-  const workflowMap = new Map(workflows.map((w) => [w.id, w.slug]));
+  const workflowMap = new Map(
+    workflows.map((w) => [String(w._id), (w.toJSON() as Record<string, unknown>).slug as string])
+  );
 
-  return runs.map((run) => ({
-    id: run.id,
-    workflowSlug: workflowMap.get(run.workflowDefinitionId) ?? "",
-    workflowVersion: run.workflowVersion,
-    userId: run.userId,
-    status: run.status as WorkflowStatus,
-    currentStep: run.currentStep as WorkflowStatus,
-    inputs: run.inputsSnapshot as WorkflowInputs,
-    guardrailResults: run.guardrailsTriggered as GuardrailEvaluationResult | undefined,
-    rationales: {},
-    reviewerId: run.reviewerId ?? undefined,
-    reviewedAt: run.reviewedAt ?? undefined,
-    reviewNotes: run.reviewNotes ?? undefined,
-    createdAt: run.createdAt,
-    updatedAt: run.updatedAt,
-    completedAt: run.completedAt ?? undefined,
-  }));
+  return runs.map((run) => {
+    const obj = run.toJSON() as Record<string, unknown>;
+    return {
+      id: obj.id as string,
+      workflowSlug: workflowMap.get(String(run.workflowDefinitionId)) ?? "",
+      workflowVersion: obj.workflowVersion as number,
+      userId: obj.userId as string,
+      status: obj.status as WorkflowStatus,
+      currentStep: obj.currentStep as WorkflowStatus,
+      inputs: obj.inputsSnapshot as WorkflowInputs,
+      guardrailResults: obj.guardrailsTriggered as GuardrailEvaluationResult | undefined,
+      rationales: {},
+      reviewerId: (obj.reviewerId as string) ?? undefined,
+      reviewedAt: (obj.reviewedAt as Date) ?? undefined,
+      reviewNotes: (obj.reviewNotes as string) ?? undefined,
+      createdAt: obj.createdAt as Date,
+      updatedAt: obj.updatedAt as Date,
+      completedAt: (obj.completedAt as Date) ?? undefined,
+    };
+  });
 }

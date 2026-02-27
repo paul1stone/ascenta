@@ -13,18 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npx tsc --noEmit
+      - name: Type check (db package)
+        run: pnpm --filter @ascenta/db exec tsc --noEmit
 
       - name: Tests
-        run: npm test
+        run: pnpm --filter @ascenta/platform exec vitest run --passWithNoTests

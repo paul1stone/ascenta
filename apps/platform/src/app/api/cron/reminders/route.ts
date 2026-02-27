@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@ascenta/db";
-import { trackedDocuments } from "@ascenta/db/workflow-schema";
-import { eq, and, or, lt, isNull, sql } from "drizzle-orm";
+import { connectDB } from "@ascenta/db";
+import { TrackedDocument } from "@ascenta/db/workflow-schema";
 import { resend } from "@ascenta/email";
 import { documentReminderEmail } from "@ascenta/email/templates/document-reminder";
 
@@ -15,61 +14,54 @@ export async function GET(req: Request) {
   }
 
   try {
+    await connectDB();
+
     const now = new Date();
     const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
     const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
 
     // Find documents that need reminders
-    const docs = await db
-      .select()
-      .from(trackedDocuments)
-      .where(
-        and(
-          or(
-            eq(trackedDocuments.stage, "sent"),
-            eq(trackedDocuments.stage, "in_review")
-          ),
-          lt(trackedDocuments.sentAt, threeDaysAgo),
-          sql`${trackedDocuments.reminderCount} < 3`,
-          or(
-            isNull(trackedDocuments.reminderSentAt),
-            lt(trackedDocuments.reminderSentAt, twoDaysAgo)
-          )
-        )
-      );
+    const docs = await TrackedDocument.find({
+      stage: { $in: ["sent", "in_review"] },
+      sentAt: { $lt: threeDaysAgo },
+      reminderCount: { $lt: 3 },
+      $or: [
+        { reminderSentAt: null },
+        { reminderSentAt: { $lt: twoDaysAgo } },
+      ],
+    });
 
     let sentCount = 0;
 
     for (const doc of docs) {
-      if (!doc.employeeEmail || !doc.ackToken) continue;
+      const obj = doc.toJSON() as Record<string, unknown>;
+      const employeeEmail = obj.employeeEmail as string | null;
+      const ackToken = obj.ackToken as string | null;
+      if (!employeeEmail || !ackToken) continue;
 
-      const ackUrl = `${APP_URL}/ack/${doc.id}?token=${doc.ackToken}`;
+      const ackUrl = `${APP_URL}/ack/${obj.id}?token=${ackToken}`;
 
       try {
         await resend.emails.send({
           from: "Ascenta <noreply@ascenta.ai>",
-          to: doc.employeeEmail,
-          subject: `Reminder: Please review "${doc.title}"`,
+          to: employeeEmail,
+          subject: `Reminder: Please review "${obj.title}"`,
           html: documentReminderEmail({
-            employeeName: doc.employeeName || "Employee",
-            documentTitle: doc.title,
-            documentType: doc.documentType,
+            employeeName: (obj.employeeName as string) || "Employee",
+            documentTitle: obj.title as string,
+            documentType: obj.documentType as string,
             ackUrl,
           }),
         });
 
-        await db
-          .update(trackedDocuments)
-          .set({
-            reminderSentAt: now,
-            reminderCount: (doc.reminderCount || 0) + 1,
-            updatedAt: now,
-          })
-          .where(eq(trackedDocuments.id, doc.id));
+        await TrackedDocument.findByIdAndUpdate(obj.id, {
+          $set: { reminderSentAt: now },
+          $inc: { reminderCount: 1 },
+        });
 
         sentCount++;
       } catch (emailError) {
-        console.error(`Failed to send reminder for doc ${doc.id}:`, emailError);
+        console.error(`Failed to send reminder for doc ${obj.id}:`, emailError);
       }
     }
 

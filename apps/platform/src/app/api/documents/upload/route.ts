@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
 import { join } from "path";
 import mammoth from "mammoth";
 import {
@@ -50,6 +51,7 @@ async function extractPdfText(data: Uint8Array): Promise<string> {
  */
 export async function POST(req: Request) {
   try {
+    await connectDB();
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 

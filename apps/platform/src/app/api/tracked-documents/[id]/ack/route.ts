@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { createHmac } from "crypto";
-import { db } from "@ascenta/db";
-import { trackedDocuments } from "@ascenta/db/workflow-schema";
-import { eq } from "drizzle-orm";
+import { connectDB } from "@ascenta/db";
+import { TrackedDocument } from "@ascenta/db/workflow-schema";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await connectDB();
     const { id: docId } = await params;
     const body = await req.json();
     const { token } = body as { token?: string };
@@ -36,14 +36,12 @@ export async function POST(
     }
 
     // Set acknowledgedAt and advance stage
-    await db
-      .update(trackedDocuments)
-      .set({
+    await TrackedDocument.findByIdAndUpdate(docId, {
+      $set: {
         acknowledgedAt: new Date(),
         stage: "acknowledged",
-        updatedAt: new Date(),
-      })
-      .where(eq(trackedDocuments.id, docId));
+      },
+    });
 
     return NextResponse.json({ acknowledged: true });
   } catch (error) {

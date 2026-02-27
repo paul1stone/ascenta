@@ -1,65 +1,121 @@
 /**
- * Employee and Employee Notes Schema
- * Used for employee lookup during conversational workflows
+ * Employee and Employee Notes Schema (Mongoose)
+ * Notes are embedded sub-documents within employees
  */
 
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  jsonb,
-  index,
-} from "drizzle-orm/pg-core";
+import mongoose, { Schema, Types } from "mongoose";
 
-// Employees table - HR employee records
-export const employees = pgTable(
-  "employees",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    employeeId: text("employee_id").notNull().unique(),
-    firstName: text("first_name").notNull(),
-    lastName: text("last_name").notNull(),
-    email: text("email").notNull().unique(),
-    department: text("department").notNull(),
-    jobTitle: text("job_title").notNull(),
-    managerName: text("manager_name").notNull(),
-    hireDate: timestamp("hire_date").notNull(),
-    status: text("status").default("active").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+// ============================================================================
+// SHARED
+// ============================================================================
+
+const toJSONOptions = {
+  virtuals: true,
+  transform(_doc: unknown, ret: Record<string, unknown>) {
+    ret.id = String(ret._id);
+    delete ret._id;
+    delete ret.__v;
+    return ret;
   },
-  (table) => [
-    index("employees_employee_id_idx").on(table.employeeId),
-    index("employees_name_idx").on(table.firstName, table.lastName),
-    index("employees_email_idx").on(table.email),
-    index("employees_department_idx").on(table.department),
-  ]
+};
+
+// ============================================================================
+// EMPLOYEE NOTE (embedded sub-document)
+// ============================================================================
+
+const employeeNoteSchema = new Schema(
+  {
+    noteType: { type: String, required: true, index: true },
+    title: { type: String, required: true },
+    content: { type: String },
+    severity: { type: String },
+    occurredAt: { type: Date, required: true },
+    metadata: { type: Schema.Types.Mixed },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: true }
 );
 
-// Employee notes - attachments like warnings, late notices, etc.
-export const employeeNotes = pgTable(
-  "employee_notes",
+// ============================================================================
+// EMPLOYEE
+// ============================================================================
+
+const employeeSchema = new Schema(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    employeeId: uuid("employee_id")
-      .references(() => employees.id, { onDelete: "cascade" })
-      .notNull(),
-    noteType: text("note_type").notNull(), // 'written_warning' | 'verbal_warning' | 'late_notice' | 'pip' | 'commendation' | 'general'
-    title: text("title").notNull(),
-    content: text("content"),
-    severity: text("severity"), // 'low' | 'medium' | 'high'
-    occurredAt: timestamp("occurred_at").notNull(),
-    metadata: jsonb("metadata"), // Additional structured data
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    employeeId: { type: String, required: true, unique: true, index: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true, index: true },
+    department: { type: String, required: true, index: true },
+    jobTitle: { type: String, required: true },
+    managerName: { type: String, required: true },
+    hireDate: { type: Date, required: true },
+    status: { type: String, default: "active", required: true },
+    notes: [employeeNoteSchema],
   },
-  (table) => [
-    index("employee_notes_employee_id_idx").on(table.employeeId),
-    index("employee_notes_type_idx").on(table.noteType),
-  ]
+  {
+    timestamps: true,
+    toJSON: toJSONOptions,
+    toObject: toJSONOptions,
+  }
 );
 
-export type Employee = typeof employees.$inferSelect;
-export type NewEmployee = typeof employees.$inferInsert;
-export type EmployeeNote = typeof employeeNotes.$inferSelect;
-export type NewEmployeeNote = typeof employeeNotes.$inferInsert;
+// Compound index for name search
+employeeSchema.index({ firstName: 1, lastName: 1 });
+
+export const Employee =
+  mongoose.models.Employee ||
+  mongoose.model("Employee", employeeSchema);
+
+// ============================================================================
+// TYPE ALIASES (backward compatibility)
+// ============================================================================
+
+export type Employee_Type = {
+  id: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department: string;
+  jobTitle: string;
+  managerName: string;
+  hireDate: Date;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type NewEmployee = {
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department: string;
+  jobTitle: string;
+  managerName: string;
+  hireDate: Date;
+  status?: string;
+};
+
+export type EmployeeNote = {
+  id: string;
+  employeeId: string;
+  noteType: string;
+  title: string;
+  content: string | null;
+  severity: string | null;
+  occurredAt: Date;
+  metadata: unknown;
+  createdAt: Date;
+};
+
+export type NewEmployeeNote = {
+  employeeId: string;
+  noteType: string;
+  title: string;
+  content?: string | null;
+  severity?: string | null;
+  occurredAt: Date;
+  metadata?: unknown;
+};

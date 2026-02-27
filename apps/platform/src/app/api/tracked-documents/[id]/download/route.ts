@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
 import { getTrackedDocumentWithContent } from "@ascenta/db/tracked-documents";
 
 export async function GET(
@@ -6,6 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await connectDB();
     const { id } = await params;
     const doc = await getTrackedDocumentWithContent(id);
     if (!doc) {

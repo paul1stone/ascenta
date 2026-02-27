@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@ascenta/db";
 import {
   getUserConversations,
   getConversation,
@@ -12,6 +13,7 @@ import {
  */
 export async function GET(req: Request) {
   try {
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const userId = searchParams.get("userId") || "anonymous";
@@ -51,6 +53,7 @@ export async function GET(req: Request) {
  */
 export async function PATCH(req: Request) {
   try {
+    await connectDB();
     const body = await req.json();
     const { id, title, model, provider, systemPrompt } = body;
 
@@ -91,6 +94,7 @@ export async function PATCH(req: Request) {
  */
 export async function DELETE(req: Request) {
   try {
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 

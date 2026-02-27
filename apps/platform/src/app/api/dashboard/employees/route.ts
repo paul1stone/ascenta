@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { db } from "@ascenta/db";
-import { employees } from "@ascenta/db/employee-schema";
-import { eq, sql, count, ilike, or, and } from "drizzle-orm";
+import { connectDB } from "@ascenta/db";
+import { Employee } from "@ascenta/db/employee-schema";
+import { TrackedDocument } from "@ascenta/db/workflow-schema";
+import type { PipelineStage } from "mongoose";
 
 export async function GET(request: Request) {
   try {
+    await connectDB();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
     const department = searchParams.get("department");
@@ -14,81 +17,91 @@ export async function GET(request: Request) {
       100,
       Math.max(1, parseInt(searchParams.get("limit") || "20", 10))
     );
-    const offset = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    // Build filter conditions
-    const conditions = [];
+    // Build match conditions
+    const match: Record<string, unknown> = {};
 
     if (search) {
-      const pattern = `%${search}%`;
-      conditions.push(
-        or(
-          ilike(employees.firstName, pattern),
-          ilike(employees.lastName, pattern),
-          ilike(employees.email, pattern),
-          ilike(employees.employeeId, pattern)
-        )!
-      );
+      const regex = { $regex: search, $options: "i" };
+      match.$or = [
+        { firstName: regex },
+        { lastName: regex },
+        { email: regex },
+        { employeeId: regex },
+      ];
     }
 
     if (department) {
-      conditions.push(eq(employees.department, department));
+      match.department = department;
     }
 
     if (status) {
-      conditions.push(eq(employees.status, status));
+      match.status = status;
     }
 
-    const whereClause =
-      conditions.length > 0 ? and(...conditions) : undefined;
+    // Aggregation pipeline for employees with counts
+    const pipeline: PipelineStage[] = [
+      { $match: match },
+      { $sort: { lastName: 1 as const, firstName: 1 as const } },
+      {
+        $facet: {
+          employees: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $addFields: {
+                id: { $toString: "$_id" },
+                notesCount: { $size: { $ifNull: ["$notes", []] } },
+              },
+            },
+            {
+              $project: {
+                id: 1,
+                employeeId: 1,
+                firstName: 1,
+                lastName: 1,
+                email: 1,
+                department: 1,
+                jobTitle: 1,
+                managerName: 1,
+                hireDate: 1,
+                status: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                notesCount: 1,
+              },
+            },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ];
 
-    // Note count subquery
-    const notesCountSq = sql<number>`(
-      SELECT count(*)::int
-      FROM employee_notes
-      WHERE employee_notes.employee_id = ${employees.id}
-    )`.as("notes_count");
+    const [result] = await Employee.aggregate(pipeline);
+    const employees = result.employees as Record<string, unknown>[];
+    const total = (result.total as { count: number }[])[0]?.count ?? 0;
 
-    // Active document count subquery
-    const documentsCountSq = sql<number>`(
-      SELECT count(*)::int
-      FROM tracked_documents
-      WHERE tracked_documents.employee_id = ${employees.id}
-    )`.as("documents_count");
+    // Get document counts for returned employees
+    const employeeIds = employees.map((e) => e.id as string);
+    const docCounts = await TrackedDocument.aggregate([
+      { $match: { employeeId: { $in: employeeIds } } },
+      { $group: { _id: "$employeeId", count: { $sum: 1 } } },
+    ]);
 
-    // Main query with subquery counts
-    const employeeRows = await db
-      .select({
-        id: employees.id,
-        employeeId: employees.employeeId,
-        firstName: employees.firstName,
-        lastName: employees.lastName,
-        email: employees.email,
-        department: employees.department,
-        jobTitle: employees.jobTitle,
-        managerName: employees.managerName,
-        hireDate: employees.hireDate,
-        status: employees.status,
-        createdAt: employees.createdAt,
-        updatedAt: employees.updatedAt,
-        notesCount: notesCountSq,
-        documentsCount: documentsCountSq,
-      })
-      .from(employees)
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(employees.lastName, employees.firstName);
+    const docCountMap: Record<string, number> = {};
+    for (const row of docCounts) {
+      docCountMap[row._id] = row.count;
+    }
 
-    // Total count for pagination
-    const [totalResult] = await db
-      .select({ count: count() })
-      .from(employees)
-      .where(whereClause);
+    const employeesWithCounts = employees.map((e) => ({
+      ...e,
+      documentsCount: docCountMap[e.id as string] ?? 0,
+    }));
 
     return NextResponse.json({
-      employees: employeeRows,
-      total: totalResult.count,
+      employees: employeesWithCounts,
+      total,
       page,
       limit,
     });

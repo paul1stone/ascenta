@@ -16,20 +16,15 @@
     "./employees": "./src/employees.ts"
   },
   "scripts": {
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
     "db:seed": "npx tsx scripts/seed-employees.ts"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1"
+    "mongoose": "^8.14.1"
   },
   "devDependencies": {
     "@ascenta/config": "workspace:*",
-    "drizzle-kit": "^0.31.8",
+    "@types/node": "^20.19.33",
     "tsx": "^4",
     "typescript": "^5"
   }
