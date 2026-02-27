@@ -2,13 +2,66 @@
 
 import { useState } from "react";
 import {
-  DASHBOARD_NAV,
-  PAGE_CONFIG,
-  DEFAULT_PAGE_CONFIG,
-} from "@/lib/constants/dashboard-nav";
+  Target,
+  CheckCircle,
+  FileText,
+  List,
+  Calendar,
+  ArrowLeft,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
+import { GoalForm } from "@/components/grow/goal-form";
+import { GoalList } from "@/components/grow/goal-list";
+import { PerformanceNoteForm } from "@/components/grow/performance-note-form";
 
-// TODO: Replace with real auth user once authentication is implemented
-const USER_FIRST_NAME = "Paul";
+// ============================================================================
+// GROW ACTION CARDS
+// ============================================================================
+
+interface GrowAction {
+  key: string;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+const GROW_ACTIONS: GrowAction[] = [
+  {
+    key: "create-goal",
+    label: "Create Goal",
+    description: "Set a new performance goal",
+    icon: Target,
+  },
+  {
+    key: "log-checkin",
+    label: "Log Check-In",
+    description: "Record progress on a goal",
+    icon: CheckCircle,
+  },
+  {
+    key: "add-note",
+    label: "Add Note",
+    description: "Capture a performance observation",
+    icon: FileText,
+  },
+  {
+    key: "view-goals",
+    label: "View Goals",
+    description: "See all goals and progress",
+    icon: List,
+  },
+  {
+    key: "view-checkins",
+    label: "View Check-Ins",
+    description: "Upcoming and past check-ins",
+    icon: Calendar,
+  },
+];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 interface ChatWelcomeProps {
   onSuggestionClick: (suggestion: string) => void;
@@ -18,34 +71,139 @@ export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(
     null
   );
-  const [activeSubPageKey, setActiveSubPageKey] = useState("");
+  const [activeAction, setActiveAction] = useState<string | null>(null);
 
-  const selectedCategory = DASHBOARD_NAV.find(
-    (c) => c.key === selectedCategoryKey
-  );
+  const selectedCategory = selectedCategoryKey
+    ? DASHBOARD_NAV.find((c) => c.key === selectedCategoryKey)
+    : null;
 
-  // Determine which suggestions to show
-  const config = activeSubPageKey
-    ? PAGE_CONFIG[activeSubPageKey]
-    : DEFAULT_PAGE_CONFIG;
+  // --------------------------------------------------------------------------
+  // Render the active action component for "Grow"
+  // --------------------------------------------------------------------------
+  function renderActiveActionComponent() {
+    switch (activeAction) {
+      case "create-goal":
+        return (
+          <GoalForm
+            onSuccess={() => setActiveAction(null)}
+            onCancel={() => setActiveAction(null)}
+          />
+        );
+      case "view-goals":
+        return <GoalList onBack={() => setActiveAction(null)} />;
+      case "add-note":
+        return (
+          <PerformanceNoteForm
+            onSuccess={() => setActiveAction(null)}
+            onCancel={() => setActiveAction(null)}
+          />
+        );
+      case "log-checkin":
+      case "view-checkins":
+        return (
+          <div className="rounded-xl border bg-white p-6 text-center text-sm text-muted-foreground">
+            Coming soon
+          </div>
+        );
+      default:
+        return null;
+    }
+  }
 
+  // --------------------------------------------------------------------------
+  // Drill-in view for a selected category
+  // --------------------------------------------------------------------------
+  if (selectedCategoryKey && selectedCategory) {
+    // Non-grow categories: coming soon
+    if (selectedCategoryKey !== "grow") {
+      return (
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+          <div className="w-full max-w-3xl">
+            <button
+              onClick={() => {
+                setSelectedCategoryKey(null);
+                setActiveAction(null);
+              }}
+              className="mb-6 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-deep-blue"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <p className="text-center text-sm text-muted-foreground">
+              Coming soon &mdash; {selectedCategory.label} features are in
+              development.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Grow category: show action cards
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-3xl">
+          {/* Header row with back button */}
+          <button
+            onClick={() => {
+              setSelectedCategoryKey(null);
+              setActiveAction(null);
+            }}
+            className="mb-6 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-deep-blue"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+
+          <h2 className="mb-4 text-lg font-semibold text-deep-blue">Grow</h2>
+
+          {/* 2x3 action card grid */}
+          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
+            {GROW_ACTIONS.map((action) => (
+              <button
+                key={action.key}
+                onClick={() => setActiveAction(action.key)}
+                className={`group flex flex-col items-center gap-2.5 rounded-2xl border-2 bg-white p-4 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-summit/5 ${
+                  activeAction === action.key
+                    ? "border-summit shadow-md shadow-summit/10"
+                    : "border-transparent hover:border-summit/30"
+                }`}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-deep-blue to-deep-blue/80 shadow-md shadow-deep-blue/15 transition-transform group-hover:scale-105">
+                  <action.icon className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xs font-semibold text-deep-blue">
+                  {action.label}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {action.description}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Active action component */}
+          {activeAction && (
+            <div className="mt-6">{renderActiveActionComponent()}</div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // Default: category grid
+  // --------------------------------------------------------------------------
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-      {/* Category icon cards (replaces logo) */}
-      <div className="mb-6 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
+      {/* Category icon cards */}
+      <div className="grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
         {DASHBOARD_NAV.map((category) => {
           const isSelected = selectedCategoryKey === category.key;
           return (
             <button
               key={category.key}
               onClick={() => {
-                if (isSelected) {
-                  setSelectedCategoryKey(null);
-                  setActiveSubPageKey("");
-                } else {
-                  setSelectedCategoryKey(category.key);
-                  setActiveSubPageKey(category.subPages[0]?.key || "");
-                }
+                setSelectedCategoryKey(isSelected ? null : category.key);
               }}
               className={`group flex flex-col items-center gap-2.5 rounded-2xl border-2 bg-white p-4 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-summit/5 ${
                 isSelected
@@ -73,61 +231,6 @@ export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
           );
         })}
       </div>
-
-      {/* Greeting */}
-      <div className="mb-6 flex flex-col items-center">
-        <h1 className="font-display text-2xl font-bold text-deep-blue">
-          Welcome {USER_FIRST_NAME}
-        </h1>
-        <p className="mt-2 max-w-md text-center text-muted-foreground">
-          Choose from a suggested prompt, or ask anything to get started.
-        </p>
-      </div>
-
-      {/* Sub-page pill tabs (only when a category is selected) */}
-      {selectedCategory && (
-        <div className="mb-6 flex flex-wrap justify-center gap-2">
-          {selectedCategory.subPages.map((sp) => {
-            const isActive = activeSubPageKey === sp.key;
-            return (
-              <button
-                key={sp.key}
-                onClick={() => setActiveSubPageKey(sp.key)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "bg-summit text-white"
-                    : "border border-border bg-white text-deep-blue hover:bg-summit/10"
-                }`}
-              >
-                {sp.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Suggestion cards */}
-      {config && (
-        <div className="w-full max-w-2xl">
-          {selectedCategory && config.description && (
-            <p className="mb-3 text-center text-sm text-muted-foreground">
-              {config.description}
-            </p>
-          )}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {config.suggestions.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => onSuggestionClick(item.prompt)}
-                className="group flex flex-col gap-1 rounded-2xl border border-border bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:border-summit/30 hover:shadow-lg hover:shadow-summit/5"
-              >
-                <p className="font-medium text-deep-blue">{item.title}</p>
-                <p className="text-sm text-muted-foreground">{item.prompt}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
