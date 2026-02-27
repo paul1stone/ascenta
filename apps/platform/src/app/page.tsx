@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useChatPanel } from "@/lib/chat/chat-context";
 import { useRole } from "@/lib/role/role-context";
 import { ChatWelcome } from "@/components/chat/chat-welcome";
@@ -10,6 +11,9 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { EmployeeDirectory } from "@/components/dashboard/employee-directory";
 import { DocumentPipeline } from "@/components/dashboard/document-pipeline";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { GrowStatus } from "@/components/grow/grow-status";
+import { GrowLearn } from "@/components/grow/grow-learn";
+import { GrowDashboard } from "@/components/grow/grow-dashboard";
 import { cn } from "@ascenta/ui";
 import {
   Mountain,
@@ -87,7 +91,7 @@ function DashboardContent() {
   );
 }
 
-const TAB_HEADERS: Record<TabKey, { title: string; description: string }> = {
+const DEFAULT_TAB_HEADERS: Record<TabKey, { title: string; description: string }> = {
   do: { title: "", description: "" },
   learn: {
     title: "HR Knowledge Base",
@@ -103,9 +107,26 @@ const TAB_HEADERS: Record<TabKey, { title: string; description: string }> = {
   },
 };
 
+const GROW_TAB_HEADERS: Record<TabKey, { title: string; description: string }> = {
+  do: { title: "", description: "" },
+  learn: {
+    title: "Grow — Learn",
+    description: "Guides, examples, and scripts for goals, notes, check-ins, and feedback.",
+  },
+  status: {
+    title: "Grow — Status",
+    description: "Goal metrics, check-in progress, and performance note activity.",
+  },
+  dashboard: {
+    title: "Grow — Dashboard",
+    description: "Overview of your team's growth activity and items needing attention.",
+  },
+};
+
 export default function RootPage() {
   const { activeTab, setActiveTab, openPanel, handleSubmit, setInput } = useChatPanel();
   const { role, setRole, roles } = useRole();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const handleSuggestionClick = (suggestion: string) => {
     openPanel();
@@ -113,7 +134,8 @@ export default function RootPage() {
     handleSubmit(suggestion);
   };
 
-  const header = TAB_HEADERS[activeTab];
+  const isGrow = selectedCategory === "grow";
+  const header = isGrow ? GROW_TAB_HEADERS[activeTab] : DEFAULT_TAB_HEADERS[activeTab];
 
   return (
     <div className="flex flex-1 flex-col bg-glacier min-h-screen">
@@ -166,7 +188,11 @@ export default function RootPage() {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === "do" ? (
-          <ChatWelcome onSuggestionClick={handleSuggestionClick} />
+          <ChatWelcome
+            onSuggestionClick={handleSuggestionClick}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
         ) : (
           <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
             {header.title && (
@@ -175,9 +201,9 @@ export default function RootPage() {
                 <p className="mt-1 text-muted-foreground">{header.description}</p>
               </div>
             )}
-            {activeTab === "learn" && <LearnContent />}
-            {activeTab === "status" && <DocumentTracker />}
-            {activeTab === "dashboard" && <DashboardContent />}
+            {activeTab === "learn" && (isGrow ? <GrowLearn /> : <LearnContent />)}
+            {activeTab === "status" && (isGrow ? <GrowStatus /> : <DocumentTracker />)}
+            {activeTab === "dashboard" && (isGrow ? <GrowDashboard /> : <DashboardContent />)}
           </div>
         )}
       </div>

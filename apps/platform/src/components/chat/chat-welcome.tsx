@@ -14,6 +14,8 @@ import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
 import { GoalForm } from "@/components/grow/goal-form";
 import { GoalList } from "@/components/grow/goal-list";
 import { PerformanceNoteForm } from "@/components/grow/performance-note-form";
+import { CheckInForm } from "@/components/grow/check-in-form";
+import { CheckInList } from "@/components/grow/check-in-list";
 
 // ============================================================================
 // GROW ACTION CARDS
@@ -65,12 +67,11 @@ const GROW_ACTIONS: GrowAction[] = [
 
 interface ChatWelcomeProps {
   onSuggestionClick: (suggestion: string) => void;
+  selectedCategory: string | null;
+  onCategoryChange: (category: string | null) => void;
 }
 
-export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
-  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(
-    null
-  );
+export function ChatWelcome({ onSuggestionClick, selectedCategory: selectedCategoryKey, onCategoryChange: setSelectedCategoryKey }: ChatWelcomeProps) {
   const [activeAction, setActiveAction] = useState<string | null>(null);
 
   const selectedCategory = selectedCategoryKey
@@ -99,12 +100,14 @@ export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
           />
         );
       case "log-checkin":
-      case "view-checkins":
         return (
-          <div className="rounded-xl border bg-white p-6 text-center text-sm text-muted-foreground">
-            Coming soon
-          </div>
+          <CheckInForm
+            onSuccess={() => setActiveAction(null)}
+            onCancel={() => setActiveAction(null)}
+          />
         );
+      case "view-checkins":
+        return <CheckInList onBack={() => setActiveAction(null)} />;
       default:
         return null;
     }
