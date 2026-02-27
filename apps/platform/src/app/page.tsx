@@ -14,6 +14,12 @@ import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { GrowStatus } from "@/components/grow/grow-status";
 import { GrowLearn } from "@/components/grow/grow-learn";
 import { GrowDashboard } from "@/components/grow/grow-dashboard";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@ascenta/ui/dropdown-menu";
 import { cn } from "@ascenta/ui";
 import {
   Mountain,
@@ -23,7 +29,9 @@ import {
   LayoutDashboard,
   FileCheck,
   Clock,
+  ChevronDown,
 } from "lucide-react";
+import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
 import type { TabKey } from "@/lib/constants/dashboard-nav";
 
 const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -124,15 +132,9 @@ const GROW_TAB_HEADERS: Record<TabKey, { title: string; description: string }> =
 };
 
 export default function RootPage() {
-  const { activeTab, setActiveTab, openPanel, handleSubmit, setInput } = useChatPanel();
+  const { activeTab, setActiveTab } = useChatPanel();
   const { role, setRole, roles } = useRole();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  const handleSuggestionClick = (suggestion: string) => {
-    openPanel();
-    setInput(suggestion);
-    handleSubmit(suggestion);
-  };
 
   const isGrow = selectedCategory === "grow";
   const header = isGrow ? GROW_TAB_HEADERS[activeTab] : DEFAULT_TAB_HEADERS[activeTab];
@@ -147,7 +149,55 @@ export default function RootPage() {
           </div>
           <span className="font-display text-sm font-bold text-deep-blue">Ascenta</span>
         </div>
-        <div className="h-5 w-px bg-border mr-2" />
+        <div className="h-5 w-px bg-border mr-1" />
+        {/* Category Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors outline-none",
+                selectedCategory
+                  ? "bg-summit/10 text-summit"
+                  : "text-muted-foreground hover:text-deep-blue hover:bg-slate-100"
+              )}
+            >
+              {selectedCategory
+                ? (() => {
+                    const cat = DASHBOARD_NAV.find((c) => c.key === selectedCategory);
+                    if (!cat) return "Select";
+                    const CatIcon = cat.icon;
+                    return (
+                      <>
+                        <CatIcon className="size-3.5" />
+                        {cat.label}
+                      </>
+                    );
+                  })()
+                : "Section"}
+              <ChevronDown className="size-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44">
+            {DASHBOARD_NAV.map((cat) => {
+              const CatIcon = cat.icon;
+              const isActive = selectedCategory === cat.key;
+              return (
+                <DropdownMenuItem
+                  key={cat.key}
+                  onClick={() => setSelectedCategory(cat.key)}
+                  className={cn(
+                    "flex items-center gap-2 text-xs",
+                    isActive && "font-semibold text-summit"
+                  )}
+                >
+                  <CatIcon className="size-3.5" />
+                  {cat.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="h-5 w-px bg-border mx-1" />
         <nav className="flex items-center gap-1">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -188,11 +238,7 @@ export default function RootPage() {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === "do" ? (
-          <ChatWelcome
-            onSuggestionClick={handleSuggestionClick}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <ChatWelcome selectedCategory={selectedCategory} />
         ) : (
           <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
             {header.title && (
