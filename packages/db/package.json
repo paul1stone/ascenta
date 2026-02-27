@@ -13,7 +13,10 @@
     "./conversations": "./src/conversations.ts",
     "./documents": "./src/documents.ts",
     "./tracked-documents": "./src/tracked-documents.ts",
-    "./employees": "./src/employees.ts"
+    "./employees": "./src/employees.ts",
+    "./goal-schema": "./src/goal-schema.ts",
+    "./checkin-schema": "./src/checkin-schema.ts",
+    "./performance-note-schema": "./src/performance-note-schema.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"

@@ -207,3 +207,6 @@ export type NewEmbedding = {
 export * from "./workflow-schema";
 export * from "./employee-schema";
 export * from "./demo-requests-schema";
+export * from "./goal-schema";
+export * from "./checkin-schema";
+export * from "./performance-note-schema";
