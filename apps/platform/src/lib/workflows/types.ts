@@ -14,10 +14,11 @@ export const WORKFLOW_CATEGORIES = [
   "scheduling",
   "compliance",
   "communication",
+  "grow",
 ] as const;
 export type WorkflowCategory = (typeof WORKFLOW_CATEGORIES)[number];
 
-export const WORKFLOW_AUDIENCES = ["manager", "hr", "hr_only"] as const;
+export const WORKFLOW_AUDIENCES = ["manager", "hr", "hr_only", "employee"] as const;
 export type WorkflowAudience = (typeof WORKFLOW_AUDIENCES)[number];
 
 export const RISK_LEVELS = ["low", "medium", "high"] as const;
