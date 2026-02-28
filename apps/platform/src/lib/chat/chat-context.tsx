@@ -12,7 +12,6 @@ import {
 import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
 import { AI_CONFIG } from "@/lib/ai/config";
 import type { ConversationSummary } from "@ascenta/types";
-import type { TabKey } from "@/lib/constants/dashboard-nav";
 
 interface Message {
   id: string;
@@ -20,7 +19,7 @@ interface Message {
   content: string;
 }
 
-interface ChatPanelContextValue {
+interface ChatContextValue {
   // State
   messages: Message[];
   input: string;
@@ -28,14 +27,11 @@ interface ChatPanelContextValue {
   conversationId: string | undefined;
   conversations: ConversationSummary[];
   model: string;
-  isPanelOpen: boolean;
-  activeTab: TabKey;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 
   // Setters
   setInput: (value: string) => void;
   setModel: (model: string) => void;
-  setActiveTab: (tab: TabKey) => void;
 
   // Handlers
   handleSubmit: (overrideValue?: string) => Promise<void>;
@@ -44,14 +40,9 @@ interface ChatPanelContextValue {
   handleStop: () => void;
   handleNewChat: () => void;
   loadConversation: (id: string) => Promise<void>;
-
-  // Panel controls
-  openPanel: () => void;
-  closePanel: () => void;
-  togglePanel: () => void;
 }
 
-const ChatPanelContext = createContext<ChatPanelContextValue | null>(null);
+const ChatContext = createContext<ChatContextValue | null>(null);
 
 const DEFAULT_MODEL = AI_CONFIG.defaultModels.anthropic;
 
@@ -62,8 +53,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabKey>("do");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -86,14 +75,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
-
-  // Auto-open panel when ?chat=open is in the URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("chat") === "open") {
-      setIsPanelOpen(true);
-    }
-  }, []);
 
   const handleSubmit = useCallback(
     async (overrideValue?: string) => {
@@ -309,7 +290,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setConversationId(undefined);
     setInput("");
     setModel(DEFAULT_MODEL);
-    setActiveTab("do");
   }, []);
 
   const loadConversation = useCallback(
@@ -339,12 +319,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const openPanel = useCallback(() => setIsPanelOpen(true), []);
-  const closePanel = useCallback(() => setIsPanelOpen(false), []);
-  const togglePanel = useCallback(() => setIsPanelOpen((prev) => !prev), []);
-
   return (
-    <ChatPanelContext.Provider
+    <ChatContext.Provider
       value={{
         messages,
         input,
@@ -352,32 +328,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         conversationId,
         conversations,
         model,
-        isPanelOpen,
-        activeTab,
         messagesEndRef,
         setInput,
         setModel,
-        setActiveTab,
         handleSubmit,
         handleWorkflowFieldSelect,
         handleWorkflowFollowUpSelect,
         handleStop,
         handleNewChat,
         loadConversation,
-        openPanel,
-        closePanel,
-        togglePanel,
       }}
     >
       {children}
-    </ChatPanelContext.Provider>
+    </ChatContext.Provider>
   );
 }
 
-export function useChatPanel() {
-  const ctx = useContext(ChatPanelContext);
+export function useChat() {
+  const ctx = useContext(ChatContext);
   if (!ctx) {
-    throw new Error("useChatPanel must be used within a ChatProvider");
+    throw new Error("useChat must be used within a ChatProvider");
   }
   return ctx;
 }

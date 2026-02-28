@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useChatPanel } from "@/lib/chat/chat-context";
 import { useRole } from "@/lib/role/role-context";
-import { ChatWelcome } from "@/components/chat/chat-welcome";
+import { DoTab } from "@/components/do-tab";
 import { DocumentTracker } from "@/components/document-tracker";
 import { StatsOverview } from "@/components/dashboard/stats-overview";
 import { NeedsAttention } from "@/components/dashboard/needs-attention";
@@ -132,7 +131,7 @@ const GROW_TAB_HEADERS: Record<TabKey, { title: string; description: string }> =
 };
 
 export default function RootPage() {
-  const { activeTab, setActiveTab } = useChatPanel();
+  const [activeTab, setActiveTab] = useState<TabKey>("do");
   const { role, setRole, roles } = useRole();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -236,10 +235,11 @@ export default function RootPage() {
       </header>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "do" ? (
-          <ChatWelcome selectedCategory={selectedCategory} onCategorySelect={setSelectedCategory} />
-        ) : (
+      <div className={cn("flex-1 flex flex-col min-h-0", activeTab !== "do" && "hidden")}>
+        <DoTab selectedCategory={selectedCategory} onCategorySelect={setSelectedCategory} />
+      </div>
+      {activeTab !== "do" && (
+        <div className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
             {header.title && (
               <div>
@@ -251,8 +251,8 @@ export default function RootPage() {
             {activeTab === "status" && (isGrow ? <GrowStatus /> : <DocumentTracker />)}
             {activeTab === "dashboard" && (isGrow ? <GrowDashboard /> : <DashboardContent />)}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

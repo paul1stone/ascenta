@@ -1,6 +1,6 @@
 "use client";
 
-import { useChatPanel } from "@/lib/chat/chat-context";
+import { useChat } from "@/lib/chat/chat-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import { Button } from "@ascenta/ui/button";
 import { ChevronDown, MessagesSquare, MessageSquarePlus } from "lucide-react";
 
 export function ChatPanelConversations() {
-  const { conversations, conversationId, loadConversation, handleNewChat } = useChatPanel();
+  const { conversations, conversationId, loadConversation, handleNewChat } = useChat();
 
   const currentTitle =
     conversations.find((c) => c.id === conversationId)?.title ?? "New Chat";
