@@ -21,6 +21,8 @@ import {
   Search,
   PieChart,
   CalendarCheck,
+  Play,
+  CircleDot,
 } from "lucide-react";
 
 // ============================================================================
@@ -37,6 +39,7 @@ export interface NavCategory {
   key: string;
   label: string;
   icon: LucideIcon;
+  color: string;
   subPages: SubPage[];
 }
 
@@ -49,6 +52,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     key: "launch",
     label: "Launch",
     icon: Rocket,
+    color: "#bb6688",
     subPages: [
       { key: "launch/onboarding", label: "Onboarding", icon: UserPlus },
       { key: "launch/training", label: "Training Plans", icon: BookOpen },
@@ -59,6 +63,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     key: "protect",
     label: "Protect",
     icon: Shield,
+    color: "#6688bb",
     subPages: [
       { key: "protect/warnings", label: "Written Warnings", icon: AlertTriangle },
       { key: "protect/pip", label: "PIP Management", icon: FileText },
@@ -69,6 +74,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     key: "attract",
     label: "Attract",
     icon: Magnet,
+    color: "#aa8866",
     subPages: [
       { key: "attract/recruitment", label: "Recruitment", icon: Target },
       { key: "attract/engagement", label: "Engagement", icon: Heart },
@@ -79,6 +85,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     key: "develop",
     label: "Develop",
     icon: TrendingUp,
+    color: "#44aa99",
     subPages: [
       { key: "develop/reviews", label: "Performance Reviews", icon: ClipboardCheck },
       { key: "develop/goals", label: "Goal Setting", icon: Target },
@@ -89,6 +96,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     key: "transition",
     label: "Transition",
     icon: ArrowRightLeft,
+    color: "#8888aa",
     subPages: [
       { key: "transition/offboarding", label: "Offboarding", icon: UserMinus },
       { key: "transition/transfers", label: "Transfers", icon: Briefcase },
@@ -99,6 +107,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     key: "analyze",
     label: "Analyze",
     icon: PieChart,
+    color: "#55aa88",
     subPages: [
       { key: "analyze/turnover", label: "Turnover Analytics", icon: BarChart3 },
       { key: "analyze/headcount", label: "Headcount Planning", icon: Search },
@@ -337,7 +346,34 @@ export const DEFAULT_PAGE_CONFIG: PageConfig = {
 };
 
 // ============================================================================
+// NAV HELPERS
+// ============================================================================
+
+export function findNavContext(categoryKey: string, subKey: string) {
+  const category = DASHBOARD_NAV.find((c) => c.key === categoryKey);
+  if (!category) return null;
+  const subPage = category.subPages.find((s) => s.key === `${categoryKey}/${subKey}`);
+  if (!subPage) return null;
+  return { category, subPage };
+}
+
+// ============================================================================
 // TAB TYPES
 // ============================================================================
 
-export type TabKey = "do" | "learn" | "status" | "dashboard";
+export type TabKey = "do" | "learn" | "status" | "insights";
+
+export interface FunctionTab {
+  key: TabKey;
+  label: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+export const FUNCTION_TABS: FunctionTab[] = [
+  { key: "do", label: "Do", icon: Play, title: "Action Center", description: "Primary workspace for executing tasks" },
+  { key: "learn", label: "Learn", icon: BookOpen, title: "Knowledge Base", description: "Documentation, guides, and training" },
+  { key: "status", label: "Status", icon: CircleDot, title: "Status Dashboard", description: "Real-time monitoring and health checks" },
+  { key: "insights", label: "Insights", icon: BarChart3, title: "Analytics & Insights", description: "Data analysis and reporting" },
+];

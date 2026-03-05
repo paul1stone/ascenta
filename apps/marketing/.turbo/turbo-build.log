@@ -1,0 +1,11 @@
+
+> @ascenta/marketing@0.0.0 build /Users/jason/personal-repos/ascenta/apps/marketing
+> next build
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.0s
+  Running TypeScript ...
+ ELIFECYCLE  Command failed with exit code 130.
