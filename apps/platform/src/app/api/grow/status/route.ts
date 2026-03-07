@@ -118,6 +118,7 @@ export async function GET(req: Request) {
           on_track: empGoals.filter((g) => g.status === "on_track").length,
           needs_attention: empGoals.filter((g) => g.status === "needs_attention").length,
           off_track: empGoals.filter((g) => g.status === "off_track").length,
+          completed: 0,
         },
         overallStatus,
         checkInCompletion7d: totalLast7 > 0 ? completedLast7 / totalLast7 : null,
@@ -135,14 +136,23 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       manager: { id: String(manager._id), name: managerName },
-      summary: {
-        directReportCount: directReports.length,
-        totalActiveGoals: totalGoals,
-        checkInCompletion7d: totalCheckIns7 > 0 ? totalCompleted7 / totalCheckIns7 : null,
-        checkInCompletion30d: totalCheckIns30 > 0 ? totalCompleted30 / totalCheckIns30 : null,
-        totalOverdueCheckIns: overdueCheckIns.length,
+      aggregates: {
+        directReportsCount: directReports.length,
+        activeGoalsCount: totalGoals,
+        checkInCompletion7d: totalCheckIns7 > 0 ? totalCompleted7 / totalCheckIns7 : 0,
+        overdueCheckIns: overdueCheckIns.length,
       },
-      employees: employeeSummaries,
+      directReports: employeeSummaries.map((e) => ({
+        employeeId: e.id,
+        name: e.name,
+        department: e.department,
+        jobTitle: e.jobTitle,
+        goalCount: e.goalCount,
+        goalStatus: e.goalsByStatus,
+        checkInCompletion7d: e.checkInCompletion7d ?? 0,
+        checkInCompletion30d: e.checkInCompletion30d ?? 0,
+        overdueCheckIns: e.overdueCheckIns,
+      })),
     });
   } catch (error) {
     console.error("Grow status API error:", error);
