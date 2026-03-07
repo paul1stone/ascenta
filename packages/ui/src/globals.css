@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+/* Ensure Tailwind scans the UI package components (ignored by default in node_modules) */
+@source "./components";
+
 @custom-variant dark (&:is(.dark *));
 
 /* Custom fonts */
