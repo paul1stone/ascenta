@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@ascenta/ui/dropdown-menu";
 import { AI_CONFIG } from "@/lib/ai/config";
-import { ChevronDown, Sparkles, Zap } from "lucide-react";
+import { ChevronDown, Sparkles, Zap, Monitor } from "lucide-react";
 import { cn } from "@ascenta/ui";
 
 interface ModelSelectorProps {
@@ -24,6 +24,7 @@ interface ModelSelectorProps {
 const allModels = [
   ...AI_CONFIG.models.anthropic.map((m) => ({ ...m, provider: "anthropic" as const })),
   ...AI_CONFIG.models.openai.map((m) => ({ ...m, provider: "openai" as const })),
+  ...AI_CONFIG.models.ollama.map((m) => ({ ...m, provider: "ollama" as const })),
 ];
 
 // Get display name for current model
@@ -33,9 +34,12 @@ function getModelDisplayName(modelId: string): string {
 }
 
 // Get provider icon
-function ProviderIcon({ provider }: { provider: "openai" | "anthropic" }) {
+function ProviderIcon({ provider }: { provider: "openai" | "anthropic" | "ollama" }) {
   if (provider === "anthropic") {
     return <Sparkles className="size-3.5 text-orange-500" />;
+  }
+  if (provider === "ollama") {
+    return <Monitor className="size-3.5 text-violet-500" />;
   }
   return <Zap className="size-3.5 text-emerald-500" />;
 }
@@ -98,6 +102,35 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
         </DropdownMenuLabel>
         <DropdownMenuGroup>
           {AI_CONFIG.models.openai.map((model) => (
+            <DropdownMenuItem
+              key={model.id}
+              onClick={() => onChange(model.id)}
+              className={cn(
+                "cursor-pointer",
+                value === model.id && "bg-accent"
+              )}
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium">{model.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {model.description}
+                </span>
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        {/* Ollama Models (Local) */}
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Monitor className="size-3.5 text-violet-500" />
+            Ollama (Local)
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          {AI_CONFIG.models.ollama.map((model) => (
             <DropdownMenuItem
               key={model.id}
               onClick={() => onChange(model.id)}

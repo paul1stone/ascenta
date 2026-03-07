@@ -8,6 +8,7 @@ export const AI_CONFIG = {
   defaultModels: {
     openai: "gpt-4o",
     anthropic: "claude-sonnet-4-20250514",
+    ollama: "qwen3:8b",
   },
 
   // Available models by provider
@@ -21,6 +22,9 @@ export const AI_CONFIG = {
       { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", description: "Best balance of speed and capability" },
       { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", description: "Previous generation" },
       { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku", description: "Fast and efficient" },
+    ],
+    ollama: [
+      { id: "qwen3:8b", name: "Qwen 3 8B", description: "Local model via Ollama" },
     ],
   },
 
@@ -45,15 +49,19 @@ export const AI_CONFIG = {
   },
 } as const;
 
-export type Provider = "openai" | "anthropic";
+export type Provider = "openai" | "anthropic" | "ollama";
 export type OpenAIModel = (typeof AI_CONFIG.models.openai)[number]["id"];
 export type AnthropicModel = (typeof AI_CONFIG.models.anthropic)[number]["id"];
-export type Model = OpenAIModel | AnthropicModel;
+export type OllamaModel = (typeof AI_CONFIG.models.ollama)[number]["id"];
+export type Model = OpenAIModel | AnthropicModel | OllamaModel;
 
 /**
  * Get the provider for a given model
  */
 export function getProviderForModel(model: string): Provider {
+  if (AI_CONFIG.models.ollama.some((m) => m.id === model)) {
+    return "ollama";
+  }
   if (AI_CONFIG.models.openai.some((m) => m.id === model)) {
     return "openai";
   }
