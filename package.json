@@ -9,7 +9,8 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
-    "db:seed": "pnpm --filter @ascenta/db db:seed"
+    "db:seed": "pnpm --filter @ascenta/db db:seed",
+    "db:seed-grow": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-grow.ts"
   },
   "devDependencies": {
     "turbo": "^2"
