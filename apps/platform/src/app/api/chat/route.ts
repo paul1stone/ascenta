@@ -46,6 +46,8 @@ interface ChatRequest {
   workflowFollowUp?: { runId: string; type: "email" | "script" };
   /** Active corrective action run – we inject current collected/still-needed state so the AI does not re-ask */
   activeWorkflowRunId?: string;
+  /** When set, the AI is instructed to use this specific tool */
+  requiredTool?: string;
 }
 
 export async function POST(req: Request) {
@@ -62,6 +64,7 @@ export async function POST(req: Request) {
       workflowFieldSelection,
       workflowFollowUp,
       activeWorkflowRunId,
+      requiredTool,
     } = body;
 
     const isWorkflowAction = !!(workflowFieldSelection || workflowFollowUp);
@@ -153,6 +156,11 @@ export async function POST(req: Request) {
       if (stateSummary) {
         effectiveSystemPrompt = `${systemPrompt}\n\n## Current workflow memory (use this – do not ask again for anything listed as collected)\n\n${stateSummary.formattedForPrompt}`;
       }
+    }
+
+    // Inject required tool hint when user has pre-selected a tool
+    if (requiredTool) {
+      effectiveSystemPrompt += `\n\n[REQUIRED_TOOL] You MUST use the ${requiredTool} tool in your response. The user has explicitly requested this tool be used. Look up the employee first with getEmployeeInfo if needed, then call ${requiredTool} as soon as you have enough information. Ask minimal clarifying questions only if truly necessary. [/REQUIRED_TOOL]`;
     }
 
     // Get the model instance

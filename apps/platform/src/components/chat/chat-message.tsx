@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@ascenta/ui";
+import type { LucideIcon } from "lucide-react";
 import { Bot, User } from "lucide-react";
 import { MarkdownRenderer } from "./markdown-renderer";
 import { parseWorkflowBlocks } from "./workflow-blocks";
@@ -12,6 +13,7 @@ interface ChatMessageProps {
   role: "user" | "assistant" | "system";
   content: string;
   isStreaming?: boolean;
+  activeTool?: { label: string; icon: LucideIcon } | null;
   onWorkflowOptionSelect?: (runId: string, fieldKey: string, value: string) => void;
   onFollowUpSelect?: (runId: string, type: "email" | "script") => void;
   onFollowUpOther?: (value: string) => void;
@@ -21,6 +23,7 @@ export function ChatMessage({
   role,
   content,
   isStreaming,
+  activeTool,
   onWorkflowOptionSelect,
   onFollowUpSelect,
   onFollowUpOther,
@@ -54,7 +57,13 @@ export function ChatMessage({
           <span className="font-display font-semibold text-deep-blue">
             {isUser ? "You" : "Ascenta"}
           </span>
-          {isStreaming && (
+          {isStreaming && activeTool && (
+            <span className="flex items-center gap-1 rounded-full bg-summit/10 px-2 py-0.5 text-xs font-medium text-summit">
+              <activeTool.icon className="size-3" />
+              {activeTool.label}
+            </span>
+          )}
+          {isStreaming && !activeTool && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-summit" />
               Thinking...

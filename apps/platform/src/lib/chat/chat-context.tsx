@@ -45,7 +45,7 @@ export interface ChatContextValue {
   model: string;
   setModel: (model: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  sendMessage: (pageKey: string, content: string) => Promise<void>;
+  sendMessage: (pageKey: string, content: string, requiredTool?: string) => Promise<void>;
   setPageInput: (pageKey: string, value: string) => void;
   resetConversation: (pageKey: string) => void;
   stopGeneration: (pageKey: string) => void;
@@ -268,7 +268,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendMessage = useCallback(
-    async (pageKey: string, content: string) => {
+    async (pageKey: string, content: string, requiredTool?: string) => {
       const trimmed = content.trim();
       const pageState = pageConversations.get(pageKey) ?? {
         ...DEFAULT_PAGE_STATE,
@@ -321,6 +321,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             userId: "anonymous",
             model,
             ...(activeWorkflowRunId ? { activeWorkflowRunId } : {}),
+            ...(requiredTool ? { requiredTool } : {}),
           }),
           signal: abortController.signal,
         });

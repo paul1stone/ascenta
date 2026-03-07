@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { MessageSquarePlus } from "lucide-react";
 import { Button } from "@ascenta/ui/button";
 import { cn } from "@ascenta/ui";
@@ -38,6 +38,11 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
   const pageState = getPageState(pageKey);
   const { messages, isLoading, input } = pageState;
   const hasMessages = messages.length > 0;
+
+  // Tool selection state
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  // Track the tool that was used for the current streaming response
+  const [activeToolForStream, setActiveToolForStream] = useState<string | null>(null);
 
   // Track which working doc blocks we've already processed to avoid re-triggering
   const processedWorkingDocRef = useRef<Set<string>>(new Set());
@@ -85,9 +90,20 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
 
   const handleSend = useCallback(() => {
     if (input.trim()) {
-      sendMessage(pageKey, input);
+      sendMessage(pageKey, input, selectedTool ?? undefined);
+      if (selectedTool) {
+        setActiveToolForStream(selectedTool);
+        setSelectedTool(null);
+      }
     }
-  }, [pageKey, input, sendMessage]);
+  }, [pageKey, input, sendMessage, selectedTool]);
+
+  // Clear the active tool badge when streaming ends
+  useEffect(() => {
+    if (!isLoading && activeToolForStream) {
+      setActiveToolForStream(null);
+    }
+  }, [isLoading, activeToolForStream]);
 
   const handleSuggestionClick = useCallback(
     (prompt: string) => {
@@ -124,6 +140,11 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     },
     [pageKey, sendMessage],
   );
+
+  // Resolve active tool metadata for the streaming badge
+  const activeToolMeta = activeToolForStream && pageConfig.tools
+    ? pageConfig.tools.find((t) => t.key === activeToolForStream) ?? null
+    : null;
 
   // ── Empty state ──────────────────────────────────────────────────────
   if (!hasMessages) {
@@ -170,6 +191,9 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
               placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
               model={model}
               onModelChange={setModel}
+              tools={pageConfig.tools}
+              selectedTool={selectedTool}
+              onToolChange={setSelectedTool}
             />
           </div>
         </div>
@@ -206,17 +230,21 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
         {/* Scrollable messages */}
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl">
-            {messages.map((msg, i) => (
-              <ChatMessage
-                key={msg.id}
-                role={msg.role}
-                content={msg.content}
-                isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
-                onWorkflowOptionSelect={onFieldSelect}
-                onFollowUpSelect={onFollowUpSelect}
-                onFollowUpOther={onFollowUpOther}
-              />
-            ))}
+            {messages.map((msg, i) => {
+              const isLastStreaming = isLoading && i === messages.length - 1 && msg.role === "assistant";
+              return (
+                <ChatMessage
+                  key={msg.id}
+                  role={msg.role}
+                  content={msg.content}
+                  isStreaming={isLastStreaming}
+                  activeTool={isLastStreaming && activeToolMeta ? { label: activeToolMeta.label, icon: activeToolMeta.icon } : null}
+                  onWorkflowOptionSelect={onFieldSelect}
+                  onFollowUpSelect={onFollowUpSelect}
+                  onFollowUpOther={onFollowUpOther}
+                />
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -233,6 +261,9 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
               placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
               model={model}
               onModelChange={setModel}
+              tools={pageConfig.tools}
+              selectedTool={selectedTool}
+              onToolChange={setSelectedTool}
             />
           </div>
         </div>

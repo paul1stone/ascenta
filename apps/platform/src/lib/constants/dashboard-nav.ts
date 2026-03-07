@@ -28,6 +28,7 @@ import {
   CalendarDays,
   ShieldAlert,
   FolderSearch,
+  FileText,
 } from "lucide-react";
 
 // ============================================================================
@@ -156,10 +157,17 @@ export const SUB_PAGE_TITLES: Record<string, string> = {
 // PAGE CONFIGS (contextual chat suggestions)
 // ============================================================================
 
+export interface PageTool {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+}
+
 export interface PageConfig {
   title: string;
   description: string;
   suggestions: { title: string; prompt: string }[];
+  tools?: PageTool[];
 }
 
 export const PAGE_CONFIG: Record<string, PageConfig> = {
@@ -291,6 +299,11 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
       { title: "Goal setting", prompt: "Help me draft SMART goals for a team member" },
       { title: "Check-in template", prompt: "Build a structured manager-employee check-in template" },
       { title: "Self-assessment", prompt: "Draft a self-assessment guide for employees" },
+    ],
+    tools: [
+      { key: "startGoalCreation", label: "Create Goal", icon: Target },
+      { key: "startCheckIn", label: "Run Check-in", icon: CalendarCheck },
+      { key: "startPerformanceNote", label: "Add Note", icon: FileText },
     ],
   },
   "grow/coaching": {
