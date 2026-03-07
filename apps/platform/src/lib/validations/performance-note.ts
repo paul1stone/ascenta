@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NOTE_TYPES } from "@ascenta/db/performance-note-schema";
+import { NOTE_TYPES } from "@ascenta/db/performance-note-constants";
 
 const FOLLOW_UP_OPTIONS = ["none", "check_in", "goal", "escalate"] as const;
 

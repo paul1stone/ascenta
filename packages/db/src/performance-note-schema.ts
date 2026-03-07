@@ -20,16 +20,11 @@ const toJSONOptions = {
 };
 
 // ============================================================================
-// CONSTANTS
+// CONSTANTS (re-exported from performance-note-constants.ts)
 // ============================================================================
 
-export const NOTE_TYPES = [
-  "observation",
-  "feedback",
-  "coaching",
-  "recognition",
-  "concern",
-] as const;
+export { NOTE_TYPES } from "./performance-note-constants";
+import { NOTE_TYPES } from "./performance-note-constants";
 
 // ============================================================================
 // PERFORMANCE NOTE

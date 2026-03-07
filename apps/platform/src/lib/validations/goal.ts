@@ -4,7 +4,7 @@ import {
   MEASUREMENT_TYPES,
   CHECKIN_CADENCES,
   ALIGNMENT_TYPES,
-} from "@ascenta/db/goal-schema";
+} from "@ascenta/db/goal-constants";
 
 const TIME_PERIODS = [
   "Q1",
