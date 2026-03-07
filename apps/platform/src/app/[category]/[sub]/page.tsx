@@ -12,6 +12,8 @@ import {
 import { FunctionTabs } from "@/components/function-tabs";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { DoTabChat } from "@/components/do-tab-chat";
+import { LearnPanel } from "@/components/grow/learn-panel";
+import { StatusDashboard } from "@/components/grow/status-dashboard";
 
 export default function CategorySubPage({
   params,
@@ -54,9 +56,15 @@ export default function CategorySubPage({
           <p className="text-xs text-muted-foreground mb-5">
             {ctx.category.label} / {ctx.subPage.label} — {tabMeta.description}
           </p>
-          <div className="rounded-lg border-2 border-dashed flex items-center justify-center h-[200px] text-sm text-muted-foreground">
-            {tabMeta.label} content coming soon
-          </div>
+          {activeTab === "status" && pageKey === "grow/performance" ? (
+            <StatusDashboard />
+          ) : activeTab === "learn" && pageKey === "grow/performance" ? (
+            <LearnPanel />
+          ) : (
+            <div className="rounded-lg border-2 border-dashed flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+              {tabMeta.label} content coming soon
+            </div>
+          )}
         </div>
       )}
     </div>
