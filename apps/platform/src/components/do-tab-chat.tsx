@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { MessageSquarePlus } from "lucide-react";
 import { Button } from "@ascenta/ui/button";
 import { cn } from "@ascenta/ui";
@@ -8,6 +8,7 @@ import { useChat } from "@/lib/chat/chat-context";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { ChatInput } from "@/components/chat/chat-input";
 import { WorkingDocument } from "@/components/grow/working-document";
+import { parseWorkflowBlocks } from "@/components/chat/workflow-blocks";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
 
 interface DoTabChatProps {
@@ -30,11 +31,16 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     handleWorkflowFieldSelect,
     handleWorkflowFollowUpSelect,
     workingDocument,
+    openWorkingDocument,
+    updateWorkingDocumentFields,
   } = useChat();
 
   const pageState = getPageState(pageKey);
   const { messages, isLoading, input } = pageState;
   const hasMessages = messages.length > 0;
+
+  // Track which working doc blocks we've already processed to avoid re-triggering
+  const processedWorkingDocRef = useRef<Set<string>>(new Set());
 
   // Keep the chat context aware of which page is active
   useEffect(() => {
@@ -47,6 +53,35 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, hasMessages, messagesEndRef]);
+
+  // Detect working document blocks in assistant messages and trigger panel
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg || lastMsg.role !== "assistant" || isLoading) return;
+
+    // Skip if we already processed this message
+    if (processedWorkingDocRef.current.has(lastMsg.id)) return;
+
+    const parsed = parseWorkflowBlocks(lastMsg.content);
+    if (!parsed.workingDoc) return;
+
+    processedWorkingDocRef.current.add(lastMsg.id);
+    const wd = parsed.workingDoc;
+
+    if (wd.action === "open_working_document" && wd.workflowType) {
+      openWorkingDocument(
+        wd.workflowType,
+        wd.runId,
+        wd.employeeId ?? "",
+        wd.employeeName ?? "",
+        wd.prefilled ?? {},
+        wd.availableGoals,
+      );
+    } else if (wd.action === "update_working_document" && wd.updates) {
+      updateWorkingDocumentFields(wd.updates);
+    }
+  }, [messages, isLoading, openWorkingDocument, updateWorkingDocumentFields]);
 
   const handleSend = useCallback(() => {
     if (input.trim()) {
