@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@ascenta/ui";
 import { PanelLeftClose, PanelLeft, LayoutDashboard } from "lucide-react";
@@ -12,6 +12,76 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@ascenta/ui/popover";
+
+import type { NavCategory } from "@/lib/constants/dashboard-nav";
+import type { LucideIcon } from "lucide-react";
+
+function CategoryPopover({
+  cat,
+  isActive,
+  activeSub,
+  CategoryIcon,
+}: {
+  cat: NavCategory;
+  isActive: boolean;
+  activeSub: string;
+  CategoryIcon: LucideIcon;
+}) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "flex w-full items-center justify-center py-2.5 transition-colors",
+            isActive
+              ? "font-bold bg-primary/6 border-l-[3px]"
+              : "text-muted-foreground hover:bg-primary/5 border-l-[3px] border-l-transparent",
+          )}
+          style={isActive ? { borderLeftColor: cat.color } : undefined}
+        >
+          <CategoryIcon className="size-4 shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="right"
+        align="start"
+        sideOffset={8}
+        className="w-48 bg-white p-2"
+      >
+        <div
+          className="mb-2 border-l-[3px] pl-2 text-xs font-semibold text-deep-blue"
+          style={{ borderLeftColor: cat.color }}
+        >
+          {cat.label}
+        </div>
+        {cat.subPages.map((sub) => {
+          const subKey = sub.key.split("/")[1];
+          const isSubActive = activeSub === subKey && isActive;
+          return (
+            <button
+              key={sub.key}
+              onClick={() => {
+                setOpen(false);
+                router.push(`/${cat.key}/${subKey}`);
+              }}
+              className={cn(
+                "block w-full text-left rounded-md px-2 py-1.5 text-sm transition-colors",
+                isSubActive
+                  ? "font-semibold bg-primary/8 text-deep-blue"
+                  : "text-muted-foreground hover:bg-primary/5",
+              )}
+            >
+              {sub.label}
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function NavSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -94,52 +164,12 @@ export function NavSidebar() {
           return (
             <div key={cat.key}>
               {collapsed ? (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex w-full items-center justify-center py-2.5 transition-colors",
-                        isActive
-                          ? "font-bold bg-primary/6 border-l-[3px]"
-                          : "text-muted-foreground hover:bg-primary/5 border-l-[3px] border-l-transparent",
-                      )}
-                      style={isActive ? { borderLeftColor: cat.color } : undefined}
-                    >
-                      <CategoryIcon className="size-4 shrink-0" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="right"
-                    align="start"
-                    sideOffset={8}
-                    className="w-48 p-2"
-                  >
-                    <div
-                      className="mb-2 border-l-[3px] pl-2 text-xs font-semibold text-deep-blue"
-                      style={{ borderLeftColor: cat.color }}
-                    >
-                      {cat.label}
-                    </div>
-                    {cat.subPages.map((sub) => {
-                      const subKey = sub.key.split("/")[1];
-                      const isSubActive = activeSub === subKey && isActive;
-                      return (
-                        <Link
-                          key={sub.key}
-                          href={`/${cat.key}/${subKey}`}
-                          className={cn(
-                            "block rounded-md px-2 py-1.5 text-sm transition-colors",
-                            isSubActive
-                              ? "font-semibold bg-primary/8 text-deep-blue"
-                              : "text-muted-foreground hover:bg-primary/5",
-                          )}
-                        >
-                          {sub.label}
-                        </Link>
-                      );
-                    })}
-                  </PopoverContent>
-                </Popover>
+                <CategoryPopover
+                  cat={cat}
+                  isActive={isActive}
+                  activeSub={activeSub}
+                  CategoryIcon={CategoryIcon}
+                />
               ) : (
                 <>
                   <Link
