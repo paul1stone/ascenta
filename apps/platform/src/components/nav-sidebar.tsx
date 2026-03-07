@@ -49,7 +49,7 @@ function CategoryPopover({
         side="right"
         align="start"
         sideOffset={8}
-        className="w-48 bg-white p-2"
+        className="w-48 p-2"
       >
         <div
           className="mb-2 border-l-[3px] pl-2 text-xs font-semibold text-deep-blue"
