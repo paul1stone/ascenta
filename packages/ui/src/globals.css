@@ -76,7 +76,7 @@
   --foreground: #0c1e3d; /* deep-blue */
   --card: oklch(1 0 0);
   --card-foreground: #0c1e3d;
-  --popover: oklch(1 0 0 / 1);
+  --popover: oklch(1 0 0);
   --popover-foreground: #0c1e3d;
   --primary: #0c1e3d;
   --primary-foreground: oklch(0.985 0 0);
