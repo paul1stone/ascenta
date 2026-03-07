@@ -55,7 +55,6 @@ interface StatusResponse {
 // ---------------------------------------------------------------------------
 
 // TODO: Replace with actual manager ID from auth context once auth is implemented
-const DEFAULT_MANAGER_ID = "EMP1000";
 
 const STATUS_COLORS: Record<string, string> = {
   on_track: "bg-emerald-500",
@@ -201,7 +200,7 @@ interface StatusDashboardProps {
   managerId?: string;
 }
 
-export function StatusDashboard({ managerId = DEFAULT_MANAGER_ID }: StatusDashboardProps) {
+export function StatusDashboard({ managerId }: StatusDashboardProps) {
   const [data, setData] = useState<StatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -210,7 +209,8 @@ export function StatusDashboard({ managerId = DEFAULT_MANAGER_ID }: StatusDashbo
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/grow/status?managerId=${encodeURIComponent(managerId)}`);
+      const params = managerId ? `?managerId=${encodeURIComponent(managerId)}` : "";
+      const res = await fetch(`/api/grow/status${params}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(

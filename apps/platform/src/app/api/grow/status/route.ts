@@ -11,20 +11,51 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const managerId = searchParams.get("managerId");
 
-    if (!managerId) {
-      return NextResponse.json({ error: "managerId required" }, { status: 400 });
+    type ManagerDoc = { _id: unknown; firstName: string; lastName: string; employeeId: string };
+
+    let manager: ManagerDoc | null = null;
+
+    if (managerId) {
+      // Support both MongoDB ObjectId and employeeId string
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(managerId);
+      manager = isObjectId
+        ? await Employee.findById(managerId).lean() as ManagerDoc | null
+        : await Employee.findOne({ employeeId: managerId }).lean() as ManagerDoc | null;
+    } else {
+      // Auto-discover: find a manager who has goals assigned (most reliable for seeded data)
+      const managerIds = await Goal.distinct("manager");
+      if (managerIds.length > 0) {
+        manager = await Employee.findById(managerIds[0]).lean() as ManagerDoc | null;
+      }
+      // Fallback: find an employee who appears as managerName on other employees
+      if (!manager) {
+        const allEmployees = await Employee.find({ status: "active" }).lean() as (ManagerDoc & { managerName: string })[];
+        const managerNames = new Set(allEmployees.map((e) => e.managerName).filter(Boolean));
+        for (const name of managerNames) {
+          const found = allEmployees.find((e) => `${e.firstName} ${e.lastName}` === name);
+          if (found) {
+            manager = found;
+            break;
+          }
+        }
+      }
     }
 
-    const manager = await Employee.findById(managerId).lean() as { _id: unknown; firstName: string; lastName: string } | null;
     if (!manager) {
       return NextResponse.json({ error: "Manager not found" }, { status: 404 });
     }
 
-    // Find direct reports (employees whose managerName matches this manager)
+    // Find direct reports via two strategies:
+    // 1. Employees whose managerName matches this manager's name
+    // 2. Employees who are goal owners where this manager is the goal's manager
     const managerName = `${manager.firstName} ${manager.lastName}`;
+    const managedGoals = await Goal.find({ manager: manager._id }).distinct("owner");
     const directReports = await Employee.find({
-      managerName: { $regex: new RegExp(managerName, "i") },
       status: "active",
+      $or: [
+        { managerName: { $regex: new RegExp(managerName, "i") } },
+        { _id: { $in: managedGoals } },
+      ],
     }).lean();
 
     const reportIds = directReports.map((e) => e._id);
