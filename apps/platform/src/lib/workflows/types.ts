@@ -14,6 +14,7 @@ export const WORKFLOW_CATEGORIES = [
   "scheduling",
   "compliance",
   "communication",
+  "grow",
 ] as const;
 export type WorkflowCategory = (typeof WORKFLOW_CATEGORIES)[number];
 
