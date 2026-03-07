@@ -16,6 +16,7 @@ import {
   getWorkflowRun,
   getWorkflowBySlug,
   registerAllWorkflows,
+  syncAllWorkflowsToDatabase,
   logAuditEvent,
 } from "@/lib/workflows";
 import type { IntakeFieldDefinition, WorkflowInputs } from "@/lib/workflows/types";
@@ -28,6 +29,19 @@ import {
 import {
   getWorkflowStateSummary,
 } from "./workflow-tools";
+
+// ---------------------------------------------------------------------------
+// Ensure workflow definitions exist in DB (register + sync once)
+// ---------------------------------------------------------------------------
+
+let _workflowsSynced = false;
+async function ensureWorkflowsSynced() {
+  registerAllWorkflows();
+  if (!_workflowsSynced) {
+    await syncAllWorkflowsToDatabase();
+    _workflowsSynced = true;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Helpers (mirrors the pattern from workflow-tools.ts)
@@ -140,7 +154,7 @@ export const startGoalCreationTool = tool({
     managerName: z.string().optional(),
   }),
   execute: async ({ employeeName, employeeId, department, jobTitle, managerName }) => {
-    registerAllWorkflows();
+    await ensureWorkflowsSynced();
     const initialInputs: WorkflowInputs = {
       employeeName,
       employeeId,
@@ -193,7 +207,7 @@ export const startCheckInTool = tool({
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
   }),
   execute: async ({ employeeName, employeeId }) => {
-    registerAllWorkflows();
+    await ensureWorkflowsSynced();
     await connectDB();
 
     // Look up employee to get ObjectId for goal query
@@ -270,7 +284,7 @@ export const startPerformanceNoteTool = tool({
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
   }),
   execute: async ({ employeeName, employeeId }) => {
-    registerAllWorkflows();
+    await ensureWorkflowsSynced();
     const initialInputs: WorkflowInputs = {
       employeeName,
       employeeId,
@@ -319,7 +333,7 @@ export const completeGrowWorkflowTool = tool({
     runId: z.string().describe("The workflow run ID"),
   }),
   execute: async ({ runId }) => {
-    registerAllWorkflows();
+    await ensureWorkflowsSynced();
     await connectDB();
 
     const run = await getWorkflowRun(runId);
