@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { NavSidebar } from "@/components/nav-sidebar";
+import { TopHeader } from "@/components/top-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,10 @@ export default function RootLayout({
         <div className="flex h-screen overflow-hidden">
           <NavSidebar />
           <main className="flex flex-1 flex-col overflow-hidden bg-glacier">
-            {children}
+            <TopHeader />
+            <div className="flex flex-1 flex-col overflow-hidden">
+              {children}
+            </div>
           </main>
         </div>
         <Analytics />
