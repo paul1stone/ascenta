@@ -24,6 +24,8 @@ import type { IntakeFieldDefinition, WorkflowInputs } from "@/lib/workflows/type
 import {
   FIELD_PROMPT_PREFIX,
   FIELD_PROMPT_SUFFIX,
+  WORKING_DOC_PREFIX,
+  WORKING_DOC_SUFFIX,
 } from "./workflow-constants";
 
 import {
@@ -106,7 +108,7 @@ function getNextMissingField(
 // Time-period parser for Goal creation
 // ---------------------------------------------------------------------------
 
-function parseTimePeriod(
+export function parseTimePeriod(
   timePeriodValue: string,
   customStart?: string,
   customEnd?: string,
@@ -145,52 +147,63 @@ function parseTimePeriod(
 
 export const startGoalCreationTool = tool({
   description:
-    "Start creating a new performance goal for an employee. Call this after using getEmployeeInfo to find the employee. This begins the goal-setting workflow and collects fields one at a time.",
+    "Open the goal creation working document for an employee. Call this after using getEmployeeInfo and after asking any clarifying questions. Pass ALL values you can infer from the conversation as pre-filled fields.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
     department: z.string().optional(),
     jobTitle: z.string().optional(),
     managerName: z.string().optional(),
+    // Pre-fill values extracted from conversation
+    title: z.string().optional().describe("Goal title if mentioned by user"),
+    description: z.string().optional().describe("Goal description if provided"),
+    categoryGroup: z.string().optional().describe("performance, leadership, or development"),
+    category: z.string().optional().describe("Specific category if inferable"),
+    measurementType: z.string().optional().describe("How progress will be measured"),
+    successMetric: z.string().optional().describe("Success metric if mentioned"),
+    timePeriod: z.string().optional().describe("Q1-Q4, H1, H2, annual, or custom"),
+    checkInCadence: z.string().optional().describe("monthly, quarterly, milestone, or manager_scheduled"),
+    alignment: z.string().optional().describe("mission, value, or priority"),
   }),
-  execute: async ({ employeeName, employeeId, department, jobTitle, managerName }) => {
+  execute: async (params) => {
     await ensureWorkflowsSynced();
     const initialInputs: WorkflowInputs = {
-      employeeName,
-      employeeId,
-      department: department ?? "",
-      jobTitle: jobTitle ?? "",
-      managerName: managerName ?? "",
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
+      department: params.department ?? "",
+      jobTitle: params.jobTitle ?? "",
+      managerName: params.managerName ?? "",
     };
 
     const run = await startWorkflowRun("create-goal", "system", initialInputs);
-    const workflow = await getWorkflowBySlug("create-goal");
-    const summary = await getWorkflowStateSummary(run.id);
-    const next = getNextMissingField(workflow, run.inputs, employeeName);
 
-    if (next) {
-      const payload = { ...next.payload, runId: run.id };
-      return {
-        success: true,
-        runId: run.id,
-        message: `Started goal creation for ${employeeName}. Need to collect: ${next.field.label}`,
-        fieldPrompt: payload,
-        fieldPromptBlock: `${FIELD_PROMPT_PREFIX}${JSON.stringify(payload)}${FIELD_PROMPT_SUFFIX}`,
-        collectedSoFar: summary?.collectedSoFar ?? {},
-        stillNeeded: summary?.stillNeededLabels ?? [],
-        nextRequired: next.field.fieldKey,
-      };
+    // Build pre-filled values from AI-extracted params
+    const prefilled: Record<string, unknown> = {
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
+    };
+    for (const key of [
+      "title", "description", "categoryGroup", "category",
+      "measurementType", "successMetric", "timePeriod",
+      "checkInCadence", "alignment",
+    ] as const) {
+      if (params[key]) prefilled[key] = params[key];
     }
+
+    const workingDocPayload = {
+      action: "open_working_document" as const,
+      workflowType: "create-goal" as const,
+      runId: run.id,
+      employeeId: params.employeeId,
+      employeeName: params.employeeName,
+      prefilled,
+    };
 
     return {
       success: true,
       runId: run.id,
-      message: `Started goal creation for ${employeeName}. All required fields collected from employee profile.`,
-      fieldPrompt: null,
-      fieldPromptBlock: null,
-      collectedSoFar: summary?.collectedSoFar ?? {},
-      stillNeeded: summary?.stillNeededLabels ?? [],
-      nextRequired: null,
+      message: `I've opened the goal creation form for ${params.employeeName} with the details pre-filled. You can review and edit the form, or ask me to make changes.`,
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
     };
   },
 });
@@ -201,73 +214,72 @@ export const startGoalCreationTool = tool({
 
 export const startCheckInTool = tool({
   description:
-    "Start a structured check-in for an employee. This fetches the employee's active goals and begins the check-in workflow. Call this after using getEmployeeInfo to find the employee.",
+    "Open the check-in working document for an employee. This fetches active goals and opens a pre-filled form. Call after getEmployeeInfo and any clarifying questions.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
+    // Pre-fill values extracted from conversation
+    managerProgressObserved: z.string().optional().describe("Manager's progress observations if provided"),
+    managerCoachingNeeded: z.string().optional().describe("Coaching needs if mentioned"),
+    managerRecognition: z.string().optional().describe("Recognition if mentioned"),
+    employeeProgress: z.string().optional().describe("Employee progress if provided"),
+    employeeObstacles: z.string().optional().describe("Obstacles if mentioned"),
+    employeeSupportNeeded: z.string().optional().describe("Support needs if mentioned"),
   }),
-  execute: async ({ employeeName, employeeId }) => {
+  execute: async (params) => {
     await ensureWorkflowsSynced();
     await connectDB();
 
     // Look up employee to get ObjectId for goal query
-    const employee = await getEmployeeByEmployeeId(employeeId);
+    const employee = await getEmployeeByEmployeeId(params.employeeId);
 
-    // Fetch active goals for this employee to populate linkedGoals options
-    let goalOptions: { value: string; label: string }[] = [];
+    // Fetch active goals for this employee
+    let availableGoals: { id: string; title: string }[] = [];
     if (employee) {
       const activeGoals = await Goal.find({
         owner: employee.id,
         status: { $in: ["on_track", "needs_attention"] },
       }).lean();
 
-      goalOptions = activeGoals.map((g) => ({
-        value: String(g._id),
-        label: (g as Record<string, unknown>).title as string,
+      availableGoals = activeGoals.map((g) => ({
+        id: String(g._id),
+        title: (g as Record<string, unknown>).title as string,
       }));
     }
 
     const initialInputs: WorkflowInputs = {
-      employeeName,
-      employeeId,
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
     };
 
     const run = await startWorkflowRun("run-check-in", "system", initialInputs);
-    const workflow = await getWorkflowBySlug("run-check-in");
-    const summary = await getWorkflowStateSummary(run.id);
-    const next = getNextMissingField(workflow, run.inputs, employeeName);
 
-    if (next) {
-      const payload = { ...next.payload, runId: run.id };
-
-      // If the next field is linkedGoals, inject dynamic goal options
-      if (payload.fieldKey === "linkedGoals" && goalOptions.length > 0) {
-        payload.options = goalOptions;
-      }
-
-      return {
-        success: true,
-        runId: run.id,
-        message: `Started check-in for ${employeeName}.${goalOptions.length > 0 ? ` Found ${goalOptions.length} active goal(s).` : " No active goals found."} Need to collect: ${next.field.label}`,
-        fieldPrompt: payload,
-        fieldPromptBlock: `${FIELD_PROMPT_PREFIX}${JSON.stringify(payload)}${FIELD_PROMPT_SUFFIX}`,
-        collectedSoFar: summary?.collectedSoFar ?? {},
-        stillNeeded: summary?.stillNeededLabels ?? [],
-        nextRequired: next.field.fieldKey,
-        activeGoals: goalOptions,
-      };
+    const prefilled: Record<string, unknown> = {
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
+    };
+    for (const key of [
+      "managerProgressObserved", "managerCoachingNeeded", "managerRecognition",
+      "employeeProgress", "employeeObstacles", "employeeSupportNeeded",
+    ] as const) {
+      if (params[key]) prefilled[key] = params[key];
     }
+
+    const workingDocPayload = {
+      action: "open_working_document" as const,
+      workflowType: "run-check-in" as const,
+      runId: run.id,
+      employeeId: params.employeeId,
+      employeeName: params.employeeName,
+      prefilled,
+      availableGoals,
+    };
 
     return {
       success: true,
       runId: run.id,
-      message: `Started check-in for ${employeeName}. All required fields collected.`,
-      fieldPrompt: null,
-      fieldPromptBlock: null,
-      collectedSoFar: summary?.collectedSoFar ?? {},
-      stillNeeded: summary?.stillNeededLabels ?? [],
-      nextRequired: null,
-      activeGoals: goalOptions,
+      message: `I've opened the check-in form for ${params.employeeName}${availableGoals.length > 0 ? ` with ${availableGoals.length} active goal(s) available` : ""}. You can review and edit the form, or ask me to make changes.`,
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
     };
   },
 });
@@ -278,52 +290,74 @@ export const startCheckInTool = tool({
 
 export const startPerformanceNoteTool = tool({
   description:
-    "Start adding a performance note (observation, feedback, coaching moment, recognition, or concern) for an employee. Call this after using getEmployeeInfo to find the employee.",
+    "Open the performance note working document for an employee. Call after getEmployeeInfo and any clarifying questions. Pass all values you can infer.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
+    // Pre-fill values extracted from conversation
+    noteType: z.string().optional().describe("observation, feedback, coaching, recognition, or concern"),
+    observation: z.string().optional().describe("The observation text if provided"),
+    expectation: z.string().optional().describe("Expected behavior if mentioned"),
+    followUp: z.string().optional().describe("none, check_in, goal, or escalate"),
   }),
-  execute: async ({ employeeName, employeeId }) => {
+  execute: async (params) => {
     await ensureWorkflowsSynced();
     const initialInputs: WorkflowInputs = {
-      employeeName,
-      employeeId,
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
     };
 
     const run = await startWorkflowRun("add-performance-note", "system", initialInputs);
-    const workflow = await getWorkflowBySlug("add-performance-note");
-    const summary = await getWorkflowStateSummary(run.id);
-    const next = getNextMissingField(workflow, run.inputs, employeeName);
 
-    if (next) {
-      const payload = { ...next.payload, runId: run.id };
-      return {
-        success: true,
-        runId: run.id,
-        message: `Started performance note for ${employeeName}. Need to collect: ${next.field.label}`,
-        fieldPrompt: payload,
-        fieldPromptBlock: `${FIELD_PROMPT_PREFIX}${JSON.stringify(payload)}${FIELD_PROMPT_SUFFIX}`,
-        collectedSoFar: summary?.collectedSoFar ?? {},
-        stillNeeded: summary?.stillNeededLabels ?? [],
-        nextRequired: next.field.fieldKey,
-      };
+    const prefilled: Record<string, unknown> = {
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
+    };
+    for (const key of ["noteType", "observation", "expectation", "followUp"] as const) {
+      if (params[key]) prefilled[key] = params[key];
     }
+
+    const workingDocPayload = {
+      action: "open_working_document" as const,
+      workflowType: "add-performance-note" as const,
+      runId: run.id,
+      employeeId: params.employeeId,
+      employeeName: params.employeeName,
+      prefilled,
+    };
 
     return {
       success: true,
       runId: run.id,
-      message: `Started performance note for ${employeeName}. All required fields collected.`,
-      fieldPrompt: null,
-      fieldPromptBlock: null,
-      collectedSoFar: summary?.collectedSoFar ?? {},
-      stillNeeded: summary?.stillNeededLabels ?? [],
-      nextRequired: null,
+      message: `I've opened the performance note form for ${params.employeeName}. You can review and edit the form, or ask me to make changes.`,
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
     };
   },
 });
 
 // ---------------------------------------------------------------------------
-// Tool 4: Complete Grow Workflow (save the record)
+// Tool 4: Update Working Document Fields (chat → form sync)
+// ---------------------------------------------------------------------------
+
+export const updateWorkingDocumentTool = tool({
+  description:
+    "Update fields in the open working document form. Use when the user asks to change a value via chat (e.g. 'change the time period to Q3').",
+  inputSchema: z.object({
+    runId: z.string().describe("The workflow run ID"),
+    updates: z.record(z.string(), z.unknown()).describe("Object with fieldKey: newValue pairs to update"),
+  }),
+  execute: async ({ runId, updates }) => {
+    const payload = { action: "update_working_document" as const, runId, updates };
+    return {
+      success: true,
+      message: "I've updated the form with your changes.",
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(payload)}${WORKING_DOC_SUFFIX}`,
+    };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Tool 5: Complete Grow Workflow (save the record)
 // ---------------------------------------------------------------------------
 
 export const completeGrowWorkflowTool = tool({

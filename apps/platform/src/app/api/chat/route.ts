@@ -20,6 +20,7 @@ import {
   startCheckInTool,
   startPerformanceNoteTool,
   completeGrowWorkflowTool,
+  updateWorkingDocumentTool,
 } from "@/lib/ai/grow-tools";
 import { AI_CONFIG } from "@/lib/ai/config";
 import {
@@ -170,6 +171,7 @@ export async function POST(req: Request) {
       startGoalCreation: startGoalCreationTool,
       startCheckIn: startCheckInTool,
       startPerformanceNote: startPerformanceNoteTool,
+      updateWorkingDocument: updateWorkingDocumentTool,
       completeGrowWorkflow: completeGrowWorkflowTool,
     };
     const availableTools = useTools
