@@ -11,115 +11,166 @@ import {
 } from "react";
 import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
 import { AI_CONFIG } from "@/lib/ai/config";
-import type { ConversationSummary } from "@ascenta/types";
-import type { TabKey } from "@/lib/constants/dashboard-nav";
 
-interface Message {
+export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
 }
 
-interface ChatPanelContextValue {
-  // State
+export interface PageConversation {
   messages: Message[];
-  input: string;
-  isLoading: boolean;
   conversationId: string | undefined;
-  conversations: ConversationSummary[];
-  model: string;
-  isPanelOpen: boolean;
-  activeTab: TabKey;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
-
-  // Setters
-  setInput: (value: string) => void;
-  setModel: (model: string) => void;
-  setActiveTab: (tab: TabKey) => void;
-
-  // Handlers
-  handleSubmit: (overrideValue?: string) => Promise<void>;
-  handleWorkflowFieldSelect: (runId: string, fieldKey: string, value: string) => Promise<void>;
-  handleWorkflowFollowUpSelect: (runId: string, type: "email" | "script") => Promise<void>;
-  handleStop: () => void;
-  handleNewChat: () => void;
-  loadConversation: (id: string) => Promise<void>;
-
-  // Panel controls
-  openPanel: () => void;
-  closePanel: () => void;
-  togglePanel: () => void;
+  isLoading: boolean;
+  input: string;
 }
 
-const ChatPanelContext = createContext<ChatPanelContextValue | null>(null);
+export interface ChatContextValue {
+  getPageState: (pageKey: string) => PageConversation;
+  activePageKey: string;
+  setActivePageKey: (key: string) => void;
+  model: string;
+  setModel: (model: string) => void;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  sendMessage: (pageKey: string, content: string) => Promise<void>;
+  setPageInput: (pageKey: string, value: string) => void;
+  resetConversation: (pageKey: string) => void;
+  stopGeneration: (pageKey: string) => void;
+  handleWorkflowFieldSelect: (
+    pageKey: string,
+    runId: string,
+    fieldKey: string,
+    value: string,
+  ) => Promise<void>;
+  handleWorkflowFollowUpSelect: (
+    pageKey: string,
+    runId: string,
+    type: "email" | "script",
+  ) => Promise<void>;
+}
+
+const DEFAULT_PAGE_STATE: PageConversation = {
+  messages: [],
+  conversationId: undefined,
+  isLoading: false,
+  input: "",
+};
+
+const ChatContext = createContext<ChatContextValue | null>(null);
 
 const DEFAULT_MODEL = AI_CONFIG.defaultModels.anthropic;
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | undefined>();
-  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [pageConversations, setPageConversations] = useState<
+    Map<string, PageConversation>
+  >(new Map());
+  const [activePageKey, setActivePageKey] = useState<string>("");
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabKey>("do");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when active page messages change
+  const activeMessages = pageConversations.get(activePageKey)?.messages;
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [activeMessages]);
 
-  const loadConversations = useCallback(async () => {
-    try {
-      const res = await fetch("/api/conversations?userId=anonymous");
-      const data = await res.json();
-      setConversations(data.conversations || []);
-    } catch (error) {
-      console.error("Failed to load conversations:", error);
+  const getPageState = useCallback(
+    (pageKey: string): PageConversation => {
+      return pageConversations.get(pageKey) ?? DEFAULT_PAGE_STATE;
+    },
+    [pageConversations],
+  );
+
+  const updatePageState = useCallback(
+    (pageKey: string, partial: Partial<PageConversation>) => {
+      setPageConversations((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(pageKey) ?? { ...DEFAULT_PAGE_STATE };
+        next.set(pageKey, { ...current, ...partial });
+        return next;
+      });
+    },
+    [],
+  );
+
+  const setPageInput = useCallback(
+    (pageKey: string, value: string) => {
+      updatePageState(pageKey, { input: value });
+    },
+    [updatePageState],
+  );
+
+  const resetConversation = useCallback((pageKey: string) => {
+    // Abort any in-flight request
+    const controller = abortControllersRef.current.get(pageKey);
+    if (controller) {
+      controller.abort();
+      abortControllersRef.current.delete(pageKey);
     }
+    setPageConversations((prev) => {
+      const next = new Map(prev);
+      next.delete(pageKey);
+      return next;
+    });
   }, []);
 
-  // Load conversations on mount
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
-  // Auto-open panel when ?chat=open is in the URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("chat") === "open") {
-      setIsPanelOpen(true);
+  const stopGeneration = useCallback((pageKey: string) => {
+    const controller = abortControllersRef.current.get(pageKey);
+    if (controller) {
+      controller.abort();
+      abortControllersRef.current.delete(pageKey);
     }
+    setPageConversations((prev) => {
+      const current = prev.get(pageKey);
+      if (!current) return prev;
+      const next = new Map(prev);
+      next.set(pageKey, { ...current, isLoading: false });
+      return next;
+    });
   }, []);
 
-  const handleSubmit = useCallback(
-    async (overrideValue?: string) => {
-      const content = (overrideValue ?? input).trim();
-      if (!content || isLoading) return;
+  const sendMessage = useCallback(
+    async (pageKey: string, content: string) => {
+      const trimmed = content.trim();
+      const pageState = pageConversations.get(pageKey) ?? {
+        ...DEFAULT_PAGE_STATE,
+      };
+      if (!trimmed || pageState.isLoading) return;
 
       const userMessage: Message = {
         id: `user-${Date.now()}`,
         role: "user",
-        content,
+        content: trimmed,
       };
 
-      setMessages((prev) => [...prev, userMessage]);
-      if (!overrideValue) setInput("");
-      setIsLoading(true);
-
       const assistantMessageId = `assistant-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantMessageId, role: "assistant", content: "" },
-      ]);
+      const assistantPlaceholder: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+      };
+
+      // Add user message + placeholder and set loading
+      setPageConversations((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(pageKey) ?? { ...DEFAULT_PAGE_STATE };
+        next.set(pageKey, {
+          ...current,
+          messages: [...current.messages, userMessage, assistantPlaceholder],
+          isLoading: true,
+          input: "",
+        });
+        return next;
+      });
 
       try {
-        abortControllerRef.current = new AbortController();
+        const abortController = new AbortController();
+        abortControllersRef.current.set(pageKey, abortController);
 
-        const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+        const lastAssistant = [...pageState.messages]
+          .reverse()
+          .find((m) => m.role === "assistant");
         const activeWorkflowRunId = lastAssistant
           ? extractLastWorkflowRunId(lastAssistant.content)
           : undefined;
@@ -128,19 +179,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: [{ role: "user", content }],
-            conversationId,
+            messages: [{ role: "user", content: trimmed }],
+            conversationId: pageState.conversationId,
             userId: "anonymous",
             model,
             ...(activeWorkflowRunId ? { activeWorkflowRunId } : {}),
           }),
-          signal: abortControllerRef.current.signal,
+          signal: abortController.signal,
         });
 
         const newConversationId = res.headers.get("X-Conversation-Id");
-        if (newConversationId && !conversationId) {
-          setConversationId(newConversationId);
-          loadConversations();
+        if (newConversationId && !pageState.conversationId) {
+          updatePageState(pageKey, { conversationId: newConversationId });
         }
 
         if (!res.ok) {
@@ -156,228 +206,301 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             const { done, value } = await reader.read();
             if (done) break;
             fullContent += decoder.decode(value, { stream: true });
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: fullContent } : msg
-              )
-            );
+            const streamedContent = fullContent;
+            setPageConversations((prev) => {
+              const next = new Map(prev);
+              const current = prev.get(pageKey);
+              if (!current) return prev;
+              next.set(pageKey, {
+                ...current,
+                messages: current.messages.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: streamedContent }
+                    : msg,
+                ),
+              });
+              return next;
+            });
           }
         }
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
           console.error("Chat error:", error);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: "Sorry, I encountered an error. Please try again." }
-                : msg
-            )
-          );
+          setPageConversations((prev) => {
+            const next = new Map(prev);
+            const current = prev.get(pageKey);
+            if (!current) return prev;
+            next.set(pageKey, {
+              ...current,
+              messages: current.messages.map((msg) =>
+                msg.id === assistantMessageId
+                  ? {
+                      ...msg,
+                      content:
+                        "Sorry, I encountered an error. Please try again.",
+                    }
+                  : msg,
+              ),
+            });
+            return next;
+          });
         }
       } finally {
-        setIsLoading(false);
-        abortControllerRef.current = null;
+        abortControllersRef.current.delete(pageKey);
+        setPageConversations((prev) => {
+          const current = prev.get(pageKey);
+          if (!current) return prev;
+          const next = new Map(prev);
+          next.set(pageKey, { ...current, isLoading: false });
+          return next;
+        });
       }
     },
-    [input, isLoading, messages, conversationId, model, loadConversations]
+    [pageConversations, model, updatePageState],
   );
 
   const handleWorkflowFieldSelect = useCallback(
-    async (runId: string, fieldKey: string, value: string) => {
-      if (isLoading || !conversationId) return;
-      setIsLoading(true);
+    async (pageKey: string, runId: string, fieldKey: string, value: string) => {
+      const pageState = pageConversations.get(pageKey) ?? {
+        ...DEFAULT_PAGE_STATE,
+      };
+      if (pageState.isLoading || !pageState.conversationId) return;
+
       const assistantMessageId = `assistant-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantMessageId, role: "assistant", content: "" },
-      ]);
+      const assistantPlaceholder: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+      };
+
+      setPageConversations((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(pageKey) ?? { ...DEFAULT_PAGE_STATE };
+        next.set(pageKey, {
+          ...current,
+          messages: [...current.messages, assistantPlaceholder],
+          isLoading: true,
+        });
+        return next;
+      });
+
       try {
-        abortControllerRef.current = new AbortController();
+        const abortController = new AbortController();
+        abortControllersRef.current.set(pageKey, abortController);
+
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            conversationId,
+            conversationId: pageState.conversationId,
             model,
             workflowFieldSelection: { runId, fieldKey, value },
           }),
-          signal: abortControllerRef.current.signal,
+          signal: abortController.signal,
         });
+
         const newConversationId = res.headers.get("X-Conversation-Id");
-        if (newConversationId && !conversationId) {
-          setConversationId(newConversationId);
-          loadConversations();
+        if (newConversationId && !pageState.conversationId) {
+          updatePageState(pageKey, { conversationId: newConversationId });
         }
+
         if (!res.ok) throw new Error("Failed to get response");
+
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
         let fullContent = "";
+
         if (reader) {
           while (true) {
             const { done, value: chunk } = await reader.read();
             if (done) break;
             fullContent += decoder.decode(chunk, { stream: true });
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: fullContent } : msg
-              )
-            );
+            const streamedContent = fullContent;
+            setPageConversations((prev) => {
+              const next = new Map(prev);
+              const current = prev.get(pageKey);
+              if (!current) return prev;
+              next.set(pageKey, {
+                ...current,
+                messages: current.messages.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: streamedContent }
+                    : msg,
+                ),
+              });
+              return next;
+            });
           }
         }
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           console.error("Chat error:", err);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: "Sorry, something went wrong. Please try again." }
-                : msg
-            )
-          );
+          setPageConversations((prev) => {
+            const next = new Map(prev);
+            const current = prev.get(pageKey);
+            if (!current) return prev;
+            next.set(pageKey, {
+              ...current,
+              messages: current.messages.map((msg) =>
+                msg.id === assistantMessageId
+                  ? {
+                      ...msg,
+                      content:
+                        "Sorry, something went wrong. Please try again.",
+                    }
+                  : msg,
+              ),
+            });
+            return next;
+          });
         }
       } finally {
-        setIsLoading(false);
-        abortControllerRef.current = null;
+        abortControllersRef.current.delete(pageKey);
+        setPageConversations((prev) => {
+          const current = prev.get(pageKey);
+          if (!current) return prev;
+          const next = new Map(prev);
+          next.set(pageKey, { ...current, isLoading: false });
+          return next;
+        });
       }
     },
-    [isLoading, conversationId, model, loadConversations]
+    [pageConversations, model, updatePageState],
   );
 
   const handleWorkflowFollowUpSelect = useCallback(
-    async (runId: string, type: "email" | "script") => {
-      if (isLoading || !conversationId) return;
-      setIsLoading(true);
+    async (pageKey: string, runId: string, type: "email" | "script") => {
+      const pageState = pageConversations.get(pageKey) ?? {
+        ...DEFAULT_PAGE_STATE,
+      };
+      if (pageState.isLoading || !pageState.conversationId) return;
+
       const assistantMessageId = `assistant-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantMessageId, role: "assistant", content: "" },
-      ]);
+      const assistantPlaceholder: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+      };
+
+      setPageConversations((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(pageKey) ?? { ...DEFAULT_PAGE_STATE };
+        next.set(pageKey, {
+          ...current,
+          messages: [...current.messages, assistantPlaceholder],
+          isLoading: true,
+        });
+        return next;
+      });
+
       try {
-        abortControllerRef.current = new AbortController();
+        const abortController = new AbortController();
+        abortControllersRef.current.set(pageKey, abortController);
+
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            conversationId,
+            conversationId: pageState.conversationId,
             model,
             workflowFollowUp: { runId, type },
           }),
-          signal: abortControllerRef.current.signal,
+          signal: abortController.signal,
         });
+
         if (!res.ok) throw new Error("Failed to get response");
+
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
         let fullContent = "";
+
         if (reader) {
           while (true) {
             const { done, value: chunk } = await reader.read();
             if (done) break;
             fullContent += decoder.decode(chunk, { stream: true });
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: fullContent } : msg
-              )
-            );
+            const streamedContent = fullContent;
+            setPageConversations((prev) => {
+              const next = new Map(prev);
+              const current = prev.get(pageKey);
+              if (!current) return prev;
+              next.set(pageKey, {
+                ...current,
+                messages: current.messages.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: streamedContent }
+                    : msg,
+                ),
+              });
+              return next;
+            });
           }
         }
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           console.error("Chat error:", err);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: "Sorry, something went wrong. Please try again." }
-                : msg
-            )
-          );
+          setPageConversations((prev) => {
+            const next = new Map(prev);
+            const current = prev.get(pageKey);
+            if (!current) return prev;
+            next.set(pageKey, {
+              ...current,
+              messages: current.messages.map((msg) =>
+                msg.id === assistantMessageId
+                  ? {
+                      ...msg,
+                      content:
+                        "Sorry, something went wrong. Please try again.",
+                    }
+                  : msg,
+              ),
+            });
+            return next;
+          });
         }
       } finally {
-        setIsLoading(false);
-        abortControllerRef.current = null;
+        abortControllersRef.current.delete(pageKey);
+        setPageConversations((prev) => {
+          const current = prev.get(pageKey);
+          if (!current) return prev;
+          const next = new Map(prev);
+          next.set(pageKey, { ...current, isLoading: false });
+          return next;
+        });
       }
     },
-    [isLoading, conversationId, model]
+    [pageConversations, model],
   );
-
-  const handleStop = useCallback(() => {
-    abortControllerRef.current?.abort();
-    setIsLoading(false);
-  }, []);
-
-  const handleNewChat = useCallback(() => {
-    setMessages([]);
-    setConversationId(undefined);
-    setInput("");
-    setModel(DEFAULT_MODEL);
-    setActiveTab("do");
-  }, []);
-
-  const loadConversation = useCallback(
-    async (id: string) => {
-      try {
-        const res = await fetch(`/api/conversations?id=${id}`);
-        const data = await res.json();
-        if (data.messages) {
-          setMessages(
-            data.messages.map(
-              (m: { id: string; role: string; content: string }) => ({
-                id: m.id,
-                role: m.role as "user" | "assistant",
-                content: m.content,
-              })
-            )
-          );
-          setConversationId(id);
-          if (data.conversation?.model) {
-            setModel(data.conversation.model);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load conversation:", error);
-      }
-    },
-    []
-  );
-
-  const openPanel = useCallback(() => setIsPanelOpen(true), []);
-  const closePanel = useCallback(() => setIsPanelOpen(false), []);
-  const togglePanel = useCallback(() => setIsPanelOpen((prev) => !prev), []);
 
   return (
-    <ChatPanelContext.Provider
+    <ChatContext.Provider
       value={{
-        messages,
-        input,
-        isLoading,
-        conversationId,
-        conversations,
+        getPageState,
+        activePageKey,
+        setActivePageKey,
         model,
-        isPanelOpen,
-        activeTab,
-        messagesEndRef,
-        setInput,
         setModel,
-        setActiveTab,
-        handleSubmit,
+        messagesEndRef,
+        sendMessage,
+        setPageInput,
+        resetConversation,
+        stopGeneration,
         handleWorkflowFieldSelect,
         handleWorkflowFollowUpSelect,
-        handleStop,
-        handleNewChat,
-        loadConversation,
-        openPanel,
-        closePanel,
-        togglePanel,
       }}
     >
       {children}
-    </ChatPanelContext.Provider>
+    </ChatContext.Provider>
   );
 }
 
-export function useChatPanel() {
-  const ctx = useContext(ChatPanelContext);
+export function useChat() {
+  const ctx = useContext(ChatContext);
   if (!ctx) {
-    throw new Error("useChatPanel must be used within a ChatProvider");
+    throw new Error("useChat must be used within a ChatProvider");
   }
   return ctx;
 }
+
+/** @deprecated Use useChat() instead */
+export const useChatPanel = useChat;
