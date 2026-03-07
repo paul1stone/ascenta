@@ -202,17 +202,22 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
   }
 
   // ── Active state (has messages) ──────────────────────────────────────
+  const docOpen = workingDocument.isOpen;
+
   return (
     <div className="flex h-full">
-      {/* Left panel: Chat */}
+      {/* Chat panel */}
       <div
         className={cn(
           "flex h-full flex-col transition-all duration-300",
-          workingDocument.isOpen ? "w-1/2" : "w-full",
+          docOpen ? "w-1/2" : "w-full",
         )}
       >
         {/* Header bar */}
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+        <div
+          className="flex shrink-0 items-center justify-between border-b px-4 py-3"
+          style={{ borderColor: `color-mix(in srgb, ${accentColor} 20%, var(--border))` }}
+        >
           <h3 className="font-display text-sm font-semibold text-deep-blue">
             {pageConfig.title}
           </h3>
@@ -229,7 +234,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
 
         {/* Scrollable messages */}
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-2xl">
+          <div className={cn("mx-auto py-2", docOpen ? "max-w-xl" : "max-w-2xl")}>
             {messages.map((msg, i) => {
               const isLastStreaming = isLoading && i === messages.length - 1 && msg.role === "assistant";
               return (
@@ -238,6 +243,8 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
                   role={msg.role}
                   content={msg.content}
                   isStreaming={isLastStreaming}
+                  accentColor={accentColor}
+                  botColor={accentColor}
                   activeTool={isLastStreaming && activeToolMeta ? { label: activeToolMeta.label, icon: activeToolMeta.icon } : null}
                   onWorkflowOptionSelect={onFieldSelect}
                   onFollowUpSelect={onFollowUpSelect}
@@ -251,7 +258,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
 
         {/* Pinned input */}
         <div className="shrink-0 px-4 pb-4 pt-2">
-          <div className="mx-auto max-w-2xl">
+          <div className={cn("mx-auto", docOpen ? "max-w-xl" : "max-w-2xl")}>
             <ChatInput
               value={input}
               onChange={(v) => setPageInput(pageKey, v)}
@@ -269,10 +276,10 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
         </div>
       </div>
 
-      {/* Right panel: Working Document */}
-      {workingDocument.isOpen && (
-        <div className="h-full w-1/2">
-          <WorkingDocument pageKey={pageKey} />
+      {/* Working Document panel — shares space evenly */}
+      {docOpen && (
+        <div className="h-full w-1/2 p-3">
+          <WorkingDocument pageKey={pageKey} accentColor={accentColor} />
         </div>
       )}
     </div>

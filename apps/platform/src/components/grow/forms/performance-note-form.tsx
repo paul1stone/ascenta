@@ -192,12 +192,12 @@ export function PerformanceNoteForm({
         </Select>
       </div>
 
-      {/* Sticky submit/cancel bar */}
-      <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t bg-background pt-3">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      {/* Submit/cancel bar */}
+      <div className="flex items-center justify-end gap-2 border-t pt-4 mt-2">
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" size="sm" disabled={isSubmitting}>
           {isSubmitting ? "Submitting..." : "Save Note"}
         </Button>
       </div>
