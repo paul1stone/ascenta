@@ -3,9 +3,11 @@
 import { useEffect, useCallback } from "react";
 import { MessageSquarePlus } from "lucide-react";
 import { Button } from "@ascenta/ui/button";
+import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { ChatInput } from "@/components/chat/chat-input";
+import { WorkingDocument } from "@/components/grow/working-document";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
 
 interface DoTabChatProps {
@@ -27,6 +29,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     stopGeneration,
     handleWorkflowFieldSelect,
     handleWorkflowFollowUpSelect,
+    workingDocument,
   } = useChat();
 
   const pageState = getPageState(pageKey);
@@ -141,56 +144,71 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
 
   // ── Active state (has messages) ──────────────────────────────────────
   return (
-    <div className="flex h-full flex-col">
-      {/* Header bar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-        <h3 className="font-display text-sm font-semibold text-deep-blue">
-          {pageConfig.title}
-        </h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleNewConversation}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-deep-blue"
-        >
-          <MessageSquarePlus className="h-4 w-4" />
-          New conversation
-        </Button>
-      </div>
+    <div className="flex h-full">
+      {/* Left panel: Chat */}
+      <div
+        className={cn(
+          "flex h-full flex-col transition-all duration-300",
+          workingDocument.isOpen ? "w-1/2" : "w-full",
+        )}
+      >
+        {/* Header bar */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+          <h3 className="font-display text-sm font-semibold text-deep-blue">
+            {pageConfig.title}
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleNewConversation}
+            className="gap-1.5 text-xs text-muted-foreground hover:text-deep-blue"
+          >
+            <MessageSquarePlus className="h-4 w-4" />
+            New conversation
+          </Button>
+        </div>
 
-      {/* Scrollable messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl">
-          {messages.map((msg, i) => (
-            <ChatMessage
-              key={msg.id}
-              role={msg.role}
-              content={msg.content}
-              isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
-              onWorkflowOptionSelect={onFieldSelect}
-              onFollowUpSelect={onFollowUpSelect}
-              onFollowUpOther={onFollowUpOther}
+        {/* Scrollable messages */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-2xl">
+            {messages.map((msg, i) => (
+              <ChatMessage
+                key={msg.id}
+                role={msg.role}
+                content={msg.content}
+                isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
+                onWorkflowOptionSelect={onFieldSelect}
+                onFollowUpSelect={onFollowUpSelect}
+                onFollowUpOther={onFollowUpOther}
+              />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Pinned input */}
+        <div className="shrink-0 px-4 pb-4 pt-2">
+          <div className="mx-auto max-w-2xl">
+            <ChatInput
+              value={input}
+              onChange={(v) => setPageInput(pageKey, v)}
+              onSubmit={handleSend}
+              onStop={handleStop}
+              isLoading={isLoading}
+              placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
+              model={model}
+              onModelChange={setModel}
             />
-          ))}
-          <div ref={messagesEndRef} />
+          </div>
         </div>
       </div>
 
-      {/* Pinned input */}
-      <div className="shrink-0 px-4 pb-4 pt-2">
-        <div className="mx-auto max-w-2xl">
-          <ChatInput
-            value={input}
-            onChange={(v) => setPageInput(pageKey, v)}
-            onSubmit={handleSend}
-            onStop={handleStop}
-            isLoading={isLoading}
-            placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
-            model={model}
-            onModelChange={setModel}
-          />
+      {/* Right panel: Working Document */}
+      {workingDocument.isOpen && (
+        <div className="h-full w-1/2">
+          <WorkingDocument pageKey={pageKey} />
         </div>
-      </div>
+      )}
     </div>
   );
 }
