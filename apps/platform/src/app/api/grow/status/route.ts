@@ -15,7 +15,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "managerId required" }, { status: 400 });
     }
 
-    const manager = await Employee.findById(managerId).lean();
+    const manager = await Employee.findById(managerId).lean() as { _id: unknown; firstName: string; lastName: string } | null;
     if (!manager) {
       return NextResponse.json({ error: "Manager not found" }, { status: 404 });
     }
