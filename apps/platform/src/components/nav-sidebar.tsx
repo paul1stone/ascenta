@@ -35,14 +35,17 @@ function CategoryPopover({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-center py-2.5 transition-colors",
+            "flex w-full items-center justify-center py-2.5 transition-colors border-l-[3px]",
             isActive
-              ? "font-bold bg-primary/6 border-l-[3px]"
-              : "text-muted-foreground hover:bg-primary/5 border-l-[3px] border-l-transparent",
+              ? "font-bold"
+              : "border-l-transparent hover:bg-primary/5",
           )}
-          style={isActive ? { borderLeftColor: cat.color } : undefined}
+          style={{
+            borderLeftColor: isActive ? cat.color : undefined,
+            backgroundColor: isActive ? `${cat.color}20` : undefined,
+          }}
         >
-          <CategoryIcon className="size-4 shrink-0" />
+          <CategoryIcon className="size-4 shrink-0" style={{ color: cat.color }} />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -112,12 +115,7 @@ export function NavSidebar() {
           className="shrink-0"
         />
         {!collapsed && (
-          <div className="flex flex-col leading-none">
-            <span className="font-display text-sm font-bold tracking-wider text-deep-blue">ASCENTA</span>
-            <span className="text-[10px] text-muted-foreground">
-              StoneCyber
-            </span>
-          </div>
+          <span className="font-display text-sm font-bold tracking-wider text-deep-blue">ASCENTA</span>
         )}
       </div>
 
@@ -175,14 +173,17 @@ export function NavSidebar() {
                   <Link
                     href={`/${cat.key}/${firstSubKey}`}
                     className={cn(
-                      "flex items-center gap-2.5 py-2.5 text-[13px] whitespace-nowrap transition-colors px-3.5",
+                      "flex items-center gap-2.5 py-2.5 text-[13px] whitespace-nowrap transition-colors px-3.5 border-l-[3px]",
                       isActive
-                        ? "font-bold bg-primary/6 border-l-[3px]"
-                        : "text-muted-foreground hover:bg-primary/5 border-l-[3px] border-l-transparent",
+                        ? "font-bold"
+                        : "text-muted-foreground hover:bg-primary/5 border-l-transparent",
                     )}
-                    style={isActive ? { borderLeftColor: cat.color } : undefined}
+                    style={{
+                      borderLeftColor: isActive ? cat.color : undefined,
+                      backgroundColor: isActive ? `${cat.color}20` : undefined,
+                    }}
                   >
-                    <CategoryIcon className="size-4 shrink-0" />
+                    <CategoryIcon className="size-4 shrink-0" style={{ color: cat.color }} />
                     <span>{cat.label}</span>
                   </Link>
 
@@ -200,9 +201,10 @@ export function NavSidebar() {
                             className={cn(
                               "block py-1.5 pl-[30px] pr-3.5 text-xs whitespace-nowrap transition-colors",
                               isSubActive
-                                ? "font-semibold bg-primary/8 text-deep-blue"
+                                ? "font-semibold text-deep-blue"
                                 : "text-muted-foreground hover:bg-primary/5",
                             )}
+                            style={isSubActive ? { backgroundColor: `${cat.color}18` } : undefined}
                           >
                             {sub.label}
                           </Link>

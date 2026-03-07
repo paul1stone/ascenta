@@ -178,7 +178,7 @@ export function NotificationCenter() {
         {/* Footer */}
         <div className="px-4 py-2 border-t text-center">
           <Link
-            href="/dashboard"
+            href="/home"
             className="text-xs text-summit hover:underline"
             onClick={() => setOpen(false)}
           >

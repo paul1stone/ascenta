@@ -27,7 +27,7 @@ export function AppNavbar({ onDashboardClick, isDashboardActive }: AppNavbarProp
   }
 
   return (
-    <Link href="/dashboard" className={className}>
+    <Link href="/home" className={className}>
       <LayoutDashboard className="size-3.5" />
       Dashboard
     </Link>

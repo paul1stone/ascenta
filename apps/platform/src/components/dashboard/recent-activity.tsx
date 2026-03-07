@@ -142,7 +142,7 @@ export function RecentActivity() {
       {/* Footer link */}
       <div className="mt-4 border-t pt-3">
         <Link
-          href="/dashboard/activity"
+          href="/home/activity"
           className="text-xs font-medium text-summit hover:text-summit-hover transition-colors"
         >
           View all activity &rarr;
