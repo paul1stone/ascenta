@@ -175,9 +175,7 @@ export async function POST(req: Request) {
     const availableTools = useTools
       ? availability.openai
         ? defaultChatTools
-        : availability.anthropic
-          ? workflowTools
-          : { createTask: createTaskTool }
+        : workflowTools
       : undefined;
 
     // Stream the response (stopWhen allows multiple tool roundtrips for workflow building)
