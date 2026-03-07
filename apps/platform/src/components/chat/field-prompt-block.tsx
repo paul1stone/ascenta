@@ -1,3 +1,7 @@
+// TODO: This component is used by corrective action workflows only.
+// Grow workflows now use the WorkingDocument pattern (see components/grow/working-document.tsx).
+// When corrective actions are migrated, this component can be removed.
+
 "use client";
 
 import { useState } from "react";
