@@ -25,6 +25,19 @@ export interface PageConversation {
   input: string;
 }
 
+export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note";
+
+export interface WorkingDocumentState {
+  isOpen: boolean;
+  workflowType: WorkflowType | null;
+  runId: string | null;
+  employeeId: string | null;
+  employeeName: string | null;
+  fields: Record<string, unknown>;
+  /** For check-ins: available goals to link */
+  availableGoals?: { id: string; title: string }[];
+}
+
 export interface ChatContextValue {
   getPageState: (pageKey: string) => PageConversation;
   activePageKey: string;
@@ -47,6 +60,19 @@ export interface ChatContextValue {
     runId: string,
     type: "email" | "script",
   ) => Promise<void>;
+  workingDocument: WorkingDocumentState;
+  openWorkingDocument: (
+    workflowType: WorkflowType,
+    runId: string,
+    employeeId: string,
+    employeeName: string,
+    prefilled: Record<string, unknown>,
+    availableGoals?: { id: string; title: string }[],
+  ) => void;
+  updateWorkingDocumentField: (fieldKey: string, value: unknown) => void;
+  updateWorkingDocumentFields: (updates: Record<string, unknown>) => void;
+  closeWorkingDocument: () => void;
+  submitWorkingDocument: (pageKey: string) => Promise<void>;
 }
 
 const DEFAULT_PAGE_STATE: PageConversation = {
@@ -54,6 +80,15 @@ const DEFAULT_PAGE_STATE: PageConversation = {
   conversationId: undefined,
   isLoading: false,
   input: "",
+};
+
+const INITIAL_WORKING_DOC: WorkingDocumentState = {
+  isOpen: false,
+  workflowType: null,
+  runId: null,
+  employeeId: null,
+  employeeName: null,
+  fields: {},
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -68,6 +103,108 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const [workingDocument, setWorkingDocument] =
+    useState<WorkingDocumentState>(INITIAL_WORKING_DOC);
+
+  const openWorkingDocument = useCallback(
+    (
+      workflowType: WorkflowType,
+      runId: string,
+      employeeId: string,
+      employeeName: string,
+      prefilled: Record<string, unknown>,
+      availableGoals?: { id: string; title: string }[],
+    ) => {
+      setWorkingDocument({
+        isOpen: true,
+        workflowType,
+        runId,
+        employeeId,
+        employeeName,
+        fields: prefilled,
+        availableGoals,
+      });
+    },
+    [],
+  );
+
+  const updateWorkingDocumentField = useCallback(
+    (fieldKey: string, value: unknown) => {
+      setWorkingDocument((prev) => ({
+        ...prev,
+        fields: { ...prev.fields, [fieldKey]: value },
+      }));
+    },
+    [],
+  );
+
+  const updateWorkingDocumentFields = useCallback(
+    (updates: Record<string, unknown>) => {
+      setWorkingDocument((prev) => ({
+        ...prev,
+        fields: { ...prev.fields, ...updates },
+      }));
+    },
+    [],
+  );
+
+  const closeWorkingDocument = useCallback(() => {
+    setWorkingDocument(INITIAL_WORKING_DOC);
+  }, []);
+
+  const submitWorkingDocument = useCallback(
+    async (pageKey: string) => {
+      const { workflowType, runId, fields, employeeId, employeeName } =
+        workingDocument;
+
+      if (!workflowType || !runId) {
+        throw new Error("No active working document to submit");
+      }
+
+      const routeMap: Record<WorkflowType, string> = {
+        "create-goal": "/api/grow/goals",
+        "run-check-in": "/api/grow/check-ins",
+        "add-performance-note": "/api/grow/performance-notes",
+      };
+
+      const res = await fetch(routeMap[workflowType], {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...fields,
+          employeeId,
+          employeeName,
+          runId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          (errorData as { error?: string }).error ?? "Failed to submit working document",
+        );
+      }
+
+      const confirmationMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: `Successfully submitted ${workflowType.replace(/-/g, " ")} for ${employeeName ?? "employee"}.`,
+      };
+
+      setPageConversations((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(pageKey) ?? { ...DEFAULT_PAGE_STATE };
+        next.set(pageKey, {
+          ...current,
+          messages: [...current.messages, confirmationMessage],
+        });
+        return next;
+      });
+
+      setWorkingDocument(INITIAL_WORKING_DOC);
+    },
+    [workingDocument],
+  );
 
   // Scroll to bottom when active page messages change
   const activeMessages = pageConversations.get(activePageKey)?.messages;
@@ -487,6 +624,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         stopGeneration,
         handleWorkflowFieldSelect,
         handleWorkflowFollowUpSelect,
+        workingDocument,
+        openWorkingDocument,
+        updateWorkingDocumentField,
+        updateWorkingDocumentFields,
+        closeWorkingDocument,
+        submitWorkingDocument,
       }}
     >
       {children}
