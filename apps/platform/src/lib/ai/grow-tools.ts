@@ -147,23 +147,23 @@ export function parseTimePeriod(
 
 export const startGoalCreationTool = tool({
   description:
-    "Open the goal creation working document for an employee. Call this after using getEmployeeInfo and after asking any clarifying questions. Pass ALL values you can infer from the conversation as pre-filled fields.",
+    "Open the goal creation working document for an employee. Call this after using getEmployeeInfo and after asking any clarifying questions. You MUST provide a value for EVERY field — infer from context when not explicitly stated. The user should only need to review the form, not fill it out.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
     department: z.string().optional(),
     jobTitle: z.string().optional(),
     managerName: z.string().optional(),
-    // Pre-fill values extracted from conversation
-    title: z.string().optional().describe("Goal title if mentioned by user"),
-    description: z.string().optional().describe("Goal description if provided"),
-    categoryGroup: z.string().optional().describe("performance, leadership, or development"),
-    category: z.string().optional().describe("Specific category if inferable"),
-    measurementType: z.string().optional().describe("How progress will be measured"),
-    successMetric: z.string().optional().describe("Success metric if mentioned"),
-    timePeriod: z.string().optional().describe("Q1-Q4, H1, H2, annual, or custom"),
-    checkInCadence: z.string().optional().describe("monthly, quarterly, milestone, or manager_scheduled"),
-    alignment: z.string().optional().describe("mission, value, or priority"),
+    // ALL fields below should be filled — infer from context when not explicit
+    title: z.string().describe("Concise goal title synthesized from the conversation"),
+    description: z.string().describe("1-2 sentence goal description expanding on the user's intent"),
+    categoryGroup: z.string().describe("'performance', 'leadership', or 'development' — infer from goal nature"),
+    category: z.string().describe("Specific category: productivity, quality, accuracy, efficiency, operational_excellence, customer_impact, communication, collaboration, conflict_resolution, decision_making, initiative, skill_development, certification, training_completion, leadership_growth, career_advancement"),
+    measurementType: z.string().describe("numeric_metric, percentage_target, milestone_completion, behavior_change, or learning_completion — match to what's being measured"),
+    successMetric: z.string().describe("Clear success criteria — restate user's metric or create a reasonable one from context"),
+    timePeriod: z.string().describe("Q1, Q2, Q3, Q4, H1, H2, annual, or custom — use current quarter if user says 'this quarter'"),
+    checkInCadence: z.string().describe("monthly (default for quarterly goals), quarterly (for annual), milestone (for milestone-based), or manager_scheduled"),
+    alignment: z.string().describe("mission (core job performance), value (culture/teamwork), or priority (skill development/strategic) — infer from goal type"),
   }),
   execute: async (params) => {
     await ensureWorkflowsSynced();
@@ -214,17 +214,17 @@ export const startGoalCreationTool = tool({
 
 export const startCheckInTool = tool({
   description:
-    "Open the check-in working document for an employee. This fetches active goals and opens a pre-filled form. Call after getEmployeeInfo and any clarifying questions.",
+    "Open the check-in working document for an employee. Call after getEmployeeInfo and any clarifying questions. You MUST provide a value for EVERY field you can infer from context. The user should only need to review the form, not fill it out.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
-    // Pre-fill values extracted from conversation
-    managerProgressObserved: z.string().optional().describe("Manager's progress observations if provided"),
-    managerCoachingNeeded: z.string().optional().describe("Coaching needs if mentioned"),
-    managerRecognition: z.string().optional().describe("Recognition if mentioned"),
-    employeeProgress: z.string().optional().describe("Employee progress if provided"),
-    employeeObstacles: z.string().optional().describe("Obstacles if mentioned"),
-    employeeSupportNeeded: z.string().optional().describe("Support needs if mentioned"),
+    // ALL fields below should be filled — infer from context when not explicit
+    managerProgressObserved: z.string().describe("Manager's observations on the employee's progress — synthesize from conversation context"),
+    managerCoachingNeeded: z.string().describe("What coaching or support the manager sees as needed — infer from discussed challenges or goals"),
+    managerRecognition: z.string().optional().describe("Any recognition or praise for the employee — include if positive context exists, omit if none"),
+    employeeProgress: z.string().describe("Employee's self-reported progress — summarize what the employee/manager shared about accomplishments"),
+    employeeObstacles: z.string().describe("Obstacles the employee is facing — infer from conversation or write 'None identified' if truly unclear"),
+    employeeSupportNeeded: z.string().optional().describe("What support the employee needs — include if mentioned, omit if not discussed"),
   }),
   execute: async (params) => {
     await ensureWorkflowsSynced();
@@ -290,15 +290,15 @@ export const startCheckInTool = tool({
 
 export const startPerformanceNoteTool = tool({
   description:
-    "Open the performance note working document for an employee. Call after getEmployeeInfo and any clarifying questions. Pass all values you can infer.",
+    "Open the performance note working document for an employee. Call after getEmployeeInfo and any clarifying questions. You MUST provide a value for EVERY field — infer from context when not explicitly stated. The user should only need to review the form, not fill it out.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
-    // Pre-fill values extracted from conversation
-    noteType: z.string().optional().describe("observation, feedback, coaching, recognition, or concern"),
-    observation: z.string().optional().describe("The observation text if provided"),
-    expectation: z.string().optional().describe("Expected behavior if mentioned"),
-    followUp: z.string().optional().describe("none, check_in, goal, or escalate"),
+    // ALL fields below should be filled — infer from context when not explicit
+    noteType: z.string().describe("observation (saw something), feedback (giving input), coaching (guiding improvement), recognition (positive), or concern (issue) — infer from the tone and content of what the user described"),
+    observation: z.string().describe("What was observed — expand the user's description into a clear, professional observation statement"),
+    expectation: z.string().optional().describe("Expected behavior going forward — infer a reasonable expectation if the note type is feedback, coaching, or concern; omit for recognition/observation"),
+    followUp: z.string().describe("none (no action needed), check_in (schedule follow-up), goal (create a related goal), or escalate (needs higher review) — default to 'none' for recognition, 'check_in' for coaching/concern"),
   }),
   execute: async (params) => {
     await ensureWorkflowsSynced();
