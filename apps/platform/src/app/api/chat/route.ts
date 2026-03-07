@@ -1,6 +1,7 @@
 import { streamText, stepCountIs, type ModelMessage } from "ai";
 import { connectDB } from "@ascenta/db";
 import { getModel, checkProviderConfig } from "@/lib/ai/providers";
+import { getProviderForModel } from "@/lib/ai/config";
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
   defaultChatTools,
@@ -14,6 +15,12 @@ import {
   generateWorkflowFollowUpTool,
   getWorkflowStateSummary,
 } from "@/lib/ai/workflow-tools";
+import {
+  startGoalCreationTool,
+  startCheckInTool,
+  startPerformanceNoteTool,
+  completeGrowWorkflowTool,
+} from "@/lib/ai/grow-tools";
 import { AI_CONFIG } from "@/lib/ai/config";
 import {
   createConversation,
@@ -86,7 +93,7 @@ export async function POST(req: Request) {
       conversation = await createConversation({
         userId,
         model,
-        provider: model.startsWith("claude") ? "anthropic" : "openai",
+        provider: getProviderForModel(model),
         systemPrompt,
       });
     }
@@ -160,6 +167,10 @@ export async function POST(req: Request) {
       updateWorkflowField: updateWorkflowFieldTool,
       generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
       generateWorkflowFollowUp: generateWorkflowFollowUpTool,
+      startGoalCreation: startGoalCreationTool,
+      startCheckIn: startCheckInTool,
+      startPerformanceNote: startPerformanceNoteTool,
+      completeGrowWorkflow: completeGrowWorkflowTool,
     };
     const availableTools = useTools
       ? availability.openai
@@ -193,11 +204,14 @@ export async function POST(req: Request) {
         "X-Conversation-Id": conversation.id,
       },
     });
-  } catch (error) {
-    console.error("Chat API error:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("Chat API error:", stack || message);
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request",
+        details: message,
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
