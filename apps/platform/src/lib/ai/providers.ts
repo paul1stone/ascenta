@@ -22,7 +22,6 @@ const anthropic = createAnthropic({
 const ollama = createOpenAI({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/v1",
   apiKey: "ollama", // Required by the SDK but not used by Ollama
-  compatibility: "compatible", // Use Chat Completions API, not Responses API
 });
 
 /**
@@ -54,7 +53,7 @@ export function getModel(modelId: string) {
     case "anthropic":
       return anthropic(modelId);
     case "ollama":
-      return ollama(modelId);
+      return ollama.chat(modelId);
     default:
       return openai(AI_CONFIG.defaultModels.openai);
   }
