@@ -1,3 +1,8 @@
+// TODO: Migrate corrective action workflows (written-warning, PIP, investigation-summary)
+// to the working document pattern. See docs/plans/2026-03-07-working-document-pattern-design.md
+// The working document for corrective actions would show the document template being built.
+// Follow-up actions (email/script) could become tabs or sections in the working document.
+
 /**
  * Conversational workflow tools for chat
  * Enables building corrective actions via chat with button-based field collection

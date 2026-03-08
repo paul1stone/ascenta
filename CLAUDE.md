@@ -19,6 +19,7 @@ pnpm lint                             # ESLint
 pnpm test                             # Run tests (vitest run)
 pnpm test:watch                       # Run tests in watch mode
 pnpm db:seed                          # Seed employee data
+pnpm db:seed-grow                     # Seed Grow performance data (goals, check-ins, notes)
 ```
 
 CI runs lint, `tsc --noEmit`, and tests on PRs to main (`.github/workflows/ci.yml`).
@@ -55,12 +56,14 @@ ascenta/
 
 ### Platform App (`apps/platform/src/`)
 
-- **`app/`** — Pages and API routes (App Router). `/chat` for the conversational workflow UI; `/tracker` for the Kanban document pipeline; `/dashboard` for HR management overview; `/ack/[id]` for document acknowledgment (static HTML, no React).
-- **`components/`** — `chat/` has chat interface and workflow block components; `dashboard/` has stats, employee directory, activity, and pipeline components; `app-navbar.tsx` is the main nav; `notification-center.tsx` for alerts; `document-tracker.tsx` for the tracker view.
-- **`lib/ai/`** — AI integration layer. `config.ts` defines models/providers, `providers.ts` creates OpenAI/Anthropic instances, `tools.ts` and `workflow-tools.ts` define function-calling tools, `prompts.ts` has system prompts.
+- **`app/`** — Pages and API routes (App Router). `/[category]/[sub]` is the main dashboard page (dynamic route for all nav sections); `/chat` for the legacy chat UI; `/tracker` for the Kanban document pipeline; `/dashboard` for HR management overview; `/ack/[id]` for document acknowledgment (static HTML, no React).
+- **`components/`** — `chat/` has chat interface, workflow block components, model selector, and tool selector; `grow/` has working document panel and forms (goal-creation, check-in, performance-note), status dashboard, and learn panel; `dashboard/` has stats, employee directory, activity, and pipeline components; `app-navbar.tsx` is the main nav; `notification-center.tsx` for alerts; `document-tracker.tsx` for the tracker view.
+- **`lib/ai/`** — AI integration layer. `config.ts` defines models/providers (OpenAI, Anthropic, Ollama), `providers.ts` creates provider instances, `tools.ts` and `workflow-tools.ts` define corrective action tools, `grow-tools.ts` defines Grow performance tools (goal creation, check-in, performance note, working document updates), `prompts.ts` has system prompts with detailed field inference guidance.
 - **`lib/rag/`** — Retrieval-Augmented Generation. `embeddings.ts` (OpenAI text-embedding-3-small, 1536 dims), `search.ts` (MongoDB Atlas Vector Search, 0.3 similarity threshold), `context.ts` (context assembly for prompts).
-- **`lib/workflows/`** — Workflow engine. `engine.ts` orchestrates runs with in-memory registry synced to DB, `guardrails.ts` evaluates business rules as code (not AI), `artifacts.ts` generates documents from templates, `audit.ts` writes immutable audit events with SHA-256 hashing. `definitions/` contains workflow configs (written-warning, pip, investigation-summary).
-- **`lib/constants/`** — `dashboard-nav.ts` defines the dashboard navigation structure and category metadata.
+- **`lib/workflows/`** — Workflow engine. `engine.ts` orchestrates runs with in-memory registry synced to DB, `guardrails.ts` evaluates business rules as code (not AI), `artifacts.ts` generates documents from templates, `audit.ts` writes immutable audit events with SHA-256 hashing. `definitions/` contains workflow configs (written-warning, pip, investigation-summary, create-goal, run-check-in, add-performance-note).
+- **`lib/constants/`** — `dashboard-nav.ts` defines the dashboard navigation structure, category metadata (with accent colors per section), page configs with contextual suggestions, and per-page tool definitions.
+- **`lib/validations/`** — Zod schemas for Grow workflow forms (`goal.ts`, `check-in.ts`, `performance-note.ts`).
+- **`lib/chat/`** — `chat-context.tsx` provides ChatContext with per-page message state, working document state management, and AI streaming.
 - **`hooks/`** — React hooks (`use-mobile.ts`).
 
 ### Marketing App (`apps/marketing/src/`)
@@ -72,7 +75,7 @@ ascenta/
 ### Shared Packages
 
 - **`packages/ui/`** — shadcn/ui primitives (button, dialog, dropdown, tabs, etc.), `globals.css` with design tokens, `utils.ts` with `cn()` helper, hooks. Both apps import via `@ascenta/ui` and `@ascenta/ui/globals.css`.
-- **`packages/db/`** — Database layer. `schema.ts` defines Mongoose models for conversations, documents, and embeddings. `workflow-schema.ts` defines workflow models with embedded sub-documents (intakeFields, guardrails, etc. are embedded in WorkflowDefinition). `employee-schema.ts` has Employee with embedded notes. `index.ts` exports `connectDB()` for Mongoose connection (uses `MONGODB_URI`). Query helpers in `conversations.ts`, `employees.ts`, `tracked-documents.ts`, `documents.ts`.
+- **`packages/db/`** — Database layer. `schema.ts` defines Mongoose models for conversations, documents, and embeddings. `workflow-schema.ts` defines workflow models with embedded sub-documents (intakeFields, guardrails, etc. are embedded in WorkflowDefinition). `employee-schema.ts` has Employee with embedded notes. `goal-schema.ts`, `checkin-schema.ts`, `performance-note-schema.ts` define Grow performance models. `goal-constants.ts` and `performance-note-constants.ts` export enum constants separately from schemas (to avoid client-side mongoose imports). `index.ts` exports `connectDB()` for Mongoose connection (uses `MONGODB_URI`). Query helpers in `conversations.ts`, `employees.ts`, `tracked-documents.ts`, `documents.ts`.
 - **`packages/email/`** — Resend integration. `resend.ts` exports a lazy singleton. `templates/` has email templates for document delivery, reminders, and demo request flows.
 - **`packages/types/`** — Shared TypeScript type definitions.
 - **`packages/config/`** — Shared `tsconfig.json` base and PostCSS config.
@@ -88,6 +91,22 @@ The chat-driven workflow is the core product loop. Understanding this flow is es
 5. **Workflow memory** — `getWorkflowStateSummary(runId)` injects `[WORKFLOW STATE]` block into system prompt listing collected vs still-needed fields, preventing re-asking. The `activeWorkflowRunId` is tracked by the frontend and sent with each request.
 6. **Generation** — When all fields collected (`readyToGenerate: true`), `generateCorrectiveActionDocument` renders artifact from template + inputs, creates tracked document, returns markdown.
 7. **Follow-up** — `generateWorkflowFollowUp` streams a custom email or in-person script via internal `streamText()` call, wrapped in `[ASCENTA_FOLLOW_UP]...[/ASCENTA_FOLLOW_UP]`.
+
+### Grow Performance System (Working Document Pattern)
+
+The Grow system uses a different pattern from corrective actions — a "working document" with a side-panel form:
+
+1. **User requests action** → AI calls `getEmployeeInfo` → calls `startGoalCreation`, `startCheckIn`, or `startPerformanceNote` with **all fields pre-filled** (AI must infer values from context, not ask one-by-one)
+2. **Working document block** — Tool returns JSON wrapped in `[ASCENTA_WORKING_DOC]...[/ASCENTA_WORKING_DOC]` with `action: "open_working_document"` and prefilled field values.
+3. **Frontend parsing** — `do-tab-chat.tsx` detects the block, calls `openWorkingDocument()` on ChatContext, which opens a side-panel form (50/50 split with chat).
+4. **Form components** — `components/grow/forms/` has `GoalCreationForm`, `CheckInForm`, `PerformanceNoteForm` using react-hook-form + Zod validation. Forms are pre-populated from AI-provided values.
+5. **Chat-to-form sync** — User can ask the AI to change fields (e.g., "change time period to Q3"), which triggers `updateWorkingDocument` tool → returns `action: "update_working_document"` block → frontend patches the form.
+6. **User submits** — User reviews and submits the form themselves. The AI does NOT submit for them.
+7. **API routes** — `POST /api/grow/goals`, `/api/grow/check-ins`, `/api/grow/performance-notes` handle form submissions directly.
+
+**Key difference from corrective actions**: Corrective actions collect fields one-at-a-time via `FieldPromptBlock` buttons. Grow workflows pre-fill ALL fields at once and open a form for review. The AI is instructed to infer aggressively and explain its reasoning.
+
+**Tool selector** — Pages can define tools in `dashboard-nav.ts` (e.g., Grow/Performance has Create Goal, Run Check-in, Add Note). Pre-selecting a tool injects `[REQUIRED_TOOL]` into the system prompt to guarantee tool usage. A transient badge shows on assistant messages during streaming.
 
 ### Document Delivery Pipeline
 
@@ -106,6 +125,7 @@ Generated documents flow through a delivery lifecycle:
 - **`/api/notifications`** — Aggregates recent acknowledges, sends, workflow completions, and audit events into unified notification feed.
 - **`/api/documents/upload`** — Parses PDF (pdf-parse), DOCX (mammoth), or TXT, then chunks and embeds for RAG knowledge base.
 - **`/api/cron/reminders`** — Authorized via `CRON_SECRET`, sends document acknowledgment reminders.
+- **`/api/grow/*`** — `goals` (POST create goal), `check-ins` (POST create check-in), `performance-notes` (POST create note), `status` (GET status dashboard data with goals/check-ins/notes per employee).
 - **`/api/conversations`**, **`/api/documents`**, **`/api/search`**, **`/api/completion`** — Supporting endpoints.
 
 ### Key API Routes (Marketing)
@@ -114,12 +134,13 @@ Generated documents flow through a delivery lifecycle:
 
 ### Database Schema (Mongoose + MongoDB Atlas)
 
-9 MongoDB collections (denormalized from 17 Postgres tables). Schemas live in `packages/db/src/`:
+12+ MongoDB collections. Schemas live in `packages/db/src/`:
 - **Conversations** — Chat persistence with embedded `messages[]` array (tool calls and metadata stored as Mixed type).
 - **Workflow system** — `workflowDefinitions` (embeds `intakeFields[]`, `guardrails[]`, `artifactTemplates[]`, `textLibraries[]`, `guidedActions[]`), `workflowRuns` (with immutable `inputsSnapshot`), `workflowOutputs`, `auditEvents` (with input/output SHA-256 hashes).
 - **Employees** — `employees` with embedded `notes[]` (types: written_warning, verbal_warning, late_notice, pip, commendation, general).
 - **Documents & Embeddings** — RAG knowledge base with MongoDB Atlas Vector Search (`$vectorSearch` aggregation, index name: `embedding_index`, 1536 dims, cosine similarity).
 - **Tracked Documents** — Kanban pipeline state linked to workflow runs and employees. Includes delivery fields: `employeeEmail`, `sentAt`, `acknowledgedAt`, `ackToken` (HMAC), `reminderSentAt`, `reminderCount`.
+- **Grow Performance** — `goals` (with owner ref to Employee, category/measurement/alignment enums, time periods), `checkins` (linked to goals, manager + employee sections), `performancenotes` (observation/coaching/recognition typed notes with follow-up actions).
 - **Demo Requests** — `demoRequests` collection for lead capture.
 
 All models use `toJSON`/`toObject` virtuals to expose `id` as `_id.toString()` for frontend compatibility. API routes call `await connectDB()` before any DB operations.
@@ -133,7 +154,7 @@ All models use `toJSON`/`toObject` virtuals to expose `id` as `_id.toString()` f
 
 ### AI Provider Setup
 
-Dual-provider: OpenAI (default: gpt-4o) and Anthropic (default: claude-sonnet-4). Provider is auto-detected from model ID (`claude*` → Anthropic, `gpt*` → OpenAI). Embeddings are OpenAI-only. Tool availability is conditional on provider config. Configuration in `apps/platform/src/lib/ai/config.ts`, instances in `providers.ts`.
+Three providers: OpenAI (default: gpt-4o), Anthropic (default: claude-sonnet-4), and Ollama (local, e.g., qwen3:8b). Provider is auto-detected from model ID. Embeddings are OpenAI-only. Tool availability: full tools when OpenAI configured (includes RAG search), workflow-only tools otherwise. Configuration in `apps/platform/src/lib/ai/config.ts`, instances in `providers.ts`.
 
 ## Conventions
 
@@ -143,7 +164,9 @@ Dual-provider: OpenAI (default: gpt-4o) and Anthropic (default: claude-sonnet-4)
 - **Components**: shadcn/ui with Radix primitives and Lucide icons. Shared components live in `packages/ui/`. Use `cn()` from `@ascenta/ui` for class merging.
 - **Validation**: Zod schemas for API input validation.
 - **IDs**: MongoDB ObjectId (native `_id`). `toJSON` virtuals expose `id` as string. `nanoid` used for non-DB short IDs where needed.
-- **Design tokens**: Deep Blue (#0c1e3d), Summit orange (#ff6b35), Glacier (#f8fafc). Custom fonts: Montserrat (display), Inter (sans).
+- **Design tokens**: Deep Blue (#0c1e3d), Summit orange (#ff6b35), Glacier (#f8fafc). Section accent colors defined in `dashboard-nav.ts` per category (Plan=#6688bb, Attract=#aa8866, Launch=#bb6688, Grow=#44aa99, Care=#cc6677, Protect=#8888aa). Custom fonts: Montserrat (display), Inter (sans).
+- **Tailwind v4**: Uses `@source "./components"` in `packages/ui/src/globals.css` to scan shared UI components (Tailwind v4 ignores `node_modules` by default). Without this, utility classes used only in shared packages won't be generated.
+- **Client-side imports**: Never import from `@ascenta/db/*-schema` in client components — these files import mongoose which crashes client-side. Use `@ascenta/db/goal-constants` or `@ascenta/db/performance-note-constants` for enum constants on the client.
 - **Email**: Resend with lazy singleton in `packages/email/`. Templates in `packages/email/src/templates/`. Email failures are caught and logged but don't block primary operations.
 - **Testing**: Vitest with `@` alias support. `passWithNoTests: true` in config.
 - **No auth layer**: No middleware, authentication, or route guards are currently configured. All routes are open.

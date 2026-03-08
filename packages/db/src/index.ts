@@ -21,3 +21,6 @@ export { mongoose };
 
 // Re-export all schemas/models
 export * from "./schema";
+export * from "./checkin-schema";
+export * from "./goal-schema";
+export * from "./performance-note-schema";

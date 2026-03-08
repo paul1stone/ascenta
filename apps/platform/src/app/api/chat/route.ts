@@ -1,6 +1,7 @@
 import { streamText, stepCountIs, type ModelMessage } from "ai";
 import { connectDB } from "@ascenta/db";
 import { getModel, checkProviderConfig } from "@/lib/ai/providers";
+import { getProviderForModel } from "@/lib/ai/config";
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
   defaultChatTools,
@@ -14,6 +15,13 @@ import {
   generateWorkflowFollowUpTool,
   getWorkflowStateSummary,
 } from "@/lib/ai/workflow-tools";
+import {
+  startGoalCreationTool,
+  startCheckInTool,
+  startPerformanceNoteTool,
+  completeGrowWorkflowTool,
+  updateWorkingDocumentTool,
+} from "@/lib/ai/grow-tools";
 import { AI_CONFIG } from "@/lib/ai/config";
 import {
   createConversation,
@@ -38,6 +46,8 @@ interface ChatRequest {
   workflowFollowUp?: { runId: string; type: "email" | "script" };
   /** Active corrective action run – we inject current collected/still-needed state so the AI does not re-ask */
   activeWorkflowRunId?: string;
+  /** When set, the AI is instructed to use this specific tool */
+  requiredTool?: string;
 }
 
 export async function POST(req: Request) {
@@ -54,6 +64,7 @@ export async function POST(req: Request) {
       workflowFieldSelection,
       workflowFollowUp,
       activeWorkflowRunId,
+      requiredTool,
     } = body;
 
     const isWorkflowAction = !!(workflowFieldSelection || workflowFollowUp);
@@ -86,7 +97,7 @@ export async function POST(req: Request) {
       conversation = await createConversation({
         userId,
         model,
-        provider: model.startsWith("claude") ? "anthropic" : "openai",
+        provider: getProviderForModel(model),
         systemPrompt,
       });
     }
@@ -147,6 +158,11 @@ export async function POST(req: Request) {
       }
     }
 
+    // Inject required tool hint when user has pre-selected a tool
+    if (requiredTool) {
+      effectiveSystemPrompt += `\n\n[REQUIRED_TOOL] You MUST use the ${requiredTool} tool in your response. The user has explicitly requested this tool be used. Look up the employee first with getEmployeeInfo if needed, then call ${requiredTool} as soon as you have enough information. Ask minimal clarifying questions only if truly necessary. [/REQUIRED_TOOL]`;
+    }
+
     // Get the model instance
     const modelInstance = getModel(model);
 
@@ -160,13 +176,16 @@ export async function POST(req: Request) {
       updateWorkflowField: updateWorkflowFieldTool,
       generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
       generateWorkflowFollowUp: generateWorkflowFollowUpTool,
+      startGoalCreation: startGoalCreationTool,
+      startCheckIn: startCheckInTool,
+      startPerformanceNote: startPerformanceNoteTool,
+      updateWorkingDocument: updateWorkingDocumentTool,
+      completeGrowWorkflow: completeGrowWorkflowTool,
     };
     const availableTools = useTools
       ? availability.openai
         ? defaultChatTools
-        : availability.anthropic
-          ? workflowTools
-          : { createTask: createTaskTool }
+        : workflowTools
       : undefined;
 
     // Stream the response (stopWhen allows multiple tool roundtrips for workflow building)
@@ -193,11 +212,14 @@ export async function POST(req: Request) {
         "X-Conversation-Id": conversation.id,
       },
     });
-  } catch (error) {
-    console.error("Chat API error:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("Chat API error:", stack || message);
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request",
+        details: message,
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );

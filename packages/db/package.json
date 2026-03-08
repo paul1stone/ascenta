@@ -13,7 +13,12 @@
     "./conversations": "./src/conversations.ts",
     "./documents": "./src/documents.ts",
     "./tracked-documents": "./src/tracked-documents.ts",
-    "./employees": "./src/employees.ts"
+    "./employees": "./src/employees.ts",
+    "./checkin-schema": "./src/checkin-schema.ts",
+    "./goal-constants": "./src/goal-constants.ts",
+    "./goal-schema": "./src/goal-schema.ts",
+    "./performance-note-constants": "./src/performance-note-constants.ts",
+    "./performance-note-schema": "./src/performance-note-schema.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"

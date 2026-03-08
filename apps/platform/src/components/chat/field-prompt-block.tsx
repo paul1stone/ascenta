@@ -1,10 +1,24 @@
+// TODO: This component is used by corrective action workflows only.
+// Grow workflows now use the WorkingDocument pattern (see components/grow/working-document.tsx).
+// When corrective actions are migrated, this component can be removed.
+
 "use client";
 
+import { useState } from "react";
 import { Button } from "@ascenta/ui/button";
 import { Input } from "@ascenta/ui/input";
+import { Label } from "@ascenta/ui/label";
+import { Textarea } from "@ascenta/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@ascenta/ui/select";
+import { cn } from "@ascenta/ui";
+import { Send } from "lucide-react";
 import type { FieldPromptData } from "./workflow-blocks";
-
-const OPTION_LABELS = "ABCDEFGH".split("");
 
 interface FieldPromptBlockProps {
   data: FieldPromptData;
@@ -19,92 +33,213 @@ export function FieldPromptBlock({
   onOtherChange,
   onSelect,
 }: FieldPromptBlockProps) {
-  const letters = OPTION_LABELS;
+  const [selectValue, setSelectValue] = useState("");
   const options = data.options ?? [];
   const hasOptions = options.length > 0;
-  const isTextInput = !hasOptions || ["text", "textarea", "date"].includes(data.fieldType);
 
-  return (
-    <div className="mt-4 rounded-xl border border-summit/20 bg-summit/5 p-4">
-      <p className="mb-3 font-medium text-deep-blue">{data.question}</p>
-      {hasOptions && !isTextInput ? (
-        <div className="flex flex-wrap gap-2 items-center">
-          {options.map((opt, i) => (
+  const handleSubmit = () => {
+    const val = otherValue.trim();
+    if (val) onSelect(data.runId, data.fieldKey, val);
+  };
+
+  const handleSelectSubmit = (value: string) => {
+    if (value) onSelect(data.runId, data.fieldKey, value);
+  };
+
+  // Dropdown fields — use Select component
+  if (data.fieldType === "dropdown" && hasOptions) {
+    return (
+      <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+        <Label className="text-sm font-medium text-foreground">
+          {data.question}
+        </Label>
+        {data.placeholder && (
+          <p className="text-xs text-muted-foreground">{data.placeholder}</p>
+        )}
+        <div className="flex items-center gap-2">
+          <Select
+            value={selectValue}
+            onValueChange={(v) => {
+              setSelectValue(v);
+              handleSelectSubmit(v);
+            }}
+          >
+            <SelectTrigger className="flex-1 bg-background">
+              <SelectValue placeholder="Select an option..." />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {data.allowOther && (
+          <div className="flex items-center gap-2 pt-1">
+            <Input
+              placeholder="Or type a custom value..."
+              value={otherValue}
+              onChange={(e) => onOtherChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSubmit();
+              }}
+              className="flex-1 bg-background text-sm"
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!otherValue.trim()}
+              onClick={handleSubmit}
+              className="shrink-0"
+            >
+              <Send className="size-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Checkbox group — use button pills
+  if (data.fieldType === "checkbox_group" && hasOptions) {
+    return (
+      <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+        <Label className="text-sm font-medium text-foreground">
+          {data.question}
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {options.map((opt) => (
             <Button
               key={opt.value}
               variant="outline"
               size="sm"
-              className="rounded-lg border-summit/30 hover:bg-summit/10 hover:border-summit"
+              className="rounded-full text-xs hover:bg-primary/10 hover:border-primary"
               onClick={() => onSelect(data.runId, data.fieldKey, opt.value)}
             >
-              {letters[i]}. {opt.label}
+              {opt.label}
             </Button>
           ))}
-          {data.allowOther && (
-            <div className="flex flex-1 min-w-[200px] items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {letters[options.length]}. Other:
-              </span>
-              <Input
-                placeholder={data.placeholder ?? "Specify..."}
-                value={otherValue}
-                onChange={(e) => onOtherChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && otherValue.trim()) {
-                    onSelect(data.runId, data.fieldKey, otherValue.trim());
-                  }
-                }}
-                className="flex-1"
-              />
-              <Button
-                size="sm"
-                disabled={!otherValue.trim()}
-                onClick={() =>
-                  otherValue.trim() && onSelect(data.runId, data.fieldKey, otherValue.trim())
-                }
-                className="bg-summit hover:bg-summit-hover"
-              >
-                Submit
-              </Button>
-            </div>
-          )}
         </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {data.fieldType === "textarea" ? (
-            <textarea
-              placeholder={data.placeholder ?? "Enter..."}
-              value={otherValue}
-              onChange={(e) => onOtherChange(e.target.value)}
-              rows={4}
-              className="flex-1 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          ) : (
-            <Input
-              placeholder={data.placeholder ?? "Enter..."}
-              value={otherValue}
-              onChange={(e) => onOtherChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && otherValue.trim()) {
-                  onSelect(data.runId, data.fieldKey, otherValue.trim());
-                }
-              }}
-              type={data.fieldType === "date" ? "date" : "text"}
-              className="flex-1"
-            />
-          )}
+      </div>
+    );
+  }
+
+  // Textarea fields
+  if (data.fieldType === "textarea") {
+    return (
+      <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+        <Label className="text-sm font-medium text-foreground">
+          {data.question}
+        </Label>
+        {data.placeholder && (
+          <p className="text-xs text-muted-foreground">{data.placeholder}</p>
+        )}
+        <Textarea
+          placeholder="Type your response..."
+          value={otherValue}
+          onChange={(e) => onOtherChange(e.target.value)}
+          rows={3}
+          className="bg-background text-sm resize-none"
+        />
+        <div className="flex justify-end">
           <Button
             size="sm"
             disabled={!otherValue.trim()}
-            onClick={() =>
-              otherValue.trim() && onSelect(data.runId, data.fieldKey, otherValue.trim())
-            }
-            className="bg-summit hover:bg-summit-hover self-start"
+            onClick={handleSubmit}
+            className="gap-1.5"
           >
+            <Send className="size-3.5" />
             Submit
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // Date fields
+  if (data.fieldType === "date") {
+    return (
+      <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+        <Label className="text-sm font-medium text-foreground">
+          {data.question}
+        </Label>
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            value={otherValue}
+            onChange={(e) => onOtherChange(e.target.value)}
+            className="flex-1 bg-background text-sm"
+          />
+          <Button
+            size="sm"
+            disabled={!otherValue.trim()}
+            onClick={handleSubmit}
+            className="gap-1.5 shrink-0"
+          >
+            <Send className="size-3.5" />
+            Submit
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Default: text input (also handles fields with options + allowOther)
+  if (hasOptions && !data.allowOther) {
+    // Options displayed as pill buttons (e.g., checkbox-style single select)
+    return (
+      <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+        <Label className="text-sm font-medium text-foreground">
+          {data.question}
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {options.map((opt) => (
+            <Button
+              key={opt.value}
+              variant="outline"
+              size="sm"
+              className="rounded-full text-xs hover:bg-primary/10 hover:border-primary"
+              onClick={() => onSelect(data.runId, data.fieldKey, opt.value)}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Text input (default)
+  return (
+    <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+      <Label className="text-sm font-medium text-foreground">
+        {data.question}
+      </Label>
+      {data.placeholder && (
+        <p className="text-xs text-muted-foreground">{data.placeholder}</p>
       )}
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder="Type your response..."
+          value={otherValue}
+          onChange={(e) => onOtherChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSubmit();
+          }}
+          className="flex-1 bg-background text-sm"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={!otherValue.trim()}
+          onClick={handleSubmit}
+          className="shrink-0"
+        >
+          <Send className="size-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }

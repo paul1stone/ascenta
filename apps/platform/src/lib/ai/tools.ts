@@ -8,6 +8,12 @@ import {
   generateCorrectiveActionDocumentTool,
   generateWorkflowFollowUpTool,
 } from "./workflow-tools";
+import {
+  startGoalCreationTool,
+  startCheckInTool,
+  startPerformanceNoteTool,
+  completeGrowWorkflowTool,
+} from "./grow-tools";
 
 /**
  * Tool Definitions
@@ -232,6 +238,10 @@ export const defaultChatTools = {
   updateWorkflowField: updateWorkflowFieldTool,
   generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
   generateWorkflowFollowUp: generateWorkflowFollowUpTool,
+  startGoalCreation: startGoalCreationTool,
+  startCheckIn: startCheckInTool,
+  startPerformanceNote: startPerformanceNoteTool,
+  completeGrowWorkflow: completeGrowWorkflowTool,
 };
 
 /**

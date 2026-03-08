@@ -5,6 +5,8 @@ import {
   FIELD_PROMPT_SUFFIX,
   FOLLOW_UP_PREFIX,
   FOLLOW_UP_SUFFIX,
+  WORKING_DOC_PREFIX,
+  WORKING_DOC_SUFFIX,
 } from "@/lib/ai/workflow-constants";
 
 export interface FieldPromptData {
@@ -23,16 +25,29 @@ export interface FollowUpData {
   documentContent: string;
 }
 
+export interface WorkingDocData {
+  action: "open_working_document" | "update_working_document";
+  workflowType?: "create-goal" | "run-check-in" | "add-performance-note";
+  runId: string;
+  employeeId?: string;
+  employeeName?: string;
+  prefilled?: Record<string, unknown>;
+  updates?: Record<string, unknown>;
+  availableGoals?: { id: string; title: string }[];
+}
+
 export interface ParsedContent {
   text: string;
   fieldPrompt: FieldPromptData | null;
   followUp: FollowUpData | null;
+  workingDoc: WorkingDocData | null;
 }
 
 export function parseWorkflowBlocks(content: string): ParsedContent {
   let text = content;
   let fieldPrompt: FieldPromptData | null = null;
   let followUp: FollowUpData | null = null;
+  let workingDoc: WorkingDocData | null = null;
 
   const fieldMatch = content.match(
     new RegExp(
@@ -62,13 +77,27 @@ export function parseWorkflowBlocks(content: string): ParsedContent {
     }
   }
 
-  return { text, fieldPrompt, followUp };
+  const workingDocMatch = content.match(
+    new RegExp(
+      `${escapeRegex(WORKING_DOC_PREFIX)}([\\s\\S]*?)${escapeRegex(WORKING_DOC_SUFFIX)}`
+    )
+  );
+  if (workingDocMatch) {
+    try {
+      workingDoc = JSON.parse(workingDocMatch[1].trim()) as WorkingDocData;
+      text = text.replace(workingDocMatch[0], "").trim();
+    } catch {
+      // Invalid JSON, leave in text
+    }
+  }
+
+  return { text, fieldPrompt, followUp, workingDoc };
 }
 
 /** Get the workflow runId from message content (field prompt or follow-up block) so the client can send it as activeWorkflowRunId */
 export function extractLastWorkflowRunId(content: string): string | null {
-  const { fieldPrompt, followUp } = parseWorkflowBlocks(content);
-  return fieldPrompt?.runId ?? followUp?.runId ?? null;
+  const { fieldPrompt, followUp, workingDoc } = parseWorkflowBlocks(content);
+  return fieldPrompt?.runId ?? followUp?.runId ?? workingDoc?.runId ?? null;
 }
 
 function escapeRegex(s: string): string {
