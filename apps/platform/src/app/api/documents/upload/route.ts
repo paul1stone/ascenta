@@ -28,21 +28,16 @@ export async function POST(req: Request) {
     const fileName = file.name;
     const extension = fileName.split(".").pop()?.toLowerCase();
 
-    if (!extension || !["pdf", "txt", "docx"].includes(extension)) {
+    if (!extension || !["txt", "docx"].includes(extension)) {
       return NextResponse.json(
-        { error: "Only PDF, DOCX, and TXT files are supported" },
+        { error: "Only DOCX and TXT files are supported" },
         { status: 400 }
       );
     }
 
     let content: string;
 
-    if (extension === "pdf") {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfParse = (await import("pdf-parse")).default;
-      const pdfResult = await pdfParse(Buffer.from(arrayBuffer));
-      content = pdfResult.text;
-    } else if (extension === "docx") {
+    if (extension === "docx") {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
       content = result.value;
