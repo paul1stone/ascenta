@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       }
       // Fallback: find an employee who appears as managerName on other employees
       if (!manager) {
-        const allEmployees = await Employee.find({ status: "active" }).lean() as (ManagerDoc & { managerName: string })[];
+        const allEmployees = await Employee.find({ status: "active" }).lean() as unknown as (ManagerDoc & { managerName: string })[];
         const managerNames = new Set(allEmployees.map((e) => e.managerName).filter(Boolean));
         for (const name of managerNames) {
           const found = allEmployees.find((e) => `${e.firstName} ${e.lastName}` === name);

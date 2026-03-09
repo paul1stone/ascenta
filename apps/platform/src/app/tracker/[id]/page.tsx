@@ -444,7 +444,7 @@ export default function TrackerDocumentPage({
                       type="email"
                       placeholder="name@company.com"
                       value={employeeEmail}
-                      onChange={(e) => setEmployeeEmail(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmployeeEmail(e.target.value)}
                     />
                   </div>
                   <div className="flex items-end">

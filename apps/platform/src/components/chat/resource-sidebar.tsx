@@ -103,7 +103,7 @@ export function ResourceSidebar() {
         <ToggleGroup
           type="single"
           value={mode}
-          onValueChange={(value) => value && setMode(value as ResourceMode)}
+          onValueChange={(value: string) => value && setMode(value as ResourceMode)}
           className="w-full bg-glacier/50 rounded-lg p-1"
         >
           <ToggleGroupItem

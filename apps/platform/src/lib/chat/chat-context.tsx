@@ -645,6 +645,3 @@ export function useChat() {
   }
   return ctx;
 }
-
-/** @deprecated Use useChat() instead */
-export const useChatPanel = useChat;

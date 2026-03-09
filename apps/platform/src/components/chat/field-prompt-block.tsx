@@ -81,8 +81,8 @@ export function FieldPromptBlock({
             <Input
               placeholder="Or type a custom value..."
               value={otherValue}
-              onChange={(e) => onOtherChange(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onOtherChange(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === "Enter") handleSubmit();
               }}
               className="flex-1 bg-background text-sm"
@@ -139,7 +139,7 @@ export function FieldPromptBlock({
         <Textarea
           placeholder="Type your response..."
           value={otherValue}
-          onChange={(e) => onOtherChange(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onOtherChange(e.target.value)}
           rows={3}
           className="bg-background text-sm resize-none"
         />
@@ -169,7 +169,7 @@ export function FieldPromptBlock({
           <Input
             type="date"
             value={otherValue}
-            onChange={(e) => onOtherChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onOtherChange(e.target.value)}
             className="flex-1 bg-background text-sm"
           />
           <Button
@@ -224,8 +224,8 @@ export function FieldPromptBlock({
         <Input
           placeholder="Type your response..."
           value={otherValue}
-          onChange={(e) => onOtherChange(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onOtherChange(e.target.value)}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") handleSubmit();
           }}
           className="flex-1 bg-background text-sm"
