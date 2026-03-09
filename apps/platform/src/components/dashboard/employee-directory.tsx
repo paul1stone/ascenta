@@ -166,14 +166,14 @@ export function EmployeeDirectory() {
           <Input
             placeholder="Search employees..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             className="pl-9"
           />
         </div>
         <div className="flex gap-2">
           <select
             value={department}
-            onChange={(e) => handleDepartmentChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleDepartmentChange(e.target.value)}
             className="h-9 rounded-md border border-input bg-transparent px-3 text-sm text-foreground outline-none focus:border-ring focus:ring-ring/50 focus:ring-[3px]"
           >
             {DEPARTMENTS.map((dept) => (
@@ -184,7 +184,7 @@ export function EmployeeDirectory() {
           </select>
           <select
             value={status}
-            onChange={(e) => handleStatusChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStatusChange(e.target.value)}
             className="h-9 rounded-md border border-input bg-transparent px-3 text-sm text-foreground outline-none focus:border-ring focus:ring-ring/50 focus:ring-[3px]"
           >
             {STATUSES.map((s) => (

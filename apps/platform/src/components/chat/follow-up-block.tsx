@@ -61,8 +61,8 @@ export function FollowUpBlock({
             <Input
               placeholder="Ask something else..."
               value={otherValue}
-              onChange={(e) => setOtherValue(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtherValue(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === "Enter" && otherValue.trim()) {
                   onOther(otherValue.trim());
                   setOtherValue("");

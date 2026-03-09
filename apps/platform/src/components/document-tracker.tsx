@@ -361,9 +361,9 @@ export function DocumentTracker() {
                             <div className="flex items-center gap-2">
                               <select
                                 value={doc.stage}
-                                onChange={(e) => updateStage(doc.id, e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateStage(doc.id, e.target.value)}
                                 disabled={updatingId === doc.id}
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 className="flex-1 h-7 rounded-md border border-slate-200 bg-slate-50 px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-summit/30 focus:border-summit disabled:opacity-50 transition-colors"
                               >
                                 {STAGES.map((s) => (
