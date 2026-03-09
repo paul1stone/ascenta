@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
-import { join } from "path";
 import mammoth from "mammoth";
+import pdfParse from "pdf-parse";
 import {
   createDocument,
   addEmbeddings,
@@ -9,42 +9,6 @@ import {
 import { processDocument } from "@/lib/rag/embeddings";
 
 export const maxDuration = 60;
-
-async function extractPdfText(data: Uint8Array): Promise<string> {
-  // Dynamically import pdfjs-dist so it's not loaded at build/module-init time.
-  // pdfjs-dist's internal import() for the worker uses /* webpackIgnore: true */,
-  // so it falls through to native Node.js import() at runtime.
-  const { getDocument, GlobalWorkerOptions } = await import(
-    "pdfjs-dist/legacy/build/pdf.mjs"
-  );
-  GlobalWorkerOptions.workerSrc = join(
-    process.cwd(),
-    "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
-  );
-
-  const doc = await getDocument({
-    data,
-    useWorkerFetch: false,
-    isEvalSupported: false,
-    useSystemFonts: true,
-  }).promise;
-  const pages: string[] = [];
-
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((item: any) => typeof item.str === "string")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((item: any) => item.str as string)
-      .join(" ");
-    pages.push(pageText);
-  }
-
-  await doc.destroy();
-  return pages.join("\n\n");
-}
 
 /**
  * POST - Upload a PDF or TXT file, extract text, create document + embeddings
@@ -76,7 +40,8 @@ export async function POST(req: Request) {
 
     if (extension === "pdf") {
       const arrayBuffer = await file.arrayBuffer();
-      content = await extractPdfText(new Uint8Array(arrayBuffer));
+      const pdfResult = await pdfParse(Buffer.from(arrayBuffer));
+      content = pdfResult.text;
     } else if (extension === "docx") {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
