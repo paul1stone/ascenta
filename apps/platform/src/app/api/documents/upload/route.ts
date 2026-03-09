@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
 import {
   createDocument,
   addEmbeddings,
@@ -40,6 +39,7 @@ export async function POST(req: Request) {
 
     if (extension === "pdf") {
       const arrayBuffer = await file.arrayBuffer();
+      const pdfParse = (await import("pdf-parse")).default;
       const pdfResult = await pdfParse(Buffer.from(arrayBuffer));
       content = pdfResult.text;
     } else if (extension === "docx") {
