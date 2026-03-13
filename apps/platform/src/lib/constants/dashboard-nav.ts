@@ -9,7 +9,6 @@ import {
   BarChart3,
   BookOpen,
   Play,
-  CircleDot,
   Lightbulb,
   Building2,
   Users,
