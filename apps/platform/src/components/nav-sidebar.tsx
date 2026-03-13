@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@ascenta/ui";
-import { PanelLeftClose, PanelLeft, LayoutDashboard } from "lucide-react";
+import { PanelLeftClose, PanelLeft, LayoutDashboard, CircleDot, BarChart3 } from "lucide-react";
 import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
 import {
   Popover,
@@ -215,6 +215,39 @@ export function NavSidebar() {
                 </>
               )}
             </div>
+          );
+        })}
+        {/* Overview section */}
+        <div className="mx-3 my-2 border-b" />
+        {!collapsed && (
+          <div className="px-3.5 pt-1 pb-1.5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            Overview
+          </div>
+        )}
+        {[
+          { key: "status", label: "Status", icon: CircleDot, href: "/status", color: "#22c55e" },
+          { key: "insights", label: "Insights", icon: BarChart3, href: "/insights", color: "#6366f1" },
+        ].map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2.5 py-2.5 text-[13px] whitespace-nowrap transition-colors border-l-[3px]",
+                collapsed ? "justify-center px-0" : "px-3.5",
+                isActive
+                  ? "font-bold bg-primary/6"
+                  : "text-muted-foreground hover:bg-primary/5 border-l-transparent",
+              )}
+              style={{
+                borderLeftColor: isActive ? item.color : undefined,
+              }}
+            >
+              <Icon className="size-4 shrink-0" style={{ color: item.color }} />
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
           );
         })}
       </nav>
