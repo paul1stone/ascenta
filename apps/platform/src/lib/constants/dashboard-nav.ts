@@ -415,7 +415,7 @@ export function findNavContext(categoryKey: string, subKey: string) {
 // TAB TYPES
 // ============================================================================
 
-export type TabKey = "do" | "learn" | "status" | "insights";
+export type TabKey = "do" | "learn";
 
 export interface FunctionTab {
   key: TabKey;
@@ -428,6 +428,4 @@ export interface FunctionTab {
 export const FUNCTION_TABS: FunctionTab[] = [
   { key: "do", label: "Do", icon: Play, title: "Action Center", description: "Primary workspace for executing tasks" },
   { key: "learn", label: "Learn", icon: BookOpen, title: "Knowledge Base", description: "Documentation, guides, and training" },
-  { key: "status", label: "Status", icon: CircleDot, title: "Status Dashboard", description: "Real-time monitoring and health checks" },
-  { key: "insights", label: "Insights", icon: BarChart3, title: "Analytics & Insights", description: "Data analysis and reporting" },
 ];
