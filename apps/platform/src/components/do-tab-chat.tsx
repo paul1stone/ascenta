@@ -7,9 +7,12 @@ import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { ChatInput } from "@/components/chat/chat-input";
+import { SuggestPromptPills } from "@/components/chat/suggest-prompt-pills";
 import { WorkingDocument } from "@/components/grow/working-document";
 import { parseWorkflowBlocks } from "@/components/chat/workflow-blocks";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
+import { MOCK_USER } from "@/lib/constants/mock-user";
+import { getGreeting } from "@/lib/utils/greeting";
 
 interface DoTabChatProps {
   pageKey: string;
@@ -105,11 +108,12 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     }
   }, [isLoading, activeToolForStream]);
 
-  const handleSuggestionClick = useCallback(
-    (prompt: string) => {
+  const handlePromptSelect = useCallback(
+    (prompt: string, toolKey: string) => {
       setPageInput(pageKey, prompt);
+      setSelectedTool(toolKey);
     },
-    [pageKey, setPageInput],
+    [pageKey, setPageInput, setSelectedTool],
   );
 
   const handleNewConversation = useCallback(() => {
@@ -148,55 +152,48 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
 
   // ── Empty state ──────────────────────────────────────────────────────
   if (!hasMessages) {
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-          <h2 className="font-display text-2xl font-bold text-deep-blue">
-            {pageConfig.title}
-          </h2>
-          <p className="mt-2 max-w-md text-center text-sm text-muted-foreground">
-            {pageConfig.description}
-          </p>
+    const hasTools = pageConfig.tools && pageConfig.tools.length > 0;
 
-          <div className="mt-8 grid w-full max-w-xl grid-cols-2 gap-3">
-            {pageConfig.suggestions.map((suggestion) => (
-              <button
-                key={suggestion.title}
-                type="button"
-                onClick={() => handleSuggestionClick(suggestion.prompt)}
-                className="rounded-xl border bg-white p-4 text-left transition-colors hover:bg-glacier/50"
-                style={{
-                  borderColor: `color-mix(in srgb, ${accentColor} 30%, transparent)`,
-                }}
-              >
-                <span className="text-sm font-medium text-deep-blue">
-                  {suggestion.title}
-                </span>
-                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                  {suggestion.prompt}
-                </p>
-              </button>
-            ))}
-          </div>
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-6">
+        {/* Title & greeting */}
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {pageConfig.title}
+        </p>
+        {hasTools && (
+          <h1 className="font-display mt-1 text-2xl font-bold text-deep-blue">
+            {getGreeting(MOCK_USER.name)}
+          </h1>
+        )}
+
+        {/* Chat input card */}
+        <div className="mt-6 w-full max-w-2xl">
+          <ChatInput
+            value={input}
+            onChange={(v) => setPageInput(pageKey, v)}
+            onSubmit={handleSend}
+            onStop={handleStop}
+            isLoading={isLoading}
+            placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
+            model={model}
+            onModelChange={setModel}
+            tools={pageConfig.tools}
+            selectedTool={selectedTool}
+            onToolChange={setSelectedTool}
+          />
         </div>
 
-        <div className="shrink-0 px-4 pb-4">
-          <div className="mx-auto max-w-2xl">
-            <ChatInput
-              value={input}
-              onChange={(v) => setPageInput(pageKey, v)}
-              onSubmit={handleSend}
-              onStop={handleStop}
-              isLoading={isLoading}
-              placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
-              model={model}
-              onModelChange={setModel}
+        {/* Tool prompt pills */}
+        {hasTools && pageConfig.tools && (
+          <div className="mt-4">
+            <SuggestPromptPills
               tools={pageConfig.tools}
-              selectedTool={selectedTool}
-              onToolChange={setSelectedTool}
+              user={MOCK_USER}
+              accentColor={accentColor}
+              onPromptSelect={handlePromptSelect}
             />
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -242,6 +239,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
                   key={msg.id}
                   role={msg.role}
                   content={msg.content}
+                  variant={msg.role === "user" ? "card" : "flat"}
                   isStreaming={isLastStreaming}
                   accentColor={accentColor}
                   botColor={accentColor}
