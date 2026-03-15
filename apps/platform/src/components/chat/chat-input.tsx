@@ -5,8 +5,6 @@ import { cn } from "@ascenta/ui";
 import { ArrowUp, Paperclip, Square } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { ModelSelector } from "./model-selector";
-import { ToolSelector } from "./tool-selector";
-import type { PageTool } from "@/lib/constants/dashboard-nav";
 
 const MAX_TEXTAREA_HEIGHT = 200;
 
@@ -19,9 +17,6 @@ interface ChatInputProps {
   placeholder?: string;
   model: string;
   onModelChange: (model: string) => void;
-  tools?: PageTool[];
-  selectedTool: string | null;
-  onToolChange: (tool: string | null) => void;
 }
 
 export function ChatInput({
@@ -33,9 +28,6 @@ export function ChatInput({
   placeholder = "Ask Ascenta anything about HR...",
   model,
   onModelChange,
-  tools,
-  selectedTool,
-  onToolChange,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -116,20 +108,11 @@ export function ChatInput({
 
         {/* Bottom bar with model selector */}
         <div className="flex items-center justify-between border-t border-border/50 px-2 py-1.5">
-          <div className="flex items-center gap-1">
-            <ModelSelector
-              value={model}
-              onChange={onModelChange}
-              disabled={isLoading}
-            />
-            <span className="text-border">|</span>
-            <ToolSelector
-              tools={tools}
-              value={selectedTool}
-              onChange={onToolChange}
-              disabled={isLoading}
-            />
-          </div>
+          <ModelSelector
+            value={model}
+            onChange={onModelChange}
+            disabled={isLoading}
+          />
           <span className="text-[10px] text-muted-foreground/60">
             Press Enter to send, Shift+Enter for new line
           </span>

@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Goal Follow-Through Action Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-blue: #0c1e3d;
+    --deep-blue-90: #1a2d4d;
+    --deep-blue-80: #2a3d5d;
+    --grow-accent: #44aa99;
+    --grow-accent-soft: rgba(68, 170, 153, 0.12);
+    --grow-accent-mid: rgba(68, 170, 153, 0.25);
+    --glacier: #f8fafc;
+    --summit-orange: #ff6b35;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === LAYOUT SHELL === */
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  .mockup-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grow-accent);
+    margin-bottom: 8px;
+  }
+
+  .mockup-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* === BROWSER FRAME === */
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .browser-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .browser-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  /* === APP LAYOUT === */
+  .app-layout {
+    display: flex;
+    height: 680px;
+  }
+
+  /* === SIDEBAR === */
+  .sidebar {
+    width: 220px;
+    background: var(--deep-blue);
+    padding: 20px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    padding: 0 20px 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar-logo span { color: var(--summit-orange); }
+
+  .sidebar-section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 16px 20px 6px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    cursor: default;
+    transition: all 0.15s;
+  }
+
+  .sidebar-item.active {
+    color: var(--white);
+    background: rgba(68, 170, 153, 0.15);
+    border-right: 3px solid var(--grow-accent);
+  }
+
+  .sidebar-item svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+  }
+
+  .sidebar-item.active svg { opacity: 1; }
+
+  /* === MAIN CONTENT (50/50 SPLIT) === */
+  .main-content {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+  }
+
+  /* === CHAT PANEL === */
+  .chat-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .chat-header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--deep-blue);
+  }
+
+  .chat-header-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--grow-accent-soft);
+    color: var(--grow-accent);
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--glacier);
+  }
+
+  .message {
+    max-width: 88%;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .message.user {
+    align-self: flex-end;
+  }
+
+  .message.assistant {
+    align-self: flex-start;
+  }
+
+  .message-sender {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .message-bubble {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-primary);
+  }
+
+  .message.user .message-bubble {
+    background: var(--deep-blue);
+    color: var(--white);
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.assistant .message-bubble {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .message-bubble strong {
+    color: var(--grow-accent);
+    font-weight: 600;
+  }
+
+  .offer-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .offer-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: default;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .offer-btn.primary {
+    background: var(--grow-accent);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(68, 170, 153, 0.3);
+  }
+
+  .offer-btn.secondary {
+    background: var(--glacier);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .tool-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--grow-accent);
+    background: var(--grow-accent-soft);
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+
+  .tool-badge svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .chat-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--glacier);
+    font-family: inherit;
+  }
+
+  /* === WORKING DOCUMENT PANEL === */
+  .working-doc-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+
+  .working-doc-header {
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--grow-accent), #3d9e8f);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .working-doc-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .working-doc-header-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  .working-doc-header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    font-size: 16px;
+  }
+
+  .working-doc-body {
+    flex: 1;
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* === GOAL SUMMARY BANNER === */
+  .goal-banner {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--grow-accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .goal-banner-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grow-accent);
+    margin-bottom: 6px;
+  }
+
+  .goal-banner-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+
+  .goal-banner-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .goal-banner-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* === MILESTONE CARDS === */
+  .milestones-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .milestone-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .milestone-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .milestone-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    bottom: 16px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .milestone-card.not-started::before { background: var(--border); }
+  .milestone-card.in-progress::before { background: #3b82f6; }
+  .milestone-card.completed::before { background: var(--grow-accent); }
+
+  .milestone-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .milestone-number {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: var(--grow-accent-soft);
+    color: var(--grow-accent);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .milestone-title-area {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .milestone-title-input {
+    width: 100%;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border: none;
+    background: none;
+    padding: 2px 0;
+    font-family: inherit;
+  }
+
+  .milestone-desc-input {
+    width: 100%;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border: none;
+    background: none;
+    padding: 2px 0;
+    font-family: inherit;
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+
+  .milestone-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .drag-handle {
+    color: var(--text-muted);
+    cursor: grab;
+    font-size: 14px;
+    opacity: 0.4;
+  }
+
+  .milestone-bottom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .milestone-date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--glacier);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+  }
+
+  .milestone-date svg {
+    width: 12px;
+    height: 12px;
+    color: var(--text-muted);
+  }
+
+  .milestone-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .milestone-status.not-started {
+    background: var(--glacier);
+    color: var(--text-muted);
+  }
+
+  .milestone-status.in-progress {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+
+  .milestone-status.completed {
+    background: var(--grow-accent-soft);
+    color: var(--grow-accent);
+  }
+
+  .milestone-notes-toggle {
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: default;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* === ADD MILESTONE === */
+  .add-milestone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s;
+  }
+
+  /* === FORM ACTIONS === */
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: default;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--grow-accent);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(68, 170, 153, 0.3);
+  }
+
+  .btn-ghost {
+    background: none;
+    color: var(--text-secondary);
+  }
+
+  /* === CONNECTOR LINE === */
+  .milestone-connector {
+    width: 2px;
+    height: 12px;
+    background: var(--border);
+    margin-left: 27px;
+    border-radius: 1px;
+  }
+
+  /* === ANIMATION === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .working-doc-body > * {
+    animation: fadeUp 0.35s ease both;
+  }
+  .working-doc-body > *:nth-child(1) { animation-delay: 0.05s; }
+  .working-doc-body > *:nth-child(2) { animation-delay: 0.1s; }
+  .working-doc-body > *:nth-child(3) { animation-delay: 0.15s; }
+  .working-doc-body > *:nth-child(4) { animation-delay: 0.2s; }
+  .working-doc-body > *:nth-child(5) { animation-delay: 0.25s; }
+  .working-doc-body > *:nth-child(6) { animation-delay: 0.3s; }
+  .working-doc-body > *:nth-child(7) { animation-delay: 0.35s; }
+  .working-doc-body > *:nth-child(8) { animation-delay: 0.4s; }
+  .working-doc-body > *:nth-child(9) { animation-delay: 0.45s; }
+  .working-doc-body > *:nth-child(10) { animation-delay: 0.5s; }
+  .working-doc-body > *:nth-child(11) { animation-delay: 0.55s; }
+
+  /* === ANNOTATION CALLOUTS === */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  .annotation-card-icon.green { background: var(--grow-accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+
+  .annotation-card h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Grow — Feature Proposal</div>
+  <div class="mockup-title">Goal Follow-Through: Action Plan</div>
+  <div class="mockup-subtitle">
+    After goal creation, the AI offers to generate a structured action plan with milestones.<br>
+    Opens in the working document panel — same pattern as goal creation, check-ins, and notes.
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <div class="browser-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="browser-url">app.ascenta.ai / grow / performance</div>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">ascenta<span>.</span></div>
+        <div class="sidebar-section">Workspace</div>
+        <div class="sidebar-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </div>
+        <div class="sidebar-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Employees
+        </div>
+        <div class="sidebar-section">Grow</div>
+        <div class="sidebar-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          Performance
+        </div>
+        <div class="sidebar-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Status
+        </div>
+        <div class="sidebar-section">Plan</div>
+        <div class="sidebar-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Documents
+        </div>
+        <div class="sidebar-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Tracker
+        </div>
+      </div>
+
+      <!-- Main Content: 50/50 Split -->
+      <div class="main-content">
+
+        <!-- Chat Panel (Left) -->
+        <div class="chat-panel">
+          <div class="chat-header">
+            <div class="chat-header-title">Grow Chat</div>
+            <div class="chat-header-badge">Performance</div>
+          </div>
+
+          <div class="chat-messages">
+            <div class="message user">
+              <div class="message-sender">You</div>
+              <div class="message-bubble">
+                I need to create a goal for Sarah Chen to improve her presentation skills this quarter. She's been doing great technical work but needs to level up on stakeholder communication.
+              </div>
+            </div>
+
+            <div class="message assistant">
+              <div class="message-sender">Ascenta</div>
+              <div class="message-bubble">
+                <div class="tool-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                  Create Goal
+                </div>
+                I've drafted a development goal for Sarah based on what you described. The form is open on the right — I've pre-filled all fields including <strong>Leadership &gt; Communication</strong> category and <strong>milestone-based</strong> measurement.
+                <br><br>
+                Take a look and adjust anything before submitting.
+              </div>
+            </div>
+
+            <div class="message user">
+              <div class="message-sender">You</div>
+              <div class="message-bubble">Looks good, submitted!</div>
+            </div>
+
+            <div class="message assistant">
+              <div class="message-sender">Ascenta</div>
+              <div class="message-bubble">
+                Goal created for <strong>Sarah Chen</strong>: "Develop Executive Presentation Skills."
+                <br><br>
+                Would you like me to build an <strong>action plan</strong> with milestones to help Sarah achieve this goal? I'll break it into concrete steps spread across Q2.
+
+                <div class="offer-buttons">
+                  <div class="offer-btn primary">Build Action Plan</div>
+                  <div class="offer-btn secondary">No thanks</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="message user">
+              <div class="message-sender">You</div>
+              <div class="message-bubble">Yes, build the plan</div>
+            </div>
+
+            <div class="message assistant">
+              <div class="message-sender">Ascenta</div>
+              <div class="message-bubble">
+                <div class="tool-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Action Plan
+                </div>
+                I've created a 5-milestone action plan for Sarah's presentation skills goal. The milestones are spaced across Q2 with progressive difficulty — starting with observation and ending with a live executive presentation.
+                <br><br>
+                Review and edit the plan on the right. You can also ask me to adjust anything — <em>"add a step for peer feedback"</em> or <em>"push milestone 3 back two weeks."</em>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <input type="text" class="chat-input" value='Add a milestone for getting feedback from her skip-level manager' readonly>
+          </div>
+        </div>
+
+        <!-- Working Document Panel (Right) -->
+        <div class="working-doc-panel">
+          <div class="working-doc-header">
+            <div class="working-doc-header-left">
+              <div class="working-doc-header-label">Working Document</div>
+              <div class="working-doc-header-title">Action Plan</div>
+            </div>
+            <button class="close-btn">&times;</button>
+          </div>
+
+          <div class="working-doc-body">
+            <!-- Goal Banner -->
+            <div class="goal-banner">
+              <div class="goal-banner-label">Linked Goal</div>
+              <div class="goal-banner-title">Develop Executive Presentation Skills</div>
+              <div class="goal-banner-meta">
+                <span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  Sarah Chen
+                </span>
+                <span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  Q2 2026 (Apr 1 – Jun 30)
+                </span>
+                <span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Milestone-based
+                </span>
+              </div>
+            </div>
+
+            <!-- Milestones -->
+            <div class="milestones-label">
+              Milestones
+              <span class="milestone-count">5 steps</span>
+            </div>
+
+            <!-- Milestone 1 -->
+            <div class="milestone-card not-started">
+              <div class="milestone-top">
+                <div class="milestone-number">1</div>
+                <div class="milestone-title-area">
+                  <input type="text" class="milestone-title-input" value="Shadow two executive presentations" readonly>
+                  <input type="text" class="milestone-desc-input" value="Attend and observe presentations by senior leaders. Take notes on structure, delivery, and Q&A handling." readonly>
+                </div>
+                <div class="milestone-actions">
+                  <span class="drag-handle">⋮⋮</span>
+                </div>
+              </div>
+              <div class="milestone-bottom">
+                <div class="milestone-date">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  Apr 14, 2026
+                </div>
+                <span class="milestone-status not-started">Not Started</span>
+                <span class="milestone-notes-toggle">+ Notes</span>
+              </div>
+            </div>
+
+            <div class="milestone-connector"></div>
+
+            <!-- Milestone 2 -->
+            <div class="milestone-card not-started">
+              <div class="milestone-top">
+                <div class="milestone-number">2</div>
+                <div class="milestone-title-area">
+                  <input type="text" class="milestone-title-input" value="Complete presentation skills workshop" readonly>
+                  <input type="text" class="milestone-desc-input" value="Enroll in and complete an internal or external workshop on executive communication." readonly>
+                </div>
+                <div class="milestone-actions">
+                  <span class="drag-handle">⋮⋮</span>
+                </div>
+              </div>
+              <div class="milestone-bottom">
+                <div class="milestone-date">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  Apr 28, 2026
+                </div>
+                <span class="milestone-status not-started">Not Started</span>
+                <span class="milestone-notes-toggle">+ Notes</span>
+              </div>
+            </div>
+
+            <div class="milestone-connector"></div>
+
+            <!-- Milestone 3 -->
+            <div class="milestone-card not-started">
+              <div class="milestone-top">
+                <div class="milestone-number">3</div>
+                <div class="milestone-title-area">
+                  <input type="text" class="milestone-title-input" value="Deliver practice presentation to team" readonly>
+                  <input type="text" class="milestone-desc-input" value="Prepare and deliver a 15-min presentation to the immediate team. Collect structured feedback." readonly>
+                </div>
+                <div class="milestone-actions">
+                  <span class="drag-handle">⋮⋮</span>
+                </div>
+              </div>
+              <div class="milestone-bottom">
+                <div class="milestone-date">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  May 12, 2026
+                </div>
+                <span class="milestone-status not-started">Not Started</span>
+                <span class="milestone-notes-toggle">+ Notes</span>
+              </div>
+            </div>
+
+            <div class="milestone-connector"></div>
+
+            <!-- Milestone 4 -->
+            <div class="milestone-card not-started">
+              <div class="milestone-top">
+                <div class="milestone-number">4</div>
+                <div class="milestone-title-area">
+                  <input type="text" class="milestone-title-input" value="Refine based on feedback and rehearse" readonly>
+                  <input type="text" class="milestone-desc-input" value="Incorporate team feedback. Rehearse with manager, focusing on executive framing and data storytelling." readonly>
+                </div>
+                <div class="milestone-actions">
+                  <span class="drag-handle">⋮⋮</span>
+                </div>
+              </div>
+              <div class="milestone-bottom">
+                <div class="milestone-date">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  May 26, 2026
+                </div>
+                <span class="milestone-status not-started">Not Started</span>
+                <span class="milestone-notes-toggle">+ Notes</span>
+              </div>
+            </div>
+
+            <div class="milestone-connector"></div>
+
+            <!-- Milestone 5 -->
+            <div class="milestone-card not-started">
+              <div class="milestone-top">
+                <div class="milestone-number">5</div>
+                <div class="milestone-title-area">
+                  <input type="text" class="milestone-title-input" value="Present quarterly results to leadership" readonly>
+                  <input type="text" class="milestone-desc-input" value="Deliver a polished presentation to VP+ audience covering Q2 project outcomes and strategic recommendations." readonly>
+                </div>
+                <div class="milestone-actions">
+                  <span class="drag-handle">⋮⋮</span>
+                </div>
+              </div>
+              <div class="milestone-bottom">
+                <div class="milestone-date">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  Jun 16, 2026
+                </div>
+                <span class="milestone-status not-started">Not Started</span>
+                <span class="milestone-notes-toggle">+ Notes</span>
+              </div>
+            </div>
+
+            <!-- Add Milestone -->
+            <div class="add-milestone">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add milestone
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary">Save Action Plan</button>
+            <button class="btn btn-ghost">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation Cards -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon green">&#9679;</div>
+      <h4>AI-Generated Milestones</h4>
+      <p>AI analyzes the goal's type, time period, and success metric to generate 3-6 concrete steps with progressive difficulty and realistic timelines.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">&#9679;</div>
+      <h4>Chat-Driven Refinement</h4>
+      <p>Users refine the plan through natural conversation — "add a step," "push this back," "make milestone 3 more specific." The AI updates the form in real-time.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">&#9679;</div>
+      <h4>Persisted & Tracked</h4>
+      <p>Action plans are saved to the database, linked 1:1 to goals. Employees can update milestone status over time as they work through the plan.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

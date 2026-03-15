@@ -16,6 +16,7 @@ import {
 } from "@ascenta/ui/select";
 import { goalFormSchema, type GoalFormValues } from "@/lib/validations/goal";
 import { User } from "lucide-react";
+import { EmployeePicker } from "./employee-picker";
 
 // ---------------------------------------------------------------------------
 // Category groups → filtered categories
@@ -166,18 +167,27 @@ export function GoalCreationForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-5">
-      {/* Employee info banner */}
-      <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2.5">
-        <User className="size-4 text-muted-foreground" />
-        <div className="text-sm">
-          <span className="font-medium">{watch("employeeName") || "Employee"}</span>
-          {watch("employeeId") && (
+      {/* Employee: picker for direct-open, read-only banner for AI-initiated */}
+      {watch("employeeId") ? (
+        <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2.5">
+          <User className="size-4 text-muted-foreground" />
+          <div className="text-sm">
+            <span className="font-medium">{watch("employeeName") || "Employee"}</span>
             <span className="ml-2 text-muted-foreground">
               ({watch("employeeId")})
             </span>
-          )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <EmployeePicker
+          onSelect={(employeeId, employeeName) => {
+            setValue("employeeId", employeeId, { shouldValidate: true });
+            setValue("employeeName", employeeName, { shouldValidate: true });
+            onFieldChange("employeeId", employeeId);
+            onFieldChange("employeeName", employeeName);
+          }}
+        />
+      )}
 
       {/* Title */}
       <div className="space-y-1.5">

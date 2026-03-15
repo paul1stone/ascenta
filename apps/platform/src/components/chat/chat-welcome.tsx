@@ -106,26 +106,12 @@ export function ChatWelcome({ onSuggestionClick }: ChatWelcomeProps) {
         </div>
       )}
 
-      {/* Suggestion cards */}
-      {config && (
+      {/* Description */}
+      {config && selectedCategory && config.description && (
         <div className="w-full max-w-2xl">
-          {selectedCategory && config.description && (
-            <p className="mb-3 text-center text-sm text-muted-foreground">
-              {config.description}
-            </p>
-          )}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {config.suggestions.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => onSuggestionClick(item.prompt)}
-                className="group flex flex-col gap-1 rounded-2xl border border-border bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:border-summit/30 hover:shadow-lg hover:shadow-summit/5"
-              >
-                <p className="font-medium text-deep-blue">{item.title}</p>
-                <p className="text-sm text-muted-foreground">{item.prompt}</p>
-              </button>
-            ))}
-          </div>
+          <p className="mb-3 text-center text-sm text-muted-foreground">
+            {config.description}
+          </p>
         </div>
       )}
     </div>

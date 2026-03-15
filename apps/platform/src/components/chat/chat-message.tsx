@@ -17,6 +17,7 @@ interface ChatMessageProps {
   accentColor?: string;
   /** Hex color for the bot avatar — defaults to summit orange */
   botColor?: string;
+  variant?: "card" | "flat";
   onWorkflowOptionSelect?: (runId: string, fieldKey: string, value: string) => void;
   onFollowUpSelect?: (runId: string, type: "email" | "script") => void;
   onFollowUpOther?: (value: string) => void;
@@ -32,6 +33,7 @@ export function ChatMessage({
   onWorkflowOptionSelect,
   onFollowUpSelect,
   onFollowUpOther,
+  variant = "card",
 }: ChatMessageProps) {
   const isUser = role === "user";
   const [otherInputValue, setOtherInputValue] = useState<Record<string, string>>({});
@@ -43,13 +45,13 @@ export function ChatMessage({
     <div className="px-4 md:px-6 py-2">
       <div
         className={cn(
-          "rounded-2xl border px-4 py-4 transition-colors",
-          isUser
-            ? "border-primary/15 bg-primary/[0.03]"
-            : "bg-white/80"
+          "px-4 py-4 transition-colors",
+          variant === "card" && "rounded-2xl border",
+          variant === "card" && isUser && "border-primary/15 bg-primary/[0.03]",
+          variant === "card" && !isUser && "bg-white/80",
         )}
         style={
-          !isUser && accentColor
+          variant === "card" && !isUser && accentColor
             ? { borderColor: `color-mix(in srgb, ${accentColor} 20%, transparent)` }
             : undefined
         }
