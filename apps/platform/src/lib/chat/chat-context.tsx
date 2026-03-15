@@ -157,7 +157,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const { workflowType, runId, fields, employeeId, employeeName } =
         workingDocument;
 
-      if (!workflowType || !runId) {
+      if (!workflowType) {
         throw new Error("No active working document to submit");
       }
 
@@ -174,7 +174,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           ...fields,
           employeeId,
           employeeName,
-          runId,
+          ...(runId ? { runId } : {}),
         }),
       });
 

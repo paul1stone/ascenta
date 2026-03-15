@@ -11,8 +11,15 @@ import { SuggestPromptPills } from "@/components/chat/suggest-prompt-pills";
 import { WorkingDocument } from "@/components/grow/working-document";
 import { parseWorkflowBlocks } from "@/components/chat/workflow-blocks";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
+import type { WorkflowType } from "@/lib/chat/chat-context";
 import { MOCK_USER } from "@/lib/constants/mock-user";
 import { getGreeting } from "@/lib/utils/greeting";
+
+const TOOL_KEY_TO_WORKFLOW: Record<string, WorkflowType> = {
+  startGoalCreation: "create-goal",
+  startCheckIn: "run-check-in",
+  startPerformanceNote: "add-performance-note",
+};
 
 interface DoTabChatProps {
   pageKey: string;
@@ -116,6 +123,16 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     [pageKey, setPageInput, setSelectedTool],
   );
 
+  const handleDirectOpen = useCallback(
+    (toolKey: string) => {
+      const workflowType = TOOL_KEY_TO_WORKFLOW[toolKey];
+      if (workflowType) {
+        openWorkingDocument(workflowType, "", "", "", {});
+      }
+    },
+    [openWorkingDocument],
+  );
+
   const handleNewConversation = useCallback(() => {
     resetConversation(pageKey);
   }, [pageKey, resetConversation]);
@@ -151,7 +168,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     : null;
 
   // ── Empty state ──────────────────────────────────────────────────────
-  if (!hasMessages) {
+  if (!hasMessages && !workingDocument.isOpen) {
     const hasTools = pageConfig.tools && pageConfig.tools.length > 0;
 
     return (
@@ -177,9 +194,6 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
             placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
             model={model}
             onModelChange={setModel}
-            tools={pageConfig.tools}
-            selectedTool={selectedTool}
-            onToolChange={setSelectedTool}
           />
         </div>
 
@@ -191,6 +205,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
               user={MOCK_USER}
               accentColor={accentColor}
               onPromptSelect={handlePromptSelect}
+              onDirectOpen={handleDirectOpen}
             />
           </div>
         )}
@@ -266,10 +281,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
               placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
               model={model}
               onModelChange={setModel}
-              tools={pageConfig.tools}
-              selectedTool={selectedTool}
-              onToolChange={setSelectedTool}
-            />
+              />
           </div>
         </div>
       </div>

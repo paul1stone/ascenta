@@ -12,6 +12,7 @@ import {
   type CheckInFormValues,
 } from "@/lib/validations/check-in";
 import { User } from "lucide-react";
+import { EmployeePicker } from "./employee-picker";
 
 // ---------------------------------------------------------------------------
 // Component
@@ -81,20 +82,42 @@ export function CheckInForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-5">
-      {/* Employee info banner */}
-      <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2.5">
-        <User className="size-4 text-muted-foreground" />
-        <div className="text-sm">
-          <span className="font-medium">
-            {watch("employeeName") || "Employee"}
-          </span>
-          {watch("employeeId") && (
+      {/* Employee: picker for direct-open, read-only banner for AI-initiated */}
+      {watch("employeeId") ? (
+        <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2.5">
+          <User className="size-4 text-muted-foreground" />
+          <div className="text-sm">
+            <span className="font-medium">
+              {watch("employeeName") || "Employee"}
+            </span>
             <span className="ml-2 text-muted-foreground">
               ({watch("employeeId")})
             </span>
-          )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <EmployeePicker
+          onSelect={async (employeeId, employeeName) => {
+            setValue("employeeId", employeeId, { shouldValidate: true });
+            setValue("employeeName", employeeName, { shouldValidate: true });
+            onFieldChange("employeeId", employeeId);
+            onFieldChange("employeeName", employeeName);
+            // Fetch goals for this employee to populate linkedGoals options
+            try {
+              const res = await fetch(`/api/grow/status?managerId=${encodeURIComponent(employeeId)}`);
+              if (res.ok) {
+                const data = await res.json();
+                const goals = (data.employees?.[0]?.goals ?? []).map(
+                  (g: { id: string; title: string }) => ({ id: g.id, title: g.title })
+                );
+                onFieldChange("availableGoals", goals);
+              }
+            } catch {
+              // Goals will remain empty — user can still submit without linked goals
+            }
+          }}
+        />
+      )}
 
       {/* Linked Goals - pill toggle */}
       <div className="space-y-1.5">
