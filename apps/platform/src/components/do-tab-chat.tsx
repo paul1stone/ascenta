@@ -183,7 +183,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
           </h1>
         )}
 
-        {/* Chat input card */}
+        {/* Chat input card + tool pills share same width */}
         <div className="mt-6 w-full max-w-2xl">
           <ChatInput
             value={input}
@@ -195,20 +195,19 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
             model={model}
             onModelChange={setModel}
           />
-        </div>
 
-        {/* Tool prompt pills */}
-        {hasTools && pageConfig.tools && (
-          <div className="mt-4">
-            <SuggestPromptPills
-              tools={pageConfig.tools}
-              user={MOCK_USER}
-              accentColor={accentColor}
-              onPromptSelect={handlePromptSelect}
-              onDirectOpen={handleDirectOpen}
-            />
-          </div>
-        )}
+          {hasTools && pageConfig.tools && (
+            <div className="mt-4">
+              <SuggestPromptPills
+                tools={pageConfig.tools}
+                user={MOCK_USER}
+                accentColor={accentColor}
+                onPromptSelect={handlePromptSelect}
+                onDirectOpen={handleDirectOpen}
+              />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
