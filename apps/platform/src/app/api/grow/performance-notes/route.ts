@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { nanoid } from "nanoid";
 import { connectDB } from "@ascenta/db";
 import { PerformanceNote } from "@ascenta/db/performance-note-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { runId, ...formData } = body;
-    const effectiveRunId = runId || nanoid();
+    const effectiveRunId = runId || crypto.randomUUID();
 
     const parsed = performanceNoteFormSchema.safeParse(formData);
     if (!parsed.success) {

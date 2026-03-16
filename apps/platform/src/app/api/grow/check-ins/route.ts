@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { nanoid } from "nanoid";
 import { connectDB } from "@ascenta/db";
 import { CheckIn } from "@ascenta/db/checkin-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { runId, ...formData } = body;
-    const effectiveRunId = runId || nanoid();
+    const effectiveRunId = runId || crypto.randomUUID();
 
     const parsed = checkInFormSchema.safeParse(formData);
     if (!parsed.success) {
