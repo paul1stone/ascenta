@@ -37,26 +37,26 @@ Each nav category has its own accent color. Use the correct one for the page con
 ## Typography
 
 ### Fonts
-- **Display**: `'Montserrat', sans-serif` — headings, logo, labels. Weights: 500-900.
-- **Body**: `'Inter', system-ui, sans-serif` — body text, UI elements. Weights: 300-800.
+- **Display**: `'Plus Jakarta Sans', sans-serif` — headings, logo, labels. Weights: 400-800.
+- **Body**: `'Geist', system-ui, sans-serif` — body text, UI elements. Weights: 300-700.
 
 Google Fonts import:
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ```
 
 ### Scale
 | Role | Font | Size | Weight |
 |------|------|------|--------|
-| Page title | Montserrat | 24-28px | 700 |
-| Section header | Montserrat | 14px | 600-700 |
-| Sub-header label | Montserrat | 12px | 600, uppercase, tracking 0.06em |
-| Tiny label | Montserrat | 10-11px | 600, uppercase, tracking 0.08em |
-| Body text | Inter | 14px | 400 |
-| Small text | Inter | 13px | 400 |
-| Metadata | Inter | 12px | 400-500 |
-| Caption | Inter | 11px | 500 |
+| Page title | Plus Jakarta Sans | 24-28px | 700 |
+| Section header | Plus Jakarta Sans | 14px | 600-700 |
+| Sub-header label | Plus Jakarta Sans | 12px | 600, uppercase, tracking 0.06em |
+| Tiny label | Plus Jakarta Sans | 10-11px | 600, uppercase, tracking 0.08em |
+| Body text | Geist | 14px | 400 |
+| Small text | Geist | 13px | 400 |
+| Metadata | Geist | 12px | 400-500 |
+| Caption | Geist | 11px | 500 |
 
 ## Spacing & Sizing
 
@@ -111,7 +111,7 @@ Deep-blue tinted shadows: `rgba(12, 30, 61, 0.05)` through `rgba(12, 30, 61, 0.1
 
 ### Sidebar (Real App)
 - White background (`#ffffff`), right border
-- Logo row: 56px tall, compass icon + "ASCENTA" in Montserrat bold uppercase tracking-wider
+- Logo row: 56px tall, compass icon + "ASCENTA" in Plus Jakarta Sans bold uppercase tracking-wider
 - Categories: each with Lucide icon in section color, 3px left border when active, `{color}20` background when active
 - Active subcategories: nested under parent, `{color}18` background, semibold text
 - Inactive items: `text-muted-foreground`, hover `bg-primary/5`

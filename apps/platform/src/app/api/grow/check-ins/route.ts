@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { nanoid } from "nanoid";
 import { connectDB } from "@ascenta/db";
 import { CheckIn } from "@ascenta/db/checkin-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { runId, ...formData } = body;
+    const effectiveRunId = runId || nanoid();
 
     const parsed = checkInFormSchema.safeParse(formData);
     if (!parsed.success) {
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
       employeeObstacles: data.employeeObstacles,
       employeeSupportNeeded: data.employeeSupportNeeded ?? null,
       status: "completed",
-      workflowRunId: runId ?? undefined,
+      workflowRunId: effectiveRunId,
     });
 
     const checkInObj = checkIn.toJSON() as Record<string, unknown>;
@@ -58,17 +60,17 @@ export async function POST(req: NextRequest) {
           completedAt: new Date(),
         },
       });
-
-      await logAuditEvent({
-        workflowRunId: runId,
-        actorId: "system",
-        actorType: "system",
-        action: "approved",
-        description: `Completed check-in workflow. Record ID: ${checkInId}`,
-        workflowVersion: 1,
-        metadata: { recordId: checkInId, recordType: "check-in" },
-      });
     }
+
+    await logAuditEvent({
+      workflowRunId: effectiveRunId,
+      actorId: "system",
+      actorType: "system",
+      action: "approved",
+      description: `Completed check-in workflow. Record ID: ${checkInId}`,
+      workflowVersion: 1,
+      metadata: { recordId: checkInId, recordType: "check-in" },
+    });
 
     return NextResponse.json({
       success: true,

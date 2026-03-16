@@ -164,7 +164,7 @@ Three providers: OpenAI (default: gpt-4o), Anthropic (default: claude-sonnet-4),
 - **Components**: shadcn/ui with Radix primitives and Lucide icons. Shared components live in `packages/ui/`. Use `cn()` from `@ascenta/ui` for class merging.
 - **Validation**: Zod schemas for API input validation.
 - **IDs**: MongoDB ObjectId (native `_id`). `toJSON` virtuals expose `id` as string. `nanoid` used for non-DB short IDs where needed.
-- **Design tokens**: Deep Blue (#0c1e3d), Summit orange (#ff6b35), Glacier (#f8fafc). Section accent colors defined in `dashboard-nav.ts` per category (Plan=#6688bb, Attract=#aa8866, Launch=#bb6688, Grow=#44aa99, Care=#cc6677, Protect=#8888aa). Custom fonts: Montserrat (display), Inter (sans).
+- **Design tokens**: Deep Blue (#0c1e3d), Summit orange (#ff6b35), Glacier (#f8fafc). Section accent colors defined in `dashboard-nav.ts` per category (Plan=#6688bb, Attract=#aa8866, Launch=#bb6688, Grow=#44aa99, Care=#cc6677, Protect=#8888aa). Custom fonts: Plus Jakarta Sans (display), Geist (sans).
 - **Tailwind v4**: Uses `@source "./components"` in `packages/ui/src/globals.css` to scan shared UI components (Tailwind v4 ignores `node_modules` by default). Without this, utility classes used only in shared packages won't be generated.
 - **Client-side imports**: Never import from `@ascenta/db/*-schema` in client components — these files import mongoose which crashes client-side. Use `@ascenta/db/goal-constants` or `@ascenta/db/performance-note-constants` for enum constants on the client.
 - **Email**: Resend with lazy singleton in `packages/email/`. Templates in `packages/email/src/templates/`. Email failures are caught and logged but don't block primary operations.

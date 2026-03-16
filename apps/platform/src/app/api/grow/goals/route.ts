@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { nanoid } from "nanoid";
 import { connectDB } from "@ascenta/db";
 import { Goal } from "@ascenta/db/goal-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { runId, ...formData } = body;
+    const effectiveRunId = runId || nanoid();
 
     const parsed = goalFormSchema.safeParse(formData);
     if (!parsed.success) {
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
       status: "on_track",
       owner: employee.id,
       manager: employee.id,
-      workflowRunId: runId ?? undefined,
+      workflowRunId: effectiveRunId,
     });
 
     const goalObj = goal.toJSON() as Record<string, unknown>;
@@ -64,17 +66,17 @@ export async function POST(req: NextRequest) {
           completedAt: new Date(),
         },
       });
-
-      await logAuditEvent({
-        workflowRunId: runId,
-        actorId: "system",
-        actorType: "system",
-        action: "approved",
-        description: `Completed goal workflow. Record ID: ${goalId}`,
-        workflowVersion: 1,
-        metadata: { recordId: goalId, recordType: "goal" },
-      });
     }
+
+    await logAuditEvent({
+      workflowRunId: effectiveRunId,
+      actorId: "system",
+      actorType: "system",
+      action: "approved",
+      description: `Completed goal workflow. Record ID: ${goalId}`,
+      workflowVersion: 1,
+      metadata: { recordId: goalId, recordType: "goal" },
+    });
 
     return NextResponse.json({
       success: true,

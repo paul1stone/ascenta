@@ -89,7 +89,7 @@ Always include 2-4 annotation cards below the browser frame. These explain the d
 ## Quality Checklist
 
 - [ ] Uses exact brand colors from design-system.md (no invented colors)
-- [ ] Montserrat for headings/labels, Inter for body text
+- [ ] Plus Jakarta Sans for headings/labels, Geist for body text
 - [ ] Sidebar matches real nav structure with correct section colors
 - [ ] Top header has company avatar + name + icon buttons
 - [ ] Chat messages use the real bubble structure (avatar, sender name, border styles)

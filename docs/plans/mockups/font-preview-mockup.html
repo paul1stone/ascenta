@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Font Pairing Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --grow: #44aa99;
+    --care: #cc6677;
+    --plan: #6688bb;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  .page-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--summit);
+    margin-bottom: 8px;
+  }
+
+  .page-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 6px;
+  }
+
+  .page-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .current-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 4px 14px;
+    margin-bottom: 40px;
+  }
+  .current-note strong { color: var(--text-secondary); }
+
+  /* Options grid */
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .option-card {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .option-card:hover {
+    border-color: var(--summit);
+    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.1);
+  }
+
+  .option-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, rgba(12, 30, 61, 0.02), rgba(12, 30, 61, 0.005));
+  }
+  .option-number {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--summit);
+    margin-bottom: 4px;
+  }
+  .option-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 2px;
+  }
+  .option-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .option-body { padding: 24px; }
+
+  /* Typography samples */
+  .type-section { margin-bottom: 24px; }
+  .type-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  /* Heading samples */
+  .sample-h1 { font-size: 28px; font-weight: 700; color: var(--deep-blue); margin-bottom: 6px; line-height: 1.2; }
+  .sample-h2 { font-size: 18px; font-weight: 600; color: var(--deep-blue); margin-bottom: 4px; line-height: 1.3; }
+  .sample-h3 { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  .sample-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  /* Body samples */
+  .sample-body { font-size: 14px; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px; }
+  .sample-small { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+  .sample-meta { font-size: 12px; color: var(--text-muted); }
+
+  /* Mini UI components */
+  .mini-card {
+    background: var(--glacier);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .mini-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .mini-card-title { font-size: 14px; font-weight: 700; color: var(--deep-blue); }
+  .mini-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+  }
+  .mini-badge.grow { background: rgba(68, 170, 153, 0.12); color: var(--grow); }
+  .mini-badge.care { background: rgba(204, 102, 119, 0.12); color: var(--care); }
+  .mini-badge.plan { background: rgba(102, 136, 187, 0.12); color: var(--plan); }
+
+  .mini-stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .mini-stat {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    background: var(--white);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+  }
+  .mini-stat-value { font-size: 20px; font-weight: 700; color: var(--deep-blue); line-height: 1; margin-bottom: 2px; }
+  .mini-stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+
+  .mini-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .mini-list-item:last-child { border-bottom: none; }
+  .mini-list-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .mini-list-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .mini-list-right { font-size: 12px; font-weight: 500; }
+
+  .mini-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: default;
+  }
+  .mini-btn.primary { background: var(--summit); color: var(--white); box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25); }
+  .mini-btn.secondary { background: var(--glacier); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  /* Chat preview */
+  .mini-chat {
+    background: var(--glacier);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .mini-chat-msg {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .mini-chat-msg:last-child { margin-bottom: 0; }
+  .mini-chat-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .mini-chat-avatar.user { background: var(--deep-blue); }
+  .mini-chat-avatar.bot { background: var(--summit); }
+  .mini-chat-bubble {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 85%;
+  }
+  .mini-chat-bubble.user-bubble {
+    background: rgba(12, 30, 61, 0.04);
+    border: 1px solid rgba(12, 30, 61, 0.1);
+    color: var(--text-primary);
+  }
+  .mini-chat-bubble.bot-bubble {
+    background: var(--white);
+    border: 1px solid rgba(68, 170, 153, 0.2);
+    color: var(--text-primary);
+  }
+  .mini-chat-sender { font-size: 11px; font-weight: 600; color: var(--deep-blue); margin-bottom: 2px; }
+
+  /* Comparison details section */
+  .comparison-section {
+    margin-bottom: 48px;
+  }
+  .comparison-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 8px;
+  }
+  .comparison-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .detail-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .detail-card-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--summit);
+    margin-bottom: 12px;
+  }
+  .detail-trait {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .detail-trait-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--summit);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+  .detail-trait-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Annotation bar */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.teal { background: rgba(68, 170, 153, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .options-grid { animation: fadeUp 0.5s ease-out; }
+  .comparison-section { animation: fadeUp 0.5s ease-out 0.15s both; }
+  .annotation-bar { animation: fadeUp 0.5s ease-out 0.3s both; }
+
+  /* Font family assignments per option */
+  .opt1-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .opt1-body { font-family: 'Geist', system-ui, sans-serif; }
+
+  .opt2-display { font-family: 'Outfit', sans-serif; }
+  .opt2-body { font-family: 'DM Sans', system-ui, sans-serif; }
+
+  .opt3-display { font-family: 'Sora', sans-serif; }
+  .opt3-body { font-family: 'Geist', system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+  <div class="page-label">Ascenta Design System</div>
+  <div class="page-title">Font Pairing Preview</div>
+  <div class="page-subtitle">
+    Three font pairing options to replace Montserrat + Inter. Each shown with real Ascenta UI patterns.
+  </div>
+  <div class="current-note">
+    Current fonts: <strong>Montserrat</strong> (display) + <strong>Inter</strong> (body)
+  </div>
+
+  <!-- ============================================================
+       OPTION CARDS — side by side comparison
+       ============================================================ -->
+  <div class="options-grid">
+
+    <!-- OPTION 1: Plus Jakarta Sans + Geist -->
+    <div class="option-card">
+      <div class="option-header">
+        <div class="option-number">Option 1</div>
+        <div class="option-name opt1-display">Plus Jakarta Sans + Geist</div>
+        <div class="option-desc opt1-body">Modern SaaS standard, warm geometry</div>
+      </div>
+      <div class="option-body">
+        <!-- Type scale -->
+        <div class="type-section">
+          <div class="type-label opt1-display">Headings</div>
+          <div class="sample-h1 opt1-display">Performance Review</div>
+          <div class="sample-h2 opt1-display">Employee Dashboard</div>
+          <div class="sample-h3 opt1-display">Q1 2026 Goals Overview</div>
+          <div class="sample-label opt1-display">Section Label</div>
+        </div>
+
+        <div class="type-section">
+          <div class="type-label opt1-display">Body Text</div>
+          <div class="sample-body opt1-body">Ascenta streamlines your corrective action workflow with AI-powered document generation and compliance guardrails built into every step.</div>
+          <div class="sample-small opt1-body">Last updated 3 hours ago by Sarah Chen</div>
+          <div class="sample-meta opt1-body">12 active workflows &middot; 4 pending review</div>
+        </div>
+
+        <!-- Mini dashboard card -->
+        <div class="mini-card">
+          <div class="mini-card-header">
+            <div class="mini-card-title opt1-display">Team Performance</div>
+            <div class="mini-badge grow opt1-display">On Track</div>
+          </div>
+          <div class="mini-stat-row">
+            <div class="mini-stat">
+              <div class="mini-stat-value opt1-display">24</div>
+              <div class="mini-stat-label opt1-display">Goals</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-value opt1-display">8</div>
+              <div class="mini-stat-label opt1-display">Check-ins</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-value opt1-display">92%</div>
+              <div class="mini-stat-label opt1-display">Complete</div>
+            </div>
+          </div>
+          <div>
+            <div class="mini-list-item">
+              <div>
+                <div class="mini-list-name opt1-body">Marcus Rivera</div>
+                <div class="mini-list-sub opt1-body">Engineering &middot; 4 goals</div>
+              </div>
+              <div class="mini-list-right opt1-body" style="color: var(--grow);">100%</div>
+            </div>
+            <div class="mini-list-item">
+              <div>
+                <div class="mini-list-name opt1-body">Priya Sharma</div>
+                <div class="mini-list-sub opt1-body">Product &middot; 3 goals</div>
+              </div>
+              <div class="mini-list-right opt1-body" style="color: var(--grow);">85%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini chat -->
+        <div class="mini-chat">
+          <div class="mini-chat-msg">
+            <div class="mini-chat-avatar user">Y</div>
+            <div class="mini-chat-bubble user-bubble">
+              <div class="mini-chat-sender opt1-display">You</div>
+              <span class="opt1-body">Start a check-in for Marcus</span>
+            </div>
+          </div>
+          <div class="mini-chat-msg">
+            <div class="mini-chat-avatar bot">A</div>
+            <div class="mini-chat-bubble bot-bubble">
+              <div class="mini-chat-sender opt1-display">Ascenta</div>
+              <span class="opt1-body">I've prepared a check-in form for <strong>Marcus Rivera</strong> with his Q1 goals pre-loaded.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 8px;">
+          <div class="mini-btn primary opt1-body">Start Review</div>
+          <div class="mini-btn secondary opt1-body">View Profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION 2: Outfit + DM Sans -->
+    <div class="option-card">
+      <div class="option-header">
+        <div class="option-number">Option 2</div>
+        <div class="option-name opt2-display">Outfit + DM Sans</div>
+        <div class="option-desc opt2-body">Warm and approachable, HR-friendly</div>
+      </div>
+      <div class="option-body">
+        <!-- Type scale -->
+        <div class="type-section">
+          <div class="type-label opt2-display">Headings</div>
+          <div class="sample-h1 opt2-display">Performance Review</div>
+          <div class="sample-h2 opt2-display">Employee Dashboard</div>
+          <div class="sample-h3 opt2-display">Q1 2026 Goals Overview</div>
+          <div class="sample-label opt2-display">Section Label</div>
+        </div>
+
+        <div class="type-section">
+          <div class="type-label opt2-display">Body Text</div>
+          <div class="sample-body opt2-body">Ascenta streamlines your corrective action workflow with AI-powered document generation and compliance guardrails built into every step.</div>
+          <div class="sample-small opt2-body">Last updated 3 hours ago by Sarah Chen</div>
+          <div class="sample-meta opt2-body">12 active workflows &middot; 4 pending review</div>
+        </div>
+
+        <!-- Mini dashboard card -->
+        <div class="mini-card">
+          <div class="mini-card-header">
+            <div class="mini-card-title opt2-display">Team Performance</div>
+            <div class="mini-badge care opt2-display">Needs Attention</div>
+          </div>
+          <div class="mini-stat-row">
+            <div class="mini-stat">
+              <div class="mini-stat-value opt2-display">24</div>
+              <div class="mini-stat-label opt2-display">Goals</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-value opt2-display">8</div>
+              <div class="mini-stat-label opt2-display">Check-ins</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-value opt2-display">92%</div>
+              <div class="mini-stat-label opt2-display">Complete</div>
+            </div>
+          </div>
+          <div>
+            <div class="mini-list-item">
+              <div>
+                <div class="mini-list-name opt2-body">Marcus Rivera</div>
+                <div class="mini-list-sub opt2-body">Engineering &middot; 4 goals</div>
+              </div>
+              <div class="mini-list-right opt2-body" style="color: var(--grow);">100%</div>
+            </div>
+            <div class="mini-list-item">
+              <div>
+                <div class="mini-list-name opt2-body">Priya Sharma</div>
+                <div class="mini-list-sub opt2-body">Product &middot; 3 goals</div>
+              </div>
+              <div class="mini-list-right opt2-body" style="color: var(--grow);">85%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini chat -->
+        <div class="mini-chat">
+          <div class="mini-chat-msg">
+            <div class="mini-chat-avatar user">Y</div>
+            <div class="mini-chat-bubble user-bubble">
+              <div class="mini-chat-sender opt2-display">You</div>
+              <span class="opt2-body">Start a check-in for Marcus</span>
+            </div>
+          </div>
+          <div class="mini-chat-msg">
+            <div class="mini-chat-avatar bot">A</div>
+            <div class="mini-chat-bubble bot-bubble">
+              <div class="mini-chat-sender opt2-display">Ascenta</div>
+              <span class="opt2-body">I've prepared a check-in form for <strong>Marcus Rivera</strong> with his Q1 goals pre-loaded.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 8px;">
+          <div class="mini-btn primary opt2-body">Start Review</div>
+          <div class="mini-btn secondary opt2-body">View Profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION 3: Sora + Geist -->
+    <div class="option-card">
+      <div class="option-header">
+        <div class="option-number">Option 3</div>
+        <div class="option-name opt3-display">Sora + Geist</div>
+        <div class="option-desc opt3-body">Tech-forward, clean precision</div>
+      </div>
+      <div class="option-body">
+        <!-- Type scale -->
+        <div class="type-section">
+          <div class="type-label opt3-display">Headings</div>
+          <div class="sample-h1 opt3-display">Performance Review</div>
+          <div class="sample-h2 opt3-display">Employee Dashboard</div>
+          <div class="sample-h3 opt3-display">Q1 2026 Goals Overview</div>
+          <div class="sample-label opt3-display">Section Label</div>
+        </div>
+
+        <div class="type-section">
+          <div class="type-label opt3-display">Body Text</div>
+          <div class="sample-body opt3-body">Ascenta streamlines your corrective action workflow with AI-powered document generation and compliance guardrails built into every step.</div>
+          <div class="sample-small opt3-body">Last updated 3 hours ago by Sarah Chen</div>
+          <div class="sample-meta opt3-body">12 active workflows &middot; 4 pending review</div>
+        </div>
+
+        <!-- Mini dashboard card -->
+        <div class="mini-card">
+          <div class="mini-card-header">
+            <div class="mini-card-title opt3-display">Team Performance</div>
+            <div class="mini-badge plan opt3-display">In Progress</div>
+          </div>
+          <div class="mini-stat-row">
+            <div class="mini-stat">
+              <div class="mini-stat-value opt3-display">24</div>
+              <div class="mini-stat-label opt3-display">Goals</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-value opt3-display">8</div>
+              <div class="mini-stat-label opt3-display">Check-ins</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-value opt3-display">92%</div>
+              <div class="mini-stat-label opt3-display">Complete</div>
+            </div>
+          </div>
+          <div>
+            <div class="mini-list-item">
+              <div>
+                <div class="mini-list-name opt3-body">Marcus Rivera</div>
+                <div class="mini-list-sub opt3-body">Engineering &middot; 4 goals</div>
+              </div>
+              <div class="mini-list-right opt3-body" style="color: var(--grow);">100%</div>
+            </div>
+            <div class="mini-list-item">
+              <div>
+                <div class="mini-list-name opt3-body">Priya Sharma</div>
+                <div class="mini-list-sub opt3-body">Product &middot; 3 goals</div>
+              </div>
+              <div class="mini-list-right opt3-body" style="color: var(--grow);">85%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini chat -->
+        <div class="mini-chat">
+          <div class="mini-chat-msg">
+            <div class="mini-chat-avatar user">Y</div>
+            <div class="mini-chat-bubble user-bubble">
+              <div class="mini-chat-sender opt3-display">You</div>
+              <span class="opt3-body">Start a check-in for Marcus</span>
+            </div>
+          </div>
+          <div class="mini-chat-msg">
+            <div class="mini-chat-avatar bot">A</div>
+            <div class="mini-chat-bubble bot-bubble">
+              <div class="mini-chat-sender opt3-display">Ascenta</div>
+              <span class="opt3-body">I've prepared a check-in form for <strong>Marcus Rivera</strong> with his Q1 goals pre-loaded.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 8px;">
+          <div class="mini-btn primary opt3-body">Start Review</div>
+          <div class="mini-btn secondary opt3-body">View Profile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DETAILED COMPARISON
+       ============================================================ -->
+  <div class="comparison-section">
+    <div class="comparison-title">Character Comparison</div>
+    <div class="comparison-subtitle">What each pairing brings to the Ascenta brand</div>
+
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="detail-card-label">Option 1 — Plus Jakarta Sans + Geist</div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Warm geometry</strong> — rounder than Montserrat, friendlier without losing professionalism</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>SaaS pedigree</strong> — widely adopted by Linear, Vercel, and modern product tools</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Geist body text</strong> — purpose-built for developer/product UIs with excellent monospace companion</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Best for:</strong> Balancing trust and modernity for enterprise HR buyers</div>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-label">Option 2 — Outfit + DM Sans</div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Softer edges</strong> — more approachable than geometric alternatives, inviting tone</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Human-centered</strong> — DM Sans has a warm, humanist quality great for people-focused products</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Excellent weight range</strong> — both fonts offer smooth weight transitions for hierarchy</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Best for:</strong> Making corrective action workflows feel less intimidating for HR managers</div>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-label">Option 3 — Sora + Geist</div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Tech-forward precision</strong> — distinctive letterforms with a futuristic edge</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>AI-native feel</strong> — reinforces Ascenta's positioning as an AI-first platform</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Strong differentiation</strong> — less common than Jakarta/Inter pairings, more memorable</div>
+        </div>
+        <div class="detail-trait">
+          <div class="detail-trait-dot"></div>
+          <div class="detail-trait-text"><strong>Best for:</strong> Leaning into AI identity and standing out from traditional HR tools</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">&#9650;</div>
+      <h4>All Google Fonts</h4>
+      <p>Every option uses free Google Fonts with excellent language support and performance. No licensing concerns.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">&#9679;</div>
+      <h4>Same Design Tokens</h4>
+      <p>Font swap only — all colors, spacing, shadows, and component structure remain identical. Drop-in replacement.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon teal">&#9733;</div>
+      <h4>How to Evaluate</h4>
+      <p>Focus on headings at different sizes, body text readability, and how labels/badges feel. These are the most common text patterns in Ascenta.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
