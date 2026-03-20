@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@ascenta/ui";
-import { PanelLeftClose, PanelLeft, LayoutDashboard, CircleDot, BarChart3 } from "lucide-react";
+import { PanelLeftClose, PanelLeft, LayoutDashboard, CircleDot, BarChart3, Play } from "lucide-react";
 import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
 import {
   Popover,
@@ -152,6 +152,22 @@ export function NavSidebar() {
         >
           <LayoutDashboard className="size-4 shrink-0" />
           {!collapsed && <span>Home</span>}
+        </Link>
+        <Link
+          href="/do"
+          className={cn(
+            "flex items-center gap-2.5 py-2.5 text-[13px] whitespace-nowrap transition-colors",
+            collapsed ? "justify-center px-0" : "px-3.5",
+            pathname === "/do" || pathname.startsWith("/do/")
+              ? "font-bold bg-primary/6 border-l-[3px]"
+              : "text-muted-foreground hover:bg-primary/5 border-l-[3px] border-l-transparent",
+          )}
+          style={{
+            borderLeftColor: pathname === "/do" || pathname.startsWith("/do/") ? "#ff6b35" : undefined,
+          }}
+        >
+          <Play className="size-4 shrink-0" style={{ color: "#ff6b35" }} />
+          {!collapsed && <span>Do</span>}
         </Link>
         <div className="mx-3 my-1 border-b" />
         {DASHBOARD_NAV.map((cat) => {
