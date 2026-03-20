@@ -28,6 +28,9 @@ import {
   ShieldAlert,
   FolderSearch,
   FileText,
+  Brain,
+  MessageCircle,
+  ClipboardCheck,
 } from "lucide-react";
 
 // ============================================================================
@@ -168,10 +171,17 @@ export interface PageTool {
   promptSuggestions?: ToolSuggestion[];
 }
 
+export interface PageTab {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+}
+
 export interface PageConfig {
   title: string;
   description: string;
   tools?: PageTool[];
+  tabs?: PageTab[];
 }
 
 export const PAGE_CONFIG: Record<string, PageConfig> = {
@@ -226,6 +236,12 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
   "grow/performance": {
     title: "Performance System",
     description: "Manage performance reviews, goals, and check-ins for continuous growth.",
+    tabs: [
+      { key: "goals", label: "Goals", icon: Target },
+      { key: "reviews", label: "Performance Reviews", icon: ClipboardCheck },
+      { key: "checkins", label: "Check-ins", icon: MessageCircle },
+      { key: "reflect", label: "Reflect", icon: Brain },
+    ],
     tools: [
       {
         key: "startGoalCreation",
@@ -290,6 +306,10 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
   "protect/case-management": {
     title: "Employee Case Management",
     description: "Manage employee relations cases with proper documentation and compliance.",
+  },
+  "do": {
+    title: "Do",
+    description: "Your AI workspace — create goals, run check-ins, draft documents, and more.",
   },
 };
 
