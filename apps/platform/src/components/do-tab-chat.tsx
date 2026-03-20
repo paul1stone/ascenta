@@ -177,11 +177,9 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {pageConfig.title}
         </p>
-        {hasTools && (
-          <h1 className="font-display mt-1 text-2xl font-bold text-deep-blue">
-            {getGreeting(MOCK_USER.name)}
-          </h1>
-        )}
+        <h1 className="font-display mt-1 text-2xl font-bold text-deep-blue">
+          {getGreeting(MOCK_USER.name)}
+        </h1>
 
         {/* Chat input card + tool pills share same width */}
         <div className="mt-6 w-full max-w-2xl">
@@ -191,7 +189,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
             onSubmit={handleSend}
             onStop={handleStop}
             isLoading={isLoading}
-            placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
+            placeholder="What can Ascenta do for you?"
             model={model}
             onModelChange={setModel}
           />
@@ -277,7 +275,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
               onSubmit={handleSend}
               onStop={handleStop}
               isLoading={isLoading}
-              placeholder={`Ask about ${pageConfig.title.toLowerCase()}...`}
+              placeholder="What can Ascenta do for you?"
               model={model}
               onModelChange={setModel}
               />
