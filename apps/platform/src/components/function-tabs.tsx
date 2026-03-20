@@ -1,18 +1,25 @@
 "use client";
 
 import { cn } from "@ascenta/ui";
-import { FUNCTION_TABS, type TabKey } from "@/lib/constants/dashboard-nav";
+import type { LucideIcon } from "lucide-react";
+
+interface Tab {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+}
 
 interface FunctionTabsProps {
-  activeTab: TabKey;
-  onTabChange: (tab: TabKey) => void;
+  tabs: Tab[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
   accentColor: string;
 }
 
-export function FunctionTabs({ activeTab, onTabChange, accentColor }: FunctionTabsProps) {
+export function FunctionTabs({ tabs, activeTab, onTabChange, accentColor }: FunctionTabsProps) {
   return (
     <div className="flex border-b bg-[#fafafa]">
-      {FUNCTION_TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = tab.key === activeTab;
         const Icon = tab.icon;
         return (
