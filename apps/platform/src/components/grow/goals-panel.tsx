@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Target, Loader2 } from "lucide-react";
 import { GoalCard } from "@/components/grow/goal-card";
+import { useRole } from "@/lib/role/role-context";
 
 interface GoalData {
   id: string;
@@ -24,6 +25,7 @@ interface GoalsPanelProps {
 }
 
 export function GoalsPanel({ accentColor }: GoalsPanelProps) {
+  const { persona, loading: roleLoading } = useRole();
   const [goals, setGoals] = useState<GoalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,29 +36,22 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
 
   useEffect(() => {
     async function fetchGoals() {
+      if (roleLoading) return; // Wait for persona to resolve
+      if (!persona?.id) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        // Look up the mock user (first employee matching "Jason")
-        const empRes = await fetch("/api/dashboard/employees?search=Jason&limit=1");
-        const empData = await empRes.json();
-
-        if (!empData.employees || empData.employees.length === 0) {
-          setError("No employee found. Run `pnpm db:seed` to populate employees.");
-          setLoading(false);
-          return;
-        }
-
-        const employee = empData.employees[0];
-        const employeeId = employee.id ?? employee._id;
         setEmployeeInfo({
-          id: employeeId,
-          name: `${employee.firstName} ${employee.lastName}`,
+          id: persona.id,
+          name: `${persona.firstName} ${persona.lastName}`,
         });
 
-        // Fetch goals for this employee
-        const goalsRes = await fetch(`/api/grow/goals?employeeId=${employeeId}`);
+        const goalsRes = await fetch(`/api/grow/goals?employeeId=${persona.id}`);
         const goalsData = await goalsRes.json();
 
         if (goalsData.success) {
@@ -72,7 +67,7 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
     }
 
     fetchGoals();
-  }, []);
+  }, [persona?.id, persona?.firstName, persona?.lastName, roleLoading]);
 
   if (loading) {
     return (
