@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Loader2, Sparkles, Pencil, Eye, ExternalLink } from "lucide-react";
 import { cn } from "@ascenta/ui";
 import Link from "next/link";
+import { useRole } from "@/lib/role/role-context";
 
 interface FoundationData {
   id: string;
@@ -40,6 +41,8 @@ interface FoundationPanelProps {
 }
 
 export function FoundationPanel({ accentColor }: FoundationPanelProps) {
+  const { role } = useRole();
+  const isAdmin = role === "hr";
   const [foundation, setFoundation] = useState<FoundationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -78,6 +81,16 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
   useEffect(() => {
     fetchFoundation();
   }, [fetchFoundation]);
+
+  // Gate edit mode based on role — runs after foundation loads and when role changes
+  useEffect(() => {
+    if (loading) return;
+    if (!isAdmin) {
+      setEditMode(false);
+    } else if (!foundation || foundation.status === "draft") {
+      setEditMode(true);
+    }
+  }, [loading, isAdmin, foundation?.status]);
 
   async function handleSave() {
     try {
@@ -189,13 +202,15 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
                   : ""}
               </p>
             </div>
-            <button
-              onClick={() => setEditMode(true)}
-              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Pencil className="size-4" />
-              Edit
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setEditMode(true)}
+                className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Pencil className="size-4" />
+                Edit
+              </button>
+            )}
           </div>
 
           <div className="space-y-5">
