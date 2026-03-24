@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { NavSidebar } from "@/components/nav-sidebar";
 import { TopHeader } from "@/components/top-header";
 import { ChatProvider } from "@/lib/chat/chat-context";
+import { RoleProvider } from "@/lib/role/role-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <RoleProvider>
         <ChatProvider>
           <div className="flex h-screen overflow-hidden">
             <NavSidebar />
@@ -29,6 +31,7 @@ export default function RootLayout({
             </main>
           </div>
         </ChatProvider>
+        </RoleProvider>
         <Analytics />
       </body>
     </html>
