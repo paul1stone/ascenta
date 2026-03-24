@@ -6,17 +6,11 @@ import { foundationFormSchema } from "@/lib/validations/foundation";
 export async function GET() {
   try {
     await connectDB();
-    const doc = await CompanyFoundation.findOne().lean();
+    const doc = await CompanyFoundation.findOne();
     if (!doc) {
       return NextResponse.json({ success: true, foundation: null });
     }
-    const foundation = {
-      ...doc,
-      id: String(doc._id),
-      _id: undefined,
-      __v: undefined,
-    };
-    return NextResponse.json({ success: true, foundation });
+    return NextResponse.json({ success: true, foundation: doc.toJSON() });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Foundation GET error:", message);

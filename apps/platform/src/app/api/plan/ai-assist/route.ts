@@ -45,7 +45,6 @@ export async function POST(req: NextRequest) {
       model: getModel(AI_CONFIG.defaultModels.openai),
       system: systemPrompt,
       prompt: userPrompt,
-      maxTokens: 500,
     });
 
     return NextResponse.json({ success: true, text: result.text });
