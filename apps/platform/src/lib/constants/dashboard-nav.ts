@@ -188,6 +188,10 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
   "plan/strategy-studio": {
     title: "Strategy Studio",
     description: "Define and align your people strategy with business objectives.",
+    tabs: [
+      { key: "foundation", label: "Foundation", icon: Compass },
+      { key: "strategy", label: "Strategy", icon: Target },
+    ],
   },
   "plan/org-design": {
     title: "Org Design & Operating Model",
