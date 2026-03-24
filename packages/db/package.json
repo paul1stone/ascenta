@@ -18,7 +18,8 @@
     "./goal-constants": "./src/goal-constants.ts",
     "./goal-schema": "./src/goal-schema.ts",
     "./performance-note-constants": "./src/performance-note-constants.ts",
-    "./performance-note-schema": "./src/performance-note-schema.ts"
+    "./performance-note-schema": "./src/performance-note-schema.ts",
+    "./foundation-schema": "./src/foundation-schema.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"
