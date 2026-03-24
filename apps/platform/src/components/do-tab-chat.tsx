@@ -12,7 +12,7 @@ import { WorkingDocument } from "@/components/grow/working-document";
 import { parseWorkflowBlocks } from "@/components/chat/workflow-blocks";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
 import type { WorkflowType } from "@/lib/chat/chat-context";
-import { MOCK_USER } from "@/lib/constants/mock-user";
+import { useRole } from "@/lib/role/role-context";
 import { getGreeting } from "@/lib/utils/greeting";
 
 const TOOL_KEY_TO_WORKFLOW: Record<string, WorkflowType> = {
@@ -44,6 +44,8 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     openWorkingDocument,
     updateWorkingDocumentFields,
   } = useChat();
+
+  const { persona } = useRole();
 
   const pageState = getPageState(pageKey);
   const { messages, isLoading, input } = pageState;
@@ -178,7 +180,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
           {pageConfig.title}
         </p>
         <h1 className="font-display mt-1 text-2xl font-bold text-deep-blue">
-          {getGreeting(MOCK_USER.name)}
+          {getGreeting(persona ? persona.firstName : "there")}
         </h1>
 
         {/* Chat input card + tool pills share same width */}
@@ -198,7 +200,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
             <div className="mt-4">
               <SuggestPromptPills
                 tools={pageConfig.tools}
-                user={MOCK_USER}
+                user={persona}
                 accentColor={accentColor}
                 onPromptSelect={handlePromptSelect}
                 onDirectOpen={handleDirectOpen}

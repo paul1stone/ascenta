@@ -1,3 +1,7 @@
+/**
+ * @deprecated Use useRole() from @/lib/role/role-context instead.
+ * This file is kept temporarily for reference during migration.
+ */
 export interface MockUser {
   name: string;
   role: "manager" | "employee";

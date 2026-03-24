@@ -5,12 +5,12 @@ import { Separator } from "@ascenta/ui/separator";
 import { Button } from "@ascenta/ui/button";
 import { SquarePen } from "lucide-react";
 import type { PageTool } from "@/lib/constants/dashboard-nav";
-import type { MockUser } from "@/lib/constants/mock-user";
+import type { ResolvedPersona } from "@/lib/role/role-context";
 import { resolvePrompt } from "@/lib/utils/resolve-prompt";
 
 interface SuggestPromptPillsProps {
   tools: PageTool[];
-  user: MockUser;
+  user: ResolvedPersona | null;
   accentColor: string;
   onPromptSelect: (prompt: string, toolKey: string) => void;
   onDirectOpen: (toolKey: string) => void;
