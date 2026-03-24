@@ -48,22 +48,40 @@ async function main() {
   console.log("Connected to MongoDB. Seeding Grow module data...\n");
 
   // ------------------------------------------------------------------
-  // 1. Find existing employees (need at least 6: 1 manager + 5 reports)
+  // 1. Find seed personas + additional employees for reports
   // ------------------------------------------------------------------
 
-  const employees = await Employee.find({ status: "active" }).limit(6).lean();
-  if (employees.length < 6) {
+  // Use the deterministic seed personas from pnpm db:seed
+  const sarahChen = await Employee.findOne({ firstName: "Sarah", lastName: "Chen" }).lean();
+  const jasonLee = await Employee.findOne({ firstName: "Jason", lastName: "Lee" }).lean();
+  const alexRivera = await Employee.findOne({ firstName: "Alex", lastName: "Rivera" }).lean();
+
+  if (!sarahChen || !jasonLee || !alexRivera) {
     console.error(
-      `Need at least 6 employees. Found ${employees.length}. Run \`pnpm db:seed\` first.`
+      "Seed personas not found. Run `pnpm db:seed` first to create Sarah Chen, Jason Lee, and Alex Rivera."
     );
     process.exit(1);
   }
 
-  // First employee acts as the common manager
-  const manager = employees[0];
-  const reports = employees.slice(1, 6);
+  // Find additional employees for remaining report slots
+  const otherEmployees = await Employee.find({
+    status: "active",
+    _id: { $nin: [sarahChen._id, jasonLee._id, alexRivera._id] },
+  }).limit(4).lean();
+
+  if (otherEmployees.length < 3) {
+    console.error(
+      `Need at least 3 additional employees beyond seed personas. Found ${otherEmployees.length}. Run \`pnpm db:seed\` first.`
+    );
+    process.exit(1);
+  }
+
+  // Jason Lee is the manager; Alex Rivera is first report, then others fill in
+  const manager = jasonLee;
+  const reports = [alexRivera, ...otherEmployees.slice(0, 4)];
 
   console.log(`Manager: ${manager.firstName} ${manager.lastName} (${manager._id})`);
+  console.log(`HR: ${sarahChen.firstName} ${sarahChen.lastName} (${sarahChen._id})`);
   console.log(
     `Reports: ${reports.map((r) => `${r.firstName} ${r.lastName}`).join(", ")}\n`
   );
@@ -166,6 +184,40 @@ async function main() {
       status: "completed" as const,
       owner: reports[4]._id,
       manager: manager._id,
+      managerApproved: true,
+      locked: true,
+    },
+    // Goal for Sarah Chen (HR persona) — so HR view has goal data
+    {
+      title: "Implement company-wide performance review cycle",
+      description:
+        "Design and roll out a standardized performance review process across all departments. Includes creating review templates, training managers on feedback delivery, and establishing a Q2 review timeline.",
+      category: "operational_excellence" as const,
+      measurementType: "milestone_completion" as const,
+      successMetric: "100% of departments complete Q2 reviews on schedule with manager training completion rate above 90%",
+      timePeriod: { start: daysAgo(20), end: daysFromNow(70) },
+      checkInCadence: "monthly" as const,
+      alignment: "mission" as const,
+      status: "on_track" as const,
+      owner: sarahChen._id,
+      manager: sarahChen._id, // self-managed (HR leadership)
+      managerApproved: true,
+      locked: true,
+    },
+    // Goal for Jason Lee (Manager persona) — so Manager view has own goals
+    {
+      title: "Grow engineering team to support platform re-architecture",
+      description:
+        "Hire 3 senior engineers and 1 staff engineer by end of Q3 to support the upcoming platform re-architecture initiative. Includes defining job descriptions, running interview loops, and onboarding new hires.",
+      category: "initiative" as const,
+      measurementType: "numeric_metric" as const,
+      successMetric: "4 new hires onboarded and productive within first 30 days",
+      timePeriod: { start: daysAgo(10), end: daysFromNow(90) },
+      checkInCadence: "monthly" as const,
+      alignment: "priority" as const,
+      status: "on_track" as const,
+      owner: jasonLee._id,
+      manager: jasonLee._id, // self-managed (engineering leadership)
       managerApproved: true,
       locked: true,
     },
