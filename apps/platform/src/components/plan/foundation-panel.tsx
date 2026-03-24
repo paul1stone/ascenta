@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Sparkles, Pencil, Eye, ExternalLink } from "lucide-react";
-import { cn } from "@ascenta/ui";
+import { Loader2, Pencil, Eye, Compass } from "lucide-react";
 import Link from "next/link";
 import { useRole } from "@/lib/role/role-context";
 
@@ -49,7 +48,6 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ mission: "", vision: "", values: "" });
-  const [aiLoading, setAiLoading] = useState<SectionKey | null>(null);
 
   const fetchFoundation = useCallback(async () => {
     try {
@@ -137,34 +135,6 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
     }
   }
 
-  async function handleAiAssist(section: SectionKey) {
-    setAiLoading(section);
-    try {
-      const otherSections = SECTIONS.filter((s) => s.key !== section)
-        .map((s) => `${s.label}: ${form[s.key]}`)
-        .filter((s) => s.split(": ")[1])
-        .join("\n");
-
-      const res = await fetch("/api/plan/ai-assist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          section,
-          currentValue: form[section] || undefined,
-          context: otherSections || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setForm((prev) => ({ ...prev, [section]: data.text }));
-      }
-    } catch {
-      // silent
-    } finally {
-      setAiLoading(null);
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -236,7 +206,7 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
     );
   }
 
-  // Edit mode
+  // Edit mode (HR only)
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-3xl mx-auto">
@@ -259,53 +229,51 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
                 View
               </button>
             )}
-            <Link
-              href="/do"
-              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ExternalLink className="size-4" />
-              Use Do
-            </Link>
           </div>
         </div>
 
+        {/* Compass CTA — primary action */}
+        <Link
+          href="/do"
+          className="flex items-center gap-3 rounded-xl border p-4 mb-6 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
+          style={{
+            "--accent": "#ff6b35",
+            "--accent-bg": "rgba(255, 107, 53, 0.04)",
+          } as React.CSSProperties}
+        >
+          <div
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: "rgba(255, 107, 53, 0.1)" }}
+          >
+            <Compass className="size-5" style={{ color: "#ff6b35" }} />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-deep-blue">
+              Brainstorm with Compass
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Use AI to help craft your mission, vision, and values through guided conversation.
+            </p>
+          </div>
+        </Link>
+
+        {/* Manual editing — secondary action */}
         <div className="space-y-5">
           {SECTIONS.map((section) => (
             <div
               key={section.key}
               className="rounded-xl border bg-white p-5 shadow-sm"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3
-                    className="font-display text-base font-bold"
-                    style={{ color: accentColor }}
-                  >
-                    {section.label}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {section.description}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleAiAssist(section.key)}
-                  disabled={aiLoading !== null}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
-                    "border hover:bg-accent/5",
-                  )}
-                  style={{
-                    color: accentColor,
-                    borderColor: `color-mix(in srgb, ${accentColor} 30%, transparent)`,
-                  }}
+              <div className="mb-3">
+                <h3
+                  className="font-display text-base font-bold"
+                  style={{ color: accentColor }}
                 >
-                  {aiLoading === section.key ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <Sparkles className="size-3.5" />
-                  )}
-                  AI Assist
-                </button>
+                  {section.label}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {section.description}
+                </p>
               </div>
               <textarea
                 value={form[section.key]}

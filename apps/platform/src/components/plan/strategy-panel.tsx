@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Target, Plus, ExternalLink } from "lucide-react";
+import { Loader2, Target, Plus, Compass } from "lucide-react";
 import { cn } from "@ascenta/ui";
 import { STRATEGY_HORIZON_LABELS } from "@ascenta/db/strategy-goal-constants";
 import { StrategyGoalCard } from "./strategy-goal-card";
@@ -119,29 +119,46 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
               {visibleGoals.length} goal{visibleGoals.length !== 1 ? "s" : ""} across all horizons
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/do"
-              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          {canCreate && (
+            <button
+              onClick={() => {
+                setEditGoal(null);
+                setShowForm(true);
+              }}
+              className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ExternalLink className="size-4" />
-              Use Do
-            </Link>
-            {canCreate && (
-              <button
-                onClick={() => {
-                  setEditGoal(null);
-                  setShowForm(true);
-                }}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white transition-colors"
-                style={{ backgroundColor: accentColor }}
-              >
-                <Plus className="size-4" />
-                Create Goal
-              </button>
-            )}
-          </div>
+              <Plus className="size-4" />
+              Create Goal
+            </button>
+          )}
         </div>
+
+        {/* Compass CTA — primary action for creating strategy goals */}
+        {canCreate && (
+          <Link
+            href="/do"
+            className="flex items-center gap-3 rounded-xl border p-4 mb-6 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
+            style={{
+              "--accent": "#ff6b35",
+              "--accent-bg": "rgba(255, 107, 53, 0.04)",
+            } as React.CSSProperties}
+          >
+            <div
+              className="flex size-10 shrink-0 items-center justify-center rounded-lg"
+              style={{ backgroundColor: "rgba(255, 107, 53, 0.1)" }}
+            >
+              <Compass className="size-5" style={{ color: "#ff6b35" }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-deep-blue">
+                Build Strategy with Compass
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Use AI to brainstorm and define company or department goals through guided conversation.
+              </p>
+            </div>
+          </Link>
+        )}
 
         <div className="flex items-center gap-1 rounded-lg border bg-muted/30 p-1 mb-6 w-fit">
           {(["company", "department"] as const).map((mode) => (

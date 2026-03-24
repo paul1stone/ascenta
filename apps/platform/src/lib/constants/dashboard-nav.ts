@@ -8,7 +8,6 @@ import {
   TrendingUp,
   BarChart3,
   BookOpen,
-  Play,
   Lightbulb,
   Building2,
   Users,
@@ -312,8 +311,8 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
     description: "Manage employee relations cases with proper documentation and compliance.",
   },
   "do": {
-    title: "Do",
-    description: "Your AI workspace — create goals, run check-ins, draft documents, and more.",
+    title: "Compass",
+    description: "Your AI workspace — brainstorm strategy, create goals, run check-ins, and more.",
   },
 };
 
@@ -349,6 +348,6 @@ export interface FunctionTab {
 }
 
 export const FUNCTION_TABS: FunctionTab[] = [
-  { key: "do", label: "Do", icon: Play, title: "Action Center", description: "Primary workspace for executing tasks" },
+  { key: "do", label: "Compass", icon: Compass, title: "Action Center", description: "Primary workspace for executing tasks" },
   { key: "learn", label: "Learn", icon: BookOpen, title: "Knowledge Base", description: "Documentation, guides, and training" },
 ];

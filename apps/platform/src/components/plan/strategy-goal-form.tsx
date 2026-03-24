@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Loader2, Sparkles } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import {
   STRATEGY_HORIZONS,
   STRATEGY_HORIZON_LABELS,
@@ -44,7 +44,6 @@ export function StrategyGoalForm({
   const [departments, setDepartments] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [aiLoading, setAiLoading] = useState<string | null>(null);
 
   // Load departments from employees
   useEffect(() => {
@@ -84,31 +83,6 @@ export function StrategyGoalForm({
     }
   }, [editGoal]);
 
-  async function handleAiAssist(field: "description" | "successMetrics") {
-    setAiLoading(field);
-    try {
-      const section = field === "description" ? "strategy_description" : "strategy_metrics";
-      const context = `Title: ${title}\nHorizon: ${STRATEGY_HORIZON_LABELS[horizon as keyof typeof STRATEGY_HORIZON_LABELS]}\nScope: ${scope === "department" ? department : "Company-wide"}`;
-      const res = await fetch("/api/plan/ai-assist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          section,
-          currentValue: field === "description" ? description : successMetrics,
-          context,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (field === "description") setDescription(data.text);
-        else setSuccessMetrics(data.text);
-      }
-    } catch {
-      // silent
-    } finally {
-      setAiLoading(null);
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -189,27 +163,11 @@ export function StrategyGoalForm({
             {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
           </div>
 
-          {/* Description + AI Assist */}
+          {/* Description */}
           <div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Description
-              </label>
-              <button
-                type="button"
-                onClick={() => handleAiAssist("description")}
-                disabled={aiLoading !== null}
-                className="flex items-center gap-1 text-xs font-semibold transition-colors"
-                style={{ color: accentColor }}
-              >
-                {aiLoading === "description" ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <Sparkles className="size-3" />
-                )}
-                AI Assist
-              </button>
-            </div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -301,27 +259,11 @@ export function StrategyGoalForm({
             )}
           </div>
 
-          {/* Success Metrics + AI Assist */}
+          {/* Success Metrics */}
           <div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Success Metrics
-              </label>
-              <button
-                type="button"
-                onClick={() => handleAiAssist("successMetrics")}
-                disabled={aiLoading !== null}
-                className="flex items-center gap-1 text-xs font-semibold transition-colors"
-                style={{ color: accentColor }}
-              >
-                {aiLoading === "successMetrics" ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <Sparkles className="size-3" />
-                )}
-                AI Assist
-              </button>
-            </div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Success Metrics
+            </label>
             <textarea
               value={successMetrics}
               onChange={(e) => setSuccessMetrics(e.target.value)}
