@@ -13,6 +13,8 @@ import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { DoTabChat } from "@/components/do-tab-chat";
 import { LearnPanel } from "@/components/grow/learn-panel";
 import { GoalsPanel } from "@/components/grow/goals-panel";
+import { FoundationPanel } from "@/components/plan/foundation-panel";
+import { StrategyPanel } from "@/components/plan/strategy-panel";
 
 export default function CategorySubPage({
   params,
@@ -66,6 +68,10 @@ export default function CategorySubPage({
         </div>
       ) : activeTab === "goals" ? (
         <GoalsPanel accentColor={ctx.category.color} />
+      ) : activeTab === "foundation" ? (
+        <FoundationPanel accentColor={ctx.category.color} />
+      ) : activeTab === "strategy" ? (
+        <StrategyPanel accentColor={ctx.category.color} />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
           <div className="text-muted-foreground/40 mb-3">
