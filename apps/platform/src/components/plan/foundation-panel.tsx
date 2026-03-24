@@ -234,7 +234,7 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
 
         {/* Compass CTA — primary action */}
         <Link
-          href="/do"
+          href="/do?tool=buildMVV&prompt=Help%20me%20build%20our%20company%27s%20mission%2C%20vision%2C%20and%20values"
           className="flex items-center gap-3 rounded-xl border p-4 mb-6 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
           style={{
             "--accent": "#ff6b35",

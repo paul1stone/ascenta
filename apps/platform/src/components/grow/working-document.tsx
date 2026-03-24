@@ -7,6 +7,7 @@ import { useChat, type WorkflowType } from "@/lib/chat/chat-context";
 import { GoalCreationForm } from "@/components/grow/forms/goal-creation-form";
 import { CheckInForm } from "@/components/grow/forms/check-in-form";
 import { PerformanceNoteForm } from "@/components/grow/forms/performance-note-form";
+import { MVVForm } from "@/components/plan/mvv-form";
 
 // ---------------------------------------------------------------------------
 // Title mapping
@@ -16,6 +17,7 @@ const WORKFLOW_TITLES: Record<WorkflowType, string> = {
   "create-goal": "Create Goal",
   "run-check-in": "Run Check-in",
   "add-performance-note": "Performance Note",
+  "build-mvv": "Mission, Vision & Values",
 };
 
 // ---------------------------------------------------------------------------
@@ -107,6 +109,15 @@ export function WorkingDocument({ pageKey, accentColor }: WorkingDocumentProps) 
 
           {workingDocument.workflowType === "add-performance-note" && (
             <PerformanceNoteForm
+              initialValues={workingDocument.fields}
+              onFieldChange={updateWorkingDocumentField}
+              onSubmit={handleSubmit}
+              onCancel={closeWorkingDocument}
+            />
+          )}
+
+          {workingDocument.workflowType === "build-mvv" && (
+            <MVVForm
               initialValues={workingDocument.fields}
               onFieldChange={updateWorkingDocumentField}
               onSubmit={handleSubmit}

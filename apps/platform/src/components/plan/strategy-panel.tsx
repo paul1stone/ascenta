@@ -136,7 +136,7 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
         {/* Compass CTA — primary action for creating strategy goals */}
         {canCreate && (
           <Link
-            href="/do"
+            href="/do?prompt=Help%20me%20define%20a%20new%20strategy%20goal%20for%20our%20company"
             className="flex items-center gap-3 rounded-xl border p-4 mb-6 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
             style={{
               "--accent": "#ff6b35",

@@ -25,7 +25,7 @@ export interface PageConversation {
   input: string;
 }
 
-export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note";
+export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note" | "build-mvv";
 
 export interface WorkingDocumentState {
   isOpen: boolean;
@@ -165,6 +165,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         "create-goal": "/api/grow/goals",
         "run-check-in": "/api/grow/check-ins",
         "add-performance-note": "/api/grow/performance-notes",
+        "build-mvv": "/api/plan/foundation",
       };
 
       const res = await fetch(routeMap[workflowType], {

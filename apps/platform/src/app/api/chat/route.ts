@@ -22,6 +22,7 @@ import {
   completeGrowWorkflowTool,
   updateWorkingDocumentTool,
 } from "@/lib/ai/grow-tools";
+import { buildMVVTool } from "@/lib/ai/plan-tools";
 import { AI_CONFIG } from "@/lib/ai/config";
 import {
   createConversation,
@@ -181,6 +182,7 @@ export async function POST(req: Request) {
       startPerformanceNote: startPerformanceNoteTool,
       updateWorkingDocument: updateWorkingDocumentTool,
       completeGrowWorkflow: completeGrowWorkflowTool,
+      buildMVV: buildMVVTool,
     };
     const availableTools = useTools
       ? availability.openai
