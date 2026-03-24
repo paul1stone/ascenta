@@ -82,12 +82,62 @@ async function main() {
   // Clear existing
   await Employee.deleteMany({});
 
+  // ── Deterministic seed personas (for role emulation) ──────────────
+  const seedPersonas = [
+    {
+      employeeId: "EMP0001",
+      firstName: "Sarah",
+      lastName: "Chen",
+      email: "sarah.chen@company.com",
+      department: "HR",
+      jobTitle: "HR Manager",
+      managerName: "Executive Team",
+      hireDate: new Date("2020-03-15"),
+      status: "active" as const,
+      notes: [],
+    },
+    {
+      employeeId: "EMP0002",
+      firstName: "Jason",
+      lastName: "Lee",
+      email: "jason.lee@company.com",
+      department: "Engineering",
+      jobTitle: "Engineering Manager",
+      managerName: "Sarah Chen",
+      hireDate: new Date("2021-06-01"),
+      status: "active" as const,
+      notes: [],
+    },
+    {
+      employeeId: "EMP0003",
+      firstName: "Alex",
+      lastName: "Rivera",
+      email: "alex.rivera@company.com",
+      department: "Engineering",
+      jobTitle: "Software Engineer",
+      managerName: "Jason Lee",
+      hireDate: new Date("2022-09-12"),
+      status: "active" as const,
+      notes: [],
+    },
+  ];
+
+  await Employee.insertMany(seedPersonas);
+  console.log(`  ✓ Inserted ${seedPersonas.length} seed personas`);
+
+  const seedNames = new Set(seedPersonas.map((p) => `${p.firstName} ${p.lastName}`));
+
   const employeeCount = 80;
   const employeeDocs = [];
 
   for (let i = 0; i < employeeCount; i++) {
     const firstName = random(FIRST_NAMES);
     const lastName = random(LAST_NAMES);
+
+    if (seedNames.has(`${firstName} ${lastName}`)) {
+      i--;
+      continue;
+    }
     const department = random(DEPARTMENTS);
     const jobTitle = random(JOB_TITLES[department]);
     const managerName = `${random(FIRST_NAMES)} ${random(LAST_NAMES)}`;
