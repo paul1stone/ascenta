@@ -40,6 +40,7 @@ export function MVVForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { isSubmitting },
   } = useForm<MVVFormValues>({
     resolver: zodResolver(mvvSchema),
@@ -53,6 +54,20 @@ export function MVVForm({
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("");
+  const prevInitialRef = useRef(initialValues);
+
+  // Update form when initialValues change (e.g., from AI tool updating working doc)
+  useEffect(() => {
+    const prev = prevInitialRef.current;
+    for (const key of ["mission", "vision", "values"] as const) {
+      const newVal = initialValues[key];
+      const oldVal = prev[key];
+      if (newVal !== undefined && newVal !== oldVal && typeof newVal === "string") {
+        setValue(key, newVal);
+      }
+    }
+    prevInitialRef.current = initialValues;
+  }, [initialValues, setValue]);
 
   // Auto-save to /api/plan/foundation on field changes (debounced 1s)
   const autoSave = useCallback(

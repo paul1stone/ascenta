@@ -27,7 +27,7 @@ export interface FollowUpData {
 
 export interface WorkingDocData {
   action: "open_working_document" | "update_working_document";
-  workflowType?: "create-goal" | "run-check-in" | "add-performance-note";
+  workflowType?: string;
   runId: string;
   employeeId?: string;
   employeeName?: string;

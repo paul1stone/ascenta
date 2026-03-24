@@ -73,31 +73,35 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
   }, [messages, hasMessages, messagesEndRef]);
 
   // Detect working document blocks in assistant messages and trigger panel
+  // Scans all unprocessed messages (not just last) to catch tool results
   useEffect(() => {
-    if (messages.length === 0) return;
-    const lastMsg = messages[messages.length - 1];
-    if (!lastMsg || lastMsg.role !== "assistant" || isLoading) return;
+    if (messages.length === 0 || isLoading) return;
 
-    // Skip if we already processed this message
-    if (processedWorkingDocRef.current.has(lastMsg.id)) return;
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      if (processedWorkingDocRef.current.has(msg.id)) continue;
 
-    const parsed = parseWorkflowBlocks(lastMsg.content);
-    if (!parsed.workingDoc) return;
+      const contentStr = typeof msg.content === "string" ? msg.content : "";
+      if (!contentStr) continue;
 
-    processedWorkingDocRef.current.add(lastMsg.id);
-    const wd = parsed.workingDoc;
+      const parsed = parseWorkflowBlocks(contentStr);
+      if (!parsed.workingDoc) continue;
 
-    if (wd.action === "open_working_document" && wd.workflowType) {
-      openWorkingDocument(
-        wd.workflowType,
-        wd.runId,
-        wd.employeeId ?? "",
-        wd.employeeName ?? "",
-        wd.prefilled ?? {},
-        wd.availableGoals,
-      );
-    } else if (wd.action === "update_working_document" && wd.updates) {
-      updateWorkingDocumentFields(wd.updates);
+      processedWorkingDocRef.current.add(msg.id);
+      const wd = parsed.workingDoc;
+
+      if (wd.action === "open_working_document" && wd.workflowType) {
+        openWorkingDocument(
+          wd.workflowType as WorkflowType,
+          wd.runId,
+          wd.employeeId ?? "",
+          wd.employeeName ?? "",
+          wd.prefilled ?? {},
+          wd.availableGoals,
+        );
+      } else if (wd.action === "update_working_document" && wd.updates) {
+        updateWorkingDocumentFields(wd.updates);
+      }
     }
   }, [messages, isLoading, openWorkingDocument, updateWorkingDocumentFields]);
 
