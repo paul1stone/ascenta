@@ -8,6 +8,7 @@ import { StrategyGoalCard } from "./strategy-goal-card";
 import { StrategyGoalForm } from "./strategy-goal-form";
 import type { StrategyGoalData } from "./strategy-goal-card";
 import Link from "next/link";
+import { useRole } from "@/lib/role/role-context";
 
 interface StrategyPanelProps {
   accentColor: string;
@@ -16,6 +17,10 @@ interface StrategyPanelProps {
 type ViewMode = "company" | "department";
 
 export function StrategyPanel({ accentColor }: StrategyPanelProps) {
+  const { role, persona } = useRole();
+  const canCreate = role === "hr" || role === "manager";
+  const canEditAll = role === "hr";
+
   const [goals, setGoals] = useState<StrategyGoalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,15 +69,22 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
       ? goals.filter((g) => g.scope === "company")
       : goals.filter((g) => g.scope === "department");
 
+  // Further filter for employee role: only company + own department
+  const visibleGoals = role === "employee"
+    ? filteredGoals.filter(
+        (g) => g.scope === "company" || g.department === persona?.department,
+      )
+    : filteredGoals;
+
   const horizonOrder = ["long_term", "medium_term", "short_term"] as const;
   const groupedByHorizon = horizonOrder.map((h) => ({
     horizon: h,
     label: STRATEGY_HORIZON_LABELS[h],
-    goals: filteredGoals.filter((g) => g.horizon === h),
+    goals: visibleGoals.filter((g) => g.horizon === h),
   }));
 
   const departments = [
-    ...new Set(goals.filter((g) => g.scope === "department").map((g) => g.department).filter(Boolean)),
+    ...new Set(visibleGoals.filter((g) => g.scope === "department").map((g) => g.department).filter(Boolean)),
   ] as string[];
 
   if (loading) {
@@ -104,7 +116,7 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
               Strategy Goals
             </h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {goals.length} goal{goals.length !== 1 ? "s" : ""} across all horizons
+              {visibleGoals.length} goal{visibleGoals.length !== 1 ? "s" : ""} across all horizons
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -115,17 +127,19 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
               <ExternalLink className="size-4" />
               Use Do
             </Link>
-            <button
-              onClick={() => {
-                setEditGoal(null);
-                setShowForm(true);
-              }}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white transition-colors"
-              style={{ backgroundColor: accentColor }}
-            >
-              <Plus className="size-4" />
-              Create Goal
-            </button>
+            {canCreate && (
+              <button
+                onClick={() => {
+                  setEditGoal(null);
+                  setShowForm(true);
+                }}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: accentColor }}
+              >
+                <Plus className="size-4" />
+                Create Goal
+              </button>
+            )}
           </div>
         </div>
 
@@ -146,7 +160,7 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
           ))}
         </div>
 
-        {filteredGoals.length === 0 ? (
+        {visibleGoals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Target className="size-10 text-muted-foreground/30 mb-3" />
             <h3 className="font-display text-lg font-bold text-foreground mb-1">
@@ -171,8 +185,8 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
                           key={goal.id}
                           goal={goal}
                           accentColor={accentColor}
-                          onEdit={handleEdit}
-                          onArchive={handleArchive}
+                          onEdit={canEditAll || (role === "manager" && goal.scope === "department" && goal.department === persona?.department) ? handleEdit : undefined}
+                          onArchive={canEditAll || (role === "manager" && goal.scope === "department" && goal.department === persona?.department) ? handleArchive : undefined}
                         />
                       ))}
                     </div>
@@ -183,7 +197,7 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
         ) : (
           <div className="space-y-8">
             {departments.map((dept) => {
-              const deptGoals = filteredGoals.filter((g) => g.department === dept);
+              const deptGoals = visibleGoals.filter((g) => g.department === dept);
               if (deptGoals.length === 0) return null;
               return (
                 <div key={dept}>
@@ -205,8 +219,8 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
                                 key={goal.id}
                                 goal={goal}
                                 accentColor={accentColor}
-                                onEdit={handleEdit}
-                                onArchive={handleArchive}
+                                onEdit={canEditAll || (role === "manager" && goal.scope === "department" && goal.department === persona?.department) ? handleEdit : undefined}
+                                onArchive={canEditAll || (role === "manager" && goal.scope === "department" && goal.department === persona?.department) ? handleArchive : undefined}
                               />
                             ))}
                           </div>
