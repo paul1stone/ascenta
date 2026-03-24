@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@ascenta/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
 
 const mvvSchema = z.object({
-  mission: z.string().min(1, "Mission is required"),
-  vision: z.string().min(1, "Vision is required"),
-  values: z.string().min(1, "Values are required"),
+  mission: z.string(),
+  vision: z.string(),
+  values: z.string(),
 });
 
 type MVVFormValues = z.infer<typeof mvvSchema>;
@@ -40,7 +40,7 @@ export function MVVForm({
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<MVVFormValues>({
     resolver: zodResolver(mvvSchema),
     defaultValues: {
@@ -51,15 +51,51 @@ export function MVVForm({
     },
   });
 
-  // Sync field changes back to chat context
-  useEffect(() => {
-    const subscription = watch((values, { name }) => {
-      if (name) {
-        onFieldChange(name, values[name as keyof MVVFormValues]);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>("");
+
+  // Auto-save to /api/plan/foundation on field changes (debounced 1s)
+  const autoSave = useCallback(
+    async (formValues: Partial<MVVFormValues>) => {
+      const key = JSON.stringify(formValues);
+      if (key === lastSavedRef.current) return;
+      lastSavedRef.current = key;
+
+      try {
+        await fetch("/api/plan/foundation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formValues),
+        });
+      } catch {
+        // silent
       }
+    },
+    [],
+  );
+
+  // Sync field changes back to chat context AND trigger auto-save
+  useEffect(() => {
+    const subscription = watch((formValues, { name }) => {
+      if (name) {
+        onFieldChange(name, formValues[name as keyof MVVFormValues]);
+      }
+      // Debounced auto-save
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => {
+        autoSave(formValues as MVVFormValues);
+      }, 1000);
     });
-    return () => subscription.unsubscribe();
-  }, [watch, onFieldChange]);
+    return () => {
+      subscription.unsubscribe();
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [watch, onFieldChange, autoSave]);
+
+  const mission = watch("mission");
+  const vision = watch("vision");
+  const values = watch("values");
+  const hasContent = !!(mission || vision || values);
 
   return (
     <form
@@ -70,83 +106,81 @@ export function MVVForm({
     >
       {/* Mission */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Mission
-        </label>
-        <p className="text-[11px] text-muted-foreground mt-0.5 mb-2">
+        <div className="flex items-center gap-2 mb-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Mission
+          </label>
+          {mission && <Check className="size-3 text-green-500" />}
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-2">
           What does your company do, who does it serve, and why does it exist?
         </p>
         <textarea
           {...register("mission")}
           rows={4}
           className="w-full rounded-lg border px-3 py-2.5 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#6688bb] resize-y"
-          placeholder="Our mission is to..."
+          placeholder="Your mission statement will appear here as we work through it..."
         />
-        {errors.mission && (
-          <p className="text-xs text-red-500 mt-1">{errors.mission.message}</p>
-        )}
       </div>
 
       {/* Vision */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Vision
-        </label>
-        <p className="text-[11px] text-muted-foreground mt-0.5 mb-2">
+        <div className="flex items-center gap-2 mb-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Vision
+          </label>
+          {vision && <Check className="size-3 text-green-500" />}
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-2">
           What future is your company working to create?
         </p>
         <textarea
           {...register("vision")}
           rows={4}
           className="w-full rounded-lg border px-3 py-2.5 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#6688bb] resize-y"
-          placeholder="We envision a world where..."
+          placeholder="Your vision statement will appear here..."
         />
-        {errors.vision && (
-          <p className="text-xs text-red-500 mt-1">{errors.vision.message}</p>
-        )}
       </div>
 
       {/* Values */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Values
-        </label>
-        <p className="text-[11px] text-muted-foreground mt-0.5 mb-2">
-          Core principles that guide how your company operates. List each value with a brief description.
+        <div className="flex items-center gap-2 mb-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Values
+          </label>
+          {values && <Check className="size-3 text-green-500" />}
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Core principles that guide how your company operates.
         </p>
         <textarea
           {...register("values")}
           rows={8}
           className="w-full rounded-lg border px-3 py-2.5 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#6688bb] resize-y"
-          placeholder={"People First — Every feature we build starts with the question: does this make someone's work life better?\n\nTransparency by Default — We believe in open communication, clear expectations, and honest feedback at every level."}
+          placeholder="Your core values will appear here..."
         />
-        {errors.values && (
-          <p className="text-xs text-red-500 mt-1">{errors.values.message}</p>
-        )}
       </div>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={isSubmitting}
-          className="bg-[#6688bb] hover:bg-[#5577aa] text-white"
-        >
-          {isSubmitting ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            "Save & Publish"
-          )}
-        </Button>
+      {/* Auto-save indicator + Publish */}
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-xs text-muted-foreground">Auto-saving as you go</p>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            Close
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isSubmitting || !hasContent}
+            className="bg-[#6688bb] hover:bg-[#5577aa] text-white"
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              "Publish"
+            )}
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -186,10 +186,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      // For MVV, also publish after saving
+      if (workflowType === "build-mvv") {
+        await fetch("/api/plan/foundation", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "publish" }),
+        });
+      }
+
+      let confirmText = `Successfully submitted ${workflowType.replace(/-/g, " ")}`;
+      if (workflowType === "build-mvv") {
+        confirmText = "Mission, Vision & Values saved and published! You can view them on the Foundation page.";
+      } else {
+        confirmText += ` for ${employeeName ?? "employee"}.`;
+      }
+
       const confirmationMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: `Successfully submitted ${workflowType.replace(/-/g, " ")} for ${employeeName ?? "employee"}.`,
+        content: confirmText,
       };
 
       setPageConversations((prev) => {
