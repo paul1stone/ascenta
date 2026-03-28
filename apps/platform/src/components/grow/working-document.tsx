@@ -8,6 +8,7 @@ import { GoalCreationForm } from "@/components/grow/forms/goal-creation-form";
 import { CheckInForm } from "@/components/grow/forms/check-in-form";
 import { PerformanceNoteForm } from "@/components/grow/forms/performance-note-form";
 import { MVVForm } from "@/components/plan/mvv-form";
+import { StrategyBriefPanel } from "@/components/strategy/strategy-brief-panel";
 
 // ---------------------------------------------------------------------------
 // Title mapping
@@ -123,6 +124,14 @@ export function WorkingDocument({ pageKey, accentColor }: WorkingDocumentProps) 
               onFieldChange={updateWorkingDocumentField}
               onSubmit={handleSubmit}
               onCancel={closeWorkingDocument}
+            />
+          )}
+
+          {workingDocument.workflowType === "strategy-breakdown" && (
+            <StrategyBriefPanel
+              initialValues={workingDocument.fields}
+              onCancel={closeWorkingDocument}
+              accentColor={color}
             />
           )}
         </div>
