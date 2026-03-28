@@ -161,15 +161,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         throw new Error("No active working document to submit");
       }
 
-      const routeMap: Record<WorkflowType, string> = {
+      const routeMap: Partial<Record<WorkflowType, string>> = {
         "create-goal": "/api/grow/goals",
         "run-check-in": "/api/grow/check-ins",
         "add-performance-note": "/api/grow/performance-notes",
         "build-mvv": "/api/plan/foundation",
-        "strategy-breakdown": "/api/strategy/brief",
       };
 
-      const res = await fetch(routeMap[workflowType], {
+      const route = routeMap[workflowType];
+      if (!route) {
+        throw new Error(`Workflow type "${workflowType}" is read-only and cannot be submitted`);
+      }
+
+      const res = await fetch(route, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

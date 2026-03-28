@@ -10,6 +10,7 @@ import { StrategyGoal } from "@ascenta/db/strategy-goal-schema";
 import { CompanyFoundation } from "@ascenta/db/foundation-schema";
 import { Employee } from "@ascenta/db/employee-schema";
 import { Goal } from "@ascenta/db/goal-schema";
+import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
 import {
   WORKING_DOC_PREFIX,
   WORKING_DOC_SUFFIX,
@@ -35,7 +36,7 @@ export const getStrategyBreakdownTool = tool({
     await connectDB();
 
     // Fetch employee details
-    const employee = await Employee.findOne({ employeeId: params.employeeId }).lean();
+    const employee = await getEmployeeByEmployeeId(params.employeeId);
     if (!employee) {
       return {
         success: false,
@@ -43,11 +44,10 @@ export const getStrategyBreakdownTool = tool({
       };
     }
 
-    const department = (employee as Record<string, unknown>).department as string;
-    const jobTitle = (employee as Record<string, unknown>).jobTitle as string;
+    const { department, jobTitle } = employee;
 
     // Determine if manager (has direct reports)
-    const directReportCount = await Employee.countDocuments({ managerId: (employee as Record<string, unknown>)._id });
+    const directReportCount = await Employee.countDocuments({ managerId: employee.id });
     const isManager = directReportCount > 0;
 
     // Fetch foundation (published MVV)
@@ -74,7 +74,7 @@ export const getStrategyBreakdownTool = tool({
     let personalGoals: unknown[] = [];
     if (params.includePersonalGoals) {
       personalGoals = await Goal.find({
-        owner: (employee as Record<string, unknown>)._id,
+        owner: employee.id,
         status: { $ne: "completed" },
       })
         .sort({ createdAt: -1 })
@@ -176,8 +176,8 @@ export const generateStrategyBriefTool = tool({
     const workingDocPayload = {
       action: "open_working_document" as const,
       workflowType: "strategy-breakdown" as const,
-      runId: `strategy-brief-${Date.now()}`,
-      employeeId: "",
+      runId: crypto.randomUUID(),
+      employeeId: null,
       employeeName: params.employeeName,
       prefilled: {
         employeeName: params.employeeName,
