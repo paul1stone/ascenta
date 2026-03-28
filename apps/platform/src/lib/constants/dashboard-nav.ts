@@ -30,6 +30,8 @@ import {
   Brain,
   MessageCircle,
   ClipboardCheck,
+  Dumbbell,
+  Settings,
 } from "lucide-react";
 
 // ============================================================================
@@ -61,10 +63,8 @@ export const DASHBOARD_NAV: NavCategory[] = [
     icon: Compass,
     color: "#6688bb",
     subPages: [
-      { key: "plan/strategy-studio", label: "Strategy Studio", icon: Lightbulb },
-      { key: "plan/org-design", label: "Org Design & Operating Model", icon: Building2 },
-      { key: "plan/workforce-planning", label: "Workforce Planning & Analytics", icon: Users },
-      { key: "plan/goals-rhythm", label: "Goals & Operating Rhythm", icon: Target },
+      { key: "plan/org-design", label: "Organizational Design", icon: Building2 },
+      { key: "plan/operations", label: "Operations", icon: Settings },
     ],
   },
   {
@@ -73,10 +73,8 @@ export const DASHBOARD_NAV: NavCategory[] = [
     icon: Magnet,
     color: "#aa8866",
     subPages: [
-      { key: "attract/requisition", label: "Requisition & Role Intake", icon: FileSearch },
+      { key: "attract/talent-outreach", label: "Talent Outreach", icon: Users },
       { key: "attract/interview-kits", label: "Interview Kits & Scorecards", icon: ClipboardList },
-      { key: "attract/debrief", label: "Debrief & Decision", icon: MessageSquareText },
-      { key: "attract/offer", label: "Offer & Pre-Hire", icon: Handshake },
     ],
   },
   {
@@ -85,10 +83,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     icon: Rocket,
     color: "#bb6688",
     subPages: [
-      { key: "launch/day-one", label: "Day One Ready", icon: CalendarCheck },
-      { key: "launch/ramp-plans", label: "30-60-90 Ramp Plans", icon: TrendingUp },
-      { key: "launch/training", label: "Training & Enablement", icon: GraduationCap },
-      { key: "launch/provisioning", label: "Access & Equipment", icon: Wrench },
+      { key: "launch/arrival-orchestration", label: "Arrival Orchestration", icon: CalendarCheck },
     ],
   },
   {
@@ -99,8 +94,6 @@ export const DASHBOARD_NAV: NavCategory[] = [
     subPages: [
       { key: "grow/performance", label: "Performance System", icon: BarChart3 },
       { key: "grow/coaching", label: "Coaching & Corrective Action", icon: Gavel },
-      { key: "grow/learning", label: "Learning & Development", icon: GraduationCap },
-      { key: "grow/leadership-library", label: "Leadership Library", icon: Library },
     ],
   },
   {
@@ -109,9 +102,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     icon: Heart,
     color: "#cc6677",
     subPages: [
-      { key: "care/total-rewards", label: "Total Rewards", icon: Gift },
       { key: "care/benefits", label: "Benefits Hub", icon: BadgeDollarSign },
-      { key: "care/leave", label: "Leave & Benefits Orchestrator", icon: CalendarDays },
     ],
   },
   {
@@ -121,9 +112,28 @@ export const DASHBOARD_NAV: NavCategory[] = [
     color: "#8888aa",
     subPages: [
       { key: "protect/feedback", label: "Protected Feedback", icon: ShieldAlert },
-      { key: "protect/case-management", label: "Employee Case Management", icon: FolderSearch },
+      { key: "protect/investigations", label: "Investigations", icon: FolderSearch },
+      { key: "protect/policy-governance", label: "Policy Governance", icon: FileText },
     ],
   },
+];
+
+// ============================================================================
+// TOP-LEVEL NAV ITEMS (standalone pages, not part of category/sub routing)
+// ============================================================================
+
+export interface TopLevelNavItem {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  href: string;
+  color: string;
+}
+
+export const TOP_LEVEL_NAV: TopLevelNavItem[] = [
+  { key: "strategy-studio", label: "Strategy Studio", icon: Lightbulb, href: "/strategy-studio", color: "#6688bb" },
+  { key: "culture-gym", label: "Culture Gym", icon: Dumbbell, href: "/culture-gym", color: "#44aa99" },
+  { key: "leadership-library", label: "Leadership Library", icon: Library, href: "/leadership-library", color: "#8b5cf6" },
 ];
 
 // ============================================================================
@@ -131,27 +141,17 @@ export const DASHBOARD_NAV: NavCategory[] = [
 // ============================================================================
 
 export const SUB_PAGE_TITLES: Record<string, string> = {
-  "plan/strategy-studio": "Strategy Studio",
-  "plan/org-design": "Org Design & Operating Model",
-  "plan/workforce-planning": "Workforce Planning & Analytics",
-  "plan/goals-rhythm": "Goals & Operating Rhythm",
-  "attract/requisition": "Requisition & Role Intake",
+  "plan/org-design": "Organizational Design",
+  "plan/operations": "Operations",
+  "attract/talent-outreach": "Talent Outreach",
   "attract/interview-kits": "Interview Kits & Scorecards",
-  "attract/debrief": "Debrief & Decision",
-  "attract/offer": "Offer & Pre-Hire",
-  "launch/day-one": "Day One Ready",
-  "launch/ramp-plans": "30-60-90 Ramp Plans",
-  "launch/training": "Training & Enablement",
-  "launch/provisioning": "Access & Equipment",
+  "launch/arrival-orchestration": "Arrival Orchestration",
   "grow/performance": "Performance System",
   "grow/coaching": "Coaching & Corrective Action",
-  "grow/learning": "Learning & Development",
-  "grow/leadership-library": "Leadership Library",
-  "care/total-rewards": "Total Rewards",
   "care/benefits": "Benefits Hub",
-  "care/leave": "Leave & Benefits Orchestrator",
   "protect/feedback": "Protected Feedback",
-  "protect/case-management": "Employee Case Management",
+  "protect/investigations": "Investigations",
+  "protect/policy-governance": "Policy Governance",
 };
 
 // ============================================================================
@@ -184,57 +184,25 @@ export interface PageConfig {
 }
 
 export const PAGE_CONFIG: Record<string, PageConfig> = {
-  "plan/strategy-studio": {
-    title: "Strategy Studio",
-    description: "Define and align your people strategy with business objectives.",
-    tabs: [
-      { key: "foundation", label: "Foundation", icon: Compass },
-      { key: "strategy", label: "Strategy", icon: Target },
-    ],
-  },
   "plan/org-design": {
-    title: "Org Design & Operating Model",
+    title: "Organizational Design",
     description: "Design organizational structures and operating models for effectiveness.",
   },
-  "plan/workforce-planning": {
-    title: "Workforce Planning & Analytics",
-    description: "Forecast workforce needs and leverage people analytics for decisions.",
+  "plan/operations": {
+    title: "Operations",
+    description: "Workforce planning, goals, and operating rhythm for your organization.",
   },
-  "plan/goals-rhythm": {
-    title: "Goals & Operating Rhythm",
-    description: "Set organizational goals and establish a consistent operating cadence.",
-  },
-  "attract/requisition": {
-    title: "Requisition & Role Intake",
-    description: "Streamline job requisitions and role definition for effective hiring.",
+  "attract/talent-outreach": {
+    title: "Talent Outreach",
+    description: "Source, engage, and attract top talent to your organization.",
   },
   "attract/interview-kits": {
     title: "Interview Kits & Scorecards",
     description: "Build structured interview processes with consistent evaluation criteria.",
   },
-  "attract/debrief": {
-    title: "Debrief & Decision",
-    description: "Facilitate hiring debriefs and make data-driven selection decisions.",
-  },
-  "attract/offer": {
-    title: "Offer & Pre-Hire",
-    description: "Manage offer creation, negotiation, and pre-hire processes.",
-  },
-  "launch/day-one": {
-    title: "Day One Ready",
-    description: "Ensure every new hire has a seamless, organized first day.",
-  },
-  "launch/ramp-plans": {
-    title: "30-60-90 Ramp Plans",
-    description: "Structure the first 90 days for new hires to accelerate productivity.",
-  },
-  "launch/training": {
-    title: "Training & Enablement",
-    description: "Build and manage training programs for new hire enablement.",
-  },
-  "launch/provisioning": {
-    title: "Access & Equipment",
-    description: "Manage system access, equipment, and tooling provisioning for new hires.",
+  "launch/arrival-orchestration": {
+    title: "Arrival Orchestration",
+    description: "Orchestrate seamless onboarding experiences from offer to full productivity.",
   },
   "grow/performance": {
     title: "Performance System",
@@ -282,37 +250,53 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
     title: "Coaching & Corrective Action",
     description: "Guide managers through coaching conversations and corrective action workflows.",
   },
-  "grow/learning": {
-    title: "Learning & Development",
-    description: "Build a culture of continuous learning with the Culture Gym and skill development.",
-  },
-  "grow/leadership-library": {
-    title: "Leadership Library",
-    description: "Access leadership principles, frameworks, and development resources.",
-  },
-  "care/total-rewards": {
-    title: "Total Rewards",
-    description: "Design and communicate comprehensive total rewards packages.",
-  },
   "care/benefits": {
     title: "Benefits Hub",
     description: "Manage employee benefits programs and communications.",
-  },
-  "care/leave": {
-    title: "Leave & Benefits Orchestrator",
-    description: "Coordinate leave management and benefits administration workflows.",
   },
   "protect/feedback": {
     title: "Protected Feedback",
     description: "Collect and manage sensitive employee feedback with confidentiality protections.",
   },
-  "protect/case-management": {
-    title: "Employee Case Management",
-    description: "Manage employee relations cases with proper documentation and compliance.",
+  "protect/investigations": {
+    title: "Investigations",
+    description: "Manage workplace investigations with proper documentation and compliance.",
+  },
+  "protect/policy-governance": {
+    title: "Policy Governance",
+    description: "Create, manage, and enforce organizational policies and compliance frameworks.",
   },
   "do": {
     title: "Compass",
     description: "Your AI workspace — brainstorm strategy, create goals, run check-ins, and more.",
+    tools: [
+      {
+        key: "getStrategyBreakdown",
+        label: "Strategy Breakdown",
+        icon: Target,
+        promptSuggestions: [
+          { label: "Break down company strategy", promptTemplate: "Break down our company strategy for me" },
+          { label: "Department alignment", promptTemplate: "How do my department's goals connect to the company strategy?" },
+          { label: "What should I focus on", promptTemplate: "What should I focus on based on our current strategy?" },
+        ],
+      },
+    ],
+  },
+  "strategy-studio": {
+    title: "Strategy Studio",
+    description: "Define and align your people strategy with business objectives.",
+    tabs: [
+      { key: "foundation", label: "Foundation", icon: Compass },
+      { key: "strategy", label: "Strategy", icon: Target },
+    ],
+  },
+  "culture-gym": {
+    title: "Culture Gym",
+    description: "Build a culture of continuous learning, skill development, and team growth.",
+  },
+  "leadership-library": {
+    title: "Leadership Library",
+    description: "Access leadership principles, frameworks, and development resources.",
   },
 };
 

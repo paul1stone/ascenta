@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@ascenta/ui";
 import { PanelLeftClose, PanelLeft, LayoutDashboard, CircleDot, BarChart3, Compass } from "lucide-react";
-import { DASHBOARD_NAV } from "@/lib/constants/dashboard-nav";
+import { DASHBOARD_NAV, TOP_LEVEL_NAV } from "@/lib/constants/dashboard-nav";
 import {
   Popover,
   PopoverTrigger,
@@ -169,6 +169,29 @@ export function NavSidebar() {
           <Compass className="size-4 shrink-0" style={{ color: "#ff6b35" }} />
           {!collapsed && <span>Compass</span>}
         </Link>
+        {TOP_LEVEL_NAV.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2.5 py-2.5 text-[13px] whitespace-nowrap transition-colors border-l-[3px]",
+                collapsed ? "justify-center px-0" : "px-3.5",
+                isActive
+                  ? "font-bold bg-primary/6"
+                  : "text-muted-foreground hover:bg-primary/5 border-l-transparent",
+              )}
+              style={{
+                borderLeftColor: isActive ? item.color : undefined,
+              }}
+            >
+              <Icon className="size-4 shrink-0" style={{ color: item.color }} />
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
         <div className="mx-3 my-1 border-b" />
         {DASHBOARD_NAV.map((cat) => {
           const isActive = activeCategory === cat.key;
