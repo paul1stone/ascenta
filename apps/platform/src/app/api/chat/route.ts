@@ -23,6 +23,7 @@ import {
   updateWorkingDocumentTool,
 } from "@/lib/ai/grow-tools";
 import { buildMVVTool } from "@/lib/ai/plan-tools";
+import { getStrategyBreakdownTool, generateStrategyBriefTool } from "@/lib/ai/strategy-tools";
 import { AI_CONFIG } from "@/lib/ai/config";
 import {
   createConversation,
@@ -183,6 +184,8 @@ export async function POST(req: Request) {
       updateWorkingDocument: updateWorkingDocumentTool,
       completeGrowWorkflow: completeGrowWorkflowTool,
       buildMVV: buildMVVTool,
+      getStrategyBreakdown: getStrategyBreakdownTool,
+      generateStrategyBrief: generateStrategyBriefTool,
     };
     const availableTools = useTools
       ? availability.openai
