@@ -133,32 +133,58 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
           )}
         </div>
 
-        {/* Compass CTA — primary action for creating strategy goals */}
-        {canCreate && (
+        {/* Compass CTAs */}
+        <div className="flex flex-col gap-3 mb-6">
+          {canCreate && (
+            <Link
+              href="/do?prompt=Help%20me%20define%20a%20new%20strategy%20goal%20for%20our%20company"
+              className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
+              style={{
+                "--accent": "#ff6b35",
+                "--accent-bg": "rgba(255, 107, 53, 0.04)",
+              } as React.CSSProperties}
+            >
+              <div
+                className="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                style={{ backgroundColor: "rgba(255, 107, 53, 0.1)" }}
+              >
+                <Compass className="size-5" style={{ color: "#ff6b35" }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-deep-blue">
+                  Build Strategy with Compass
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Use AI to brainstorm and define company or department goals through guided conversation.
+                </p>
+              </div>
+            </Link>
+          )}
+
           <Link
-            href="/do?prompt=Help%20me%20define%20a%20new%20strategy%20goal%20for%20our%20company"
-            className="flex items-center gap-3 rounded-xl border p-4 mb-6 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
+            href="/do?prompt=Break%20down%20our%20company%20strategy%20for%20me&tool=getStrategyBreakdown"
+            className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
             style={{
-              "--accent": "#ff6b35",
-              "--accent-bg": "rgba(255, 107, 53, 0.04)",
+              "--accent": accentColor,
+              "--accent-bg": `${accentColor}0a`,
             } as React.CSSProperties}
           >
             <div
               className="flex size-10 shrink-0 items-center justify-center rounded-lg"
-              style={{ backgroundColor: "rgba(255, 107, 53, 0.1)" }}
+              style={{ backgroundColor: `${accentColor}1a` }}
             >
-              <Compass className="size-5" style={{ color: "#ff6b35" }} />
+              <Target className="size-5" style={{ color: accentColor }} />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-deep-blue">
-                Build Strategy with Compass
+                Strategy Breakdown
               </p>
               <p className="text-xs text-muted-foreground">
-                Use AI to brainstorm and define company or department goals through guided conversation.
+                Use AI to break down how company and department strategy goals apply to you.
               </p>
             </div>
           </Link>
-        )}
+        </div>
 
         <div className="flex items-center gap-1 rounded-lg border bg-muted/30 p-1 mb-6 w-fit">
           {(["company", "department"] as const).map((mode) => (

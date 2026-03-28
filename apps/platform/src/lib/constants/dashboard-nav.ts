@@ -269,18 +269,6 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
   "do": {
     title: "Compass",
     description: "Your AI workspace — brainstorm strategy, create goals, run check-ins, and more.",
-    tools: [
-      {
-        key: "getStrategyBreakdown",
-        label: "Strategy Breakdown",
-        icon: Target,
-        promptSuggestions: [
-          { label: "Break down company strategy", promptTemplate: "Break down our company strategy for me" },
-          { label: "Department alignment", promptTemplate: "How do my department's goals connect to the company strategy?" },
-          { label: "What should I focus on", promptTemplate: "What should I focus on based on our current strategy?" },
-        ],
-      },
-    ],
   },
   "strategy-studio": {
     title: "Strategy Studio",

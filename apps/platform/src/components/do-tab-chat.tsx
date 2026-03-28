@@ -20,7 +20,6 @@ const TOOL_KEY_TO_WORKFLOW: Record<string, WorkflowType> = {
   startCheckIn: "run-check-in",
   startPerformanceNote: "add-performance-note",
   buildMVV: "build-mvv",
-  getStrategyBreakdown: "strategy-breakdown",
 };
 
 interface DoTabChatProps {
