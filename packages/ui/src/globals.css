@@ -70,12 +70,12 @@
   --color-deep-blue: #0c1e3d;
   --color-summit: #ff6b35;
   --color-summit-hover: #e85a2a;
-  --color-glacier: #f8fafc;
+  --color-glacier: oklch(98% 0.003 91);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: #f8fafc; /* glacier */
+  --background: oklch(98% 0.003 91);
   --foreground: #0c1e3d; /* deep-blue */
   --card: oklch(1 0 0);
   --card-foreground: #0c1e3d;
