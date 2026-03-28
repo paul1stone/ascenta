@@ -18,6 +18,7 @@ const WORKFLOW_TITLES: Record<WorkflowType, string> = {
   "run-check-in": "Run Check-in",
   "add-performance-note": "Performance Note",
   "build-mvv": "Mission, Vision & Values",
+  "strategy-breakdown": "Strategy Brief",
 };
 
 // ---------------------------------------------------------------------------
