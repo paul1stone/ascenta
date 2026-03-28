@@ -7,7 +7,7 @@ import { RoleSwitcher } from "@/components/role-switcher";
 
 export function TopHeader() {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-white px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-sidebar px-4">
       {/* Left: Company branding */}
       <div className="flex items-center gap-2.5">
         <div className="flex size-8 items-center justify-center rounded-md bg-deep-blue text-xs font-bold text-white">

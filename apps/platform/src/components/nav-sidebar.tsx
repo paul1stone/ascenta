@@ -52,7 +52,7 @@ function CategoryPopover({
         side="right"
         align="start"
         sideOffset={8}
-        className="w-48 bg-white p-2"
+        className="w-48 bg-sidebar p-2"
       >
         <div
           className="mb-2 border-l-[3px] pl-2 text-xs font-semibold text-deep-blue"
@@ -96,7 +96,7 @@ export function NavSidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col shrink-0 border-r border-border bg-white transition-[width] duration-200 overflow-hidden",
+        "flex flex-col shrink-0 border-r border-border bg-sidebar transition-[width] duration-200 overflow-hidden",
       )}
       style={{ width: collapsed ? 52 : 220 }}
     >
