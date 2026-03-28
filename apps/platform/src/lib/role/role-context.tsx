@@ -18,6 +18,8 @@ import {
 
 export interface ResolvedPersona {
   id: string;
+  /** EMP1001-style ID from the employees collection */
+  employeeId?: string;
   firstName: string;
   lastName: string;
   title: string;
@@ -79,6 +81,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         if (match) {
           setResolvedPersona({
             id: match.id ?? match._id,
+            employeeId: match.employeeId as string | undefined,
             firstName: match.firstName,
             lastName: match.lastName,
             title: match.jobTitle ?? config.title,

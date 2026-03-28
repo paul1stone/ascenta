@@ -45,7 +45,7 @@ export interface ChatContextValue {
   model: string;
   setModel: (model: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  sendMessage: (pageKey: string, content: string, requiredTool?: string) => Promise<void>;
+  sendMessage: (pageKey: string, content: string, requiredTool?: string, currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string }) => Promise<void>;
   setPageInput: (pageKey: string, value: string) => void;
   resetConversation: (pageKey: string) => void;
   stopGeneration: (pageKey: string) => void;
@@ -290,7 +290,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendMessage = useCallback(
-    async (pageKey: string, content: string, requiredTool?: string) => {
+    async (pageKey: string, content: string, requiredTool?: string, currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string }) => {
       const trimmed = content.trim();
       const pageState = pageConversations.get(pageKey) ?? {
         ...DEFAULT_PAGE_STATE,
@@ -344,6 +344,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             model,
             ...(activeWorkflowRunId ? { activeWorkflowRunId } : {}),
             ...(requiredTool ? { requiredTool } : {}),
+            ...(currentEmployee ? { currentEmployee } : {}),
           }),
           signal: abortController.signal,
         });

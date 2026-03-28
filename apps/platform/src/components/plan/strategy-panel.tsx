@@ -162,7 +162,7 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
           )}
 
           <Link
-            href={`/do?prompt=${encodeURIComponent(`Break down our company strategy for ${persona ? `${persona.firstName} ${persona.lastName}` : "me"}`)}&tool=getStrategyBreakdown`}
+            href="/do?prompt=Break%20down%20our%20company%20strategy%20for%20me&tool=getStrategyBreakdown"
             className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:border-[--accent] hover:bg-[--accent-bg]"
             style={{
               "--accent": accentColor,

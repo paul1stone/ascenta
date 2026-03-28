@@ -50,6 +50,8 @@ interface ChatRequest {
   activeWorkflowRunId?: string;
   /** When set, the AI is instructed to use this specific tool */
   requiredTool?: string;
+  /** Current logged-in employee context — skips need for getEmployeeInfo */
+  currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string };
 }
 
 export async function POST(req: Request) {
@@ -67,6 +69,7 @@ export async function POST(req: Request) {
       workflowFollowUp,
       activeWorkflowRunId,
       requiredTool,
+      currentEmployee,
     } = body;
 
     const isWorkflowAction = !!(workflowFieldSelection || workflowFollowUp);
@@ -160,9 +163,14 @@ export async function POST(req: Request) {
       }
     }
 
+    // Inject current user context when available so AI can skip getEmployeeInfo for the current user
+    if (currentEmployee) {
+      effectiveSystemPrompt += `\n\n[CURRENT_USER] The current user is ${currentEmployee.firstName} ${currentEmployee.lastName}, ${currentEmployee.title} in ${currentEmployee.department}. Their employee database ID is "${currentEmployee.id}"${currentEmployee.employeeId ? ` (employeeId: ${currentEmployee.employeeId})` : ""}. When tools require employeeName and employeeId, use this information directly — do NOT call getEmployeeInfo for the current user. [/CURRENT_USER]`;
+    }
+
     // Inject required tool hint when user has pre-selected a tool
     if (requiredTool) {
-      effectiveSystemPrompt += `\n\n[REQUIRED_TOOL] You MUST use the ${requiredTool} tool in your response. The user has explicitly requested this tool be used. Look up the employee first with getEmployeeInfo if needed, then call ${requiredTool} as soon as you have enough information. Ask minimal clarifying questions only if truly necessary. [/REQUIRED_TOOL]`;
+      effectiveSystemPrompt += `\n\n[REQUIRED_TOOL] You MUST use the ${requiredTool} tool in your response. The user has explicitly requested this tool be used.${currentEmployee ? " Use the current user info from [CURRENT_USER] above — do NOT call getEmployeeInfo." : " Look up the employee first with getEmployeeInfo if needed, then"} Call ${requiredTool} as soon as you have enough information. Ask minimal clarifying questions only if truly necessary. [/REQUIRED_TOOL]`;
     }
 
     // Get the model instance
