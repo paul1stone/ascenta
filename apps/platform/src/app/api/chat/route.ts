@@ -22,6 +22,10 @@ import {
   startPerformanceNoteTool,
   completeGrowWorkflowTool,
   updateWorkingDocumentTool,
+  startPerformanceReviewTool,
+  generateReviewDraftTool,
+  finalizeReviewTool,
+  recommendNextGoalsTool,
 } from "@/lib/ai/grow-tools";
 import { buildMVVTool } from "@/lib/ai/plan-tools";
 import { getStrategyBreakdownTool, generateStrategyBriefTool } from "@/lib/ai/strategy-tools";
@@ -196,6 +200,10 @@ export async function POST(req: Request) {
       buildMVV: buildMVVTool,
       getStrategyBreakdown: getStrategyBreakdownTool,
       generateStrategyBrief: generateStrategyBriefTool,
+      startPerformanceReview: startPerformanceReviewTool,
+      generateReviewDraft: generateReviewDraftTool,
+      finalizeReview: finalizeReviewTool,
+      recommendNextGoals: recommendNextGoalsTool,
     };
     const availableTools = useTools
       ? availability.openai
