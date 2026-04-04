@@ -672,6 +672,327 @@ export const startPerformanceReviewTool = tool({
 });
 
 // ---------------------------------------------------------------------------
+// Tool 7: Generate Review Draft
+// ---------------------------------------------------------------------------
+
+export const generateReviewDraftTool = tool({
+  description:
+    "Generate an AI-drafted performance review from the employee's data and manager contributions. Call this after the manager has completed the contributions step.",
+  inputSchema: z.object({
+    reviewId: z.string().describe("The performance review ID"),
+  }),
+  execute: async (params) => {
+    await connectDB();
+
+    const review = await PerformanceReview.findById(params.reviewId);
+    if (!review) {
+      return { success: false, error: "Review not found." };
+    }
+
+    // Build context for AI generation
+    const goalsContext = (review.alignedGoals || [])
+      .map((g: { title: string; status: string; category: string; successMetric: string; alignment: string }) =>
+        `- ${g.title} (${g.status}): ${g.successMetric} [${g.category}, aligns to ${g.alignment}]`,
+      )
+      .join("\n");
+
+    const checkInsContext = (review.checkInSummaries || [])
+      .map((c: { managerNotes: string; employeeNotes: string }) =>
+        `- Manager: ${c.managerNotes || "N/A"} | Employee: ${c.employeeNotes || "N/A"}`,
+      )
+      .join("\n");
+
+    const notesContext = (review.performanceNotes || [])
+      .map((n: { type: string; observation: string }) => `- [${n.type}] ${n.observation}`)
+      .join("\n");
+
+    const foundationContext = review.foundation?.mission
+      ? `Company Mission: ${review.foundation.mission}\nCompany Values: ${review.foundation.values}`
+      : "";
+
+    const strategyContext = review.strategyGoals?.length
+      ? `Strategy Goals: ${review.strategyGoals.map((sg: { title: string }) => sg.title).join(", ")}`
+      : "";
+
+    const contributions = review.contributions;
+
+    const prompt = `You are writing a performance review for an employee. Use the data below to generate each section. Frame language around the company's strategic pillars and values where available.
+
+## Employee Data
+Goals:
+${goalsContext || "No goals recorded."}
+
+Check-in Highlights:
+${checkInsContext || "No check-ins recorded."}
+
+Performance Notes:
+${notesContext || "No performance notes recorded."}
+
+${foundationContext}
+${strategyContext}
+
+## Manager's Contributions
+Strategic Priorities Supported: ${contributions?.strategicPriorities || "Not provided"}
+Outcomes Achieved: ${contributions?.outcomesAchieved || "Not provided"}
+Behaviors: ${contributions?.behaviors || "Not provided"}
+Additional Context: ${contributions?.additionalContext || "Not provided"}
+
+## Instructions
+Generate exactly five sections. Each section should be 2-4 paragraphs. Use specific details from the data — do not generalize. If company values/mission are available, explicitly tie the employee's contributions to them.
+
+Sections:
+1. SUMMARY — Brief overview of the employee's performance in this period
+2. STRENGTHS_AND_IMPACT — What went well, tied to strategic pillars and values
+3. AREAS_FOR_GROWTH — Development opportunities with specific, actionable suggestions
+4. STRATEGIC_ALIGNMENT — How the employee's work connected to company direction
+5. OVERALL_ASSESSMENT — Closing assessment
+
+Format your response as JSON:
+{"summary":"...","strengthsAndImpact":"...","areasForGrowth":"...","strategicAlignment":"...","overallAssessment":"..."}`;
+
+    try {
+      const { streamText: aiStreamText } = await import("ai");
+      const { getModel } = await import("@/lib/ai/providers");
+      const { AI_CONFIG } = await import("@/lib/ai/config");
+
+      const result = await aiStreamText({
+        model: getModel(AI_CONFIG.defaultModels.anthropic),
+        prompt,
+      });
+
+      let content = "";
+      for await (const chunk of result.textStream) {
+        content += chunk;
+      }
+
+      // Parse the JSON response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return { success: false, error: "Failed to parse AI-generated draft." };
+      }
+
+      const draft = JSON.parse(jsonMatch[0]);
+
+      // Save to review
+      await PerformanceReview.findByIdAndUpdate(params.reviewId, {
+        $set: {
+          "draft.summary": draft.summary || "",
+          "draft.strengthsAndImpact": draft.strengthsAndImpact || "",
+          "draft.areasForGrowth": draft.areasForGrowth || "",
+          "draft.strategicAlignment": draft.strategicAlignment || "",
+          "draft.overallAssessment": draft.overallAssessment || "",
+          status: "draft_complete",
+          currentStep: "draft",
+        },
+      });
+
+      const workingDocPayload = {
+        action: "update_working_document" as const,
+        updates: {
+          currentStep: "draft",
+          draftSummary: draft.summary || "",
+          draftStrengthsAndImpact: draft.strengthsAndImpact || "",
+          draftAreasForGrowth: draft.areasForGrowth || "",
+          draftStrategicAlignment: draft.strategicAlignment || "",
+          draftOverallAssessment: draft.overallAssessment || "",
+        },
+      };
+
+      return {
+        success: true,
+        message:
+          "Draft review generated. The review covers strengths and impact, areas for growth, strategic alignment, and an overall assessment. Please review the draft — you can ask me to adjust any section, or proceed to finalize.",
+        workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
+      };
+    } catch (error) {
+      console.error("Error generating review draft:", error);
+      return { success: false, error: "Failed to generate review draft." };
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Tool 8: Finalize Review
+// ---------------------------------------------------------------------------
+
+export const finalizeReviewTool = tool({
+  description:
+    "Finalize a performance review. Copies the draft (with any manager edits) to the final document and records manager signoff.",
+  inputSchema: z.object({
+    reviewId: z.string().describe("The performance review ID"),
+    managerName: z.string().describe("Name of the manager finalizing the review"),
+    summary: z.string().optional().describe("Edited summary (if changed from draft)"),
+    strengthsAndImpact: z.string().optional().describe("Edited strengths (if changed from draft)"),
+    areasForGrowth: z.string().optional().describe("Edited areas for growth (if changed from draft)"),
+    strategicAlignment: z.string().optional().describe("Edited strategic alignment (if changed from draft)"),
+    overallAssessment: z.string().optional().describe("Edited overall assessment (if changed from draft)"),
+  }),
+  execute: async (params) => {
+    await connectDB();
+
+    const review = await PerformanceReview.findById(params.reviewId);
+    if (!review) {
+      return { success: false, error: "Review not found." };
+    }
+
+    if (!review.draft?.summary) {
+      return { success: false, error: "No draft exists yet. Generate a draft first." };
+    }
+
+    const finalDoc = {
+      summary: params.summary || review.draft.summary,
+      strengthsAndImpact: params.strengthsAndImpact || review.draft.strengthsAndImpact,
+      areasForGrowth: params.areasForGrowth || review.draft.areasForGrowth,
+      strategicAlignment: params.strategicAlignment || review.draft.strategicAlignment,
+      overallAssessment: params.overallAssessment || review.draft.overallAssessment,
+      managerSignoff: {
+        at: new Date(),
+        name: params.managerName,
+      },
+    };
+
+    await PerformanceReview.findByIdAndUpdate(params.reviewId, {
+      $set: {
+        finalDocument: finalDoc,
+        status: "finalized",
+        currentStep: "finalize",
+      },
+    });
+
+    const workingDocPayload = {
+      action: "update_working_document" as const,
+      updates: {
+        currentStep: "finalize",
+        finalSummary: finalDoc.summary,
+        finalStrengthsAndImpact: finalDoc.strengthsAndImpact,
+        finalAreasForGrowth: finalDoc.areasForGrowth,
+        finalStrategicAlignment: finalDoc.strategicAlignment,
+        finalOverallAssessment: finalDoc.overallAssessment,
+      },
+    };
+
+    return {
+      success: true,
+      message:
+        "Review finalized. You can download it as a PDF from the Reviews tab. Would you like me to suggest next-period goals based on this review?",
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
+    };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Tool 9: Recommend Next Goals
+// ---------------------------------------------------------------------------
+
+export const recommendNextGoalsTool = tool({
+  description:
+    "Generate next-period goal recommendations based on a finalized performance review and current company strategy. Call this after finalizing the review.",
+  inputSchema: z.object({
+    reviewId: z.string().describe("The performance review ID"),
+  }),
+  execute: async (params) => {
+    await connectDB();
+
+    const review = await PerformanceReview.findById(params.reviewId);
+    if (!review) {
+      return { success: false, error: "Review not found." };
+    }
+
+    if (review.status !== "finalized") {
+      return { success: false, error: "Review must be finalized before generating goal recommendations." };
+    }
+
+    const foundation = (await CompanyFoundation.findOne({ status: "published" }).lean()) as Record<
+      string,
+      unknown
+    > | null;
+    const currentStrategyGoals = await StrategyGoal.find({
+      status: { $in: ["draft", "on_track", "needs_attention"] },
+    }).lean();
+
+    const finalDoc = review.finalDocument;
+    const prompt = `Based on this performance review, recommend 2-4 goals for the next period. Each goal should address gaps identified in the review or align with evolving company strategy.
+
+## Review Summary
+${finalDoc?.summary || "N/A"}
+
+## Areas for Growth
+${finalDoc?.areasForGrowth || "N/A"}
+
+## Strategic Alignment
+${finalDoc?.strategicAlignment || "N/A"}
+
+## Company Foundation
+Mission: ${(foundation?.mission as string) || "N/A"}
+Values: ${(foundation?.values as string) || "N/A"}
+
+## Current Strategy Goals
+${currentStrategyGoals.map((sg) => `- ${sg.title} (${sg.horizon}): ${sg.description}`).join("\n") || "None defined"}
+
+## Previous Goals
+${(review.alignedGoals || []).map((g: { title: string; status: string }) => `- ${g.title} (${g.status})`).join("\n") || "None"}
+
+## Instructions
+Generate 2-4 goal recommendations. Each goal should:
+- Have a clear, specific title
+- Include a brief description (1-2 sentences)
+- Map to a goal category (one of: productivity, quality, accuracy, efficiency, operational_excellence, customer_impact, communication, collaboration, conflict_resolution, decision_making, initiative, skill_development, certification, training_completion, leadership_growth, career_advancement)
+- Specify an alignment type (mission, value, or priority)
+- Include a rationale explaining why this goal matters now (1-2 sentences referencing the review or strategy)
+
+Format as JSON array:
+[{"title":"...","description":"...","category":"...","alignment":"...","rationale":"..."}]`;
+
+    try {
+      const { streamText: aiStreamText } = await import("ai");
+      const { getModel } = await import("@/lib/ai/providers");
+      const { AI_CONFIG } = await import("@/lib/ai/config");
+
+      const result = await aiStreamText({
+        model: getModel(AI_CONFIG.defaultModels.anthropic),
+        prompt,
+      });
+
+      let content = "";
+      for await (const chunk of result.textStream) {
+        content += chunk;
+      }
+
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return { success: false, error: "Failed to parse goal recommendations." };
+      }
+
+      const recommendations = JSON.parse(jsonMatch[0]);
+
+      await PerformanceReview.findByIdAndUpdate(params.reviewId, {
+        $set: {
+          goalRecommendations: recommendations,
+          currentStep: "goals",
+        },
+      });
+
+      const workingDocPayload = {
+        action: "update_working_document" as const,
+        updates: {
+          currentStep: "goals",
+          goalRecommendations: recommendations,
+        },
+      };
+
+      return {
+        success: true,
+        message: `Here are ${recommendations.length} goal recommendations for the next period based on the review and current strategy. You can create any of these goals now, or save them for later.`,
+        workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
+      };
+    } catch (error) {
+      console.error("Error generating goal recommendations:", error);
+      return { success: false, error: "Failed to generate goal recommendations." };
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
 // Tool 5: Complete Grow Workflow (save the record)
 // ---------------------------------------------------------------------------
 
