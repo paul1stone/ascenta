@@ -166,7 +166,7 @@ export async function POST(req: Request) {
 
     // Inject current user context when available so AI can skip getEmployeeInfo for the current user
     if (currentEmployee) {
-      effectiveSystemPrompt += `\n\n[CURRENT_USER] The current user is ${currentEmployee.firstName} ${currentEmployee.lastName}, ${currentEmployee.title} in ${currentEmployee.department}. Their employee database ID is "${currentEmployee.id}"${currentEmployee.employeeId ? ` (employeeId: ${currentEmployee.employeeId})` : ""}. When tools require employeeName and employeeId, use this information directly — do NOT call getEmployeeInfo for the current user. [/CURRENT_USER]`;
+      effectiveSystemPrompt += `\n\n[CURRENT_USER] The current user is:\n- employeeName: "${currentEmployee.firstName} ${currentEmployee.lastName}"\n- employeeId: "${currentEmployee.employeeId || currentEmployee.id}"\n- department: "${currentEmployee.department}"\n- jobTitle: "${currentEmployee.title}"\nWhen ANY tool requires employeeName or employeeId parameters, use these EXACT values. Do NOT call getEmployeeInfo for the current user. Do NOT use placeholder text like "Current User". [/CURRENT_USER]`;
     }
 
     // Inject required tool hint when user has pre-selected a tool
