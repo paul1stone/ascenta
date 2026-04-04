@@ -10,6 +10,8 @@ interface PerformanceGoalFormProps {
   onSaved: () => void;
   defaultEmployeeId?: string;
   defaultEmployeeName?: string;
+  defaultStrategyGoalId?: string;
+  defaultStrategyGoalTitle?: string;
 }
 
 interface EmployeeResult {
@@ -20,36 +22,13 @@ interface EmployeeResult {
   department: string;
 }
 
-const CATEGORY_GROUP_OPTIONS = [
-  { value: "performance", label: "Performance Goals" },
-  { value: "leadership", label: "Leadership Goals" },
-  { value: "development", label: "Development Goals" },
+const GOAL_TYPE_OPTIONS = [
+  { value: "performance", label: "Performance" },
+  { value: "development", label: "Development" },
+  { value: "culture", label: "Culture" },
+  { value: "compliance", label: "Compliance" },
+  { value: "operational", label: "Operational" },
 ] as const;
-
-const CATEGORIES_BY_GROUP: Record<string, { value: string; label: string }[]> = {
-  performance: [
-    { value: "productivity", label: "Productivity" },
-    { value: "quality", label: "Quality" },
-    { value: "accuracy", label: "Accuracy" },
-    { value: "efficiency", label: "Efficiency" },
-    { value: "operational_excellence", label: "Operational Excellence" },
-    { value: "customer_impact", label: "Customer Impact" },
-  ],
-  leadership: [
-    { value: "communication", label: "Communication" },
-    { value: "collaboration", label: "Collaboration" },
-    { value: "conflict_resolution", label: "Conflict Resolution" },
-    { value: "decision_making", label: "Decision Making" },
-    { value: "initiative", label: "Initiative" },
-  ],
-  development: [
-    { value: "skill_development", label: "Skill Development" },
-    { value: "certification", label: "Certification" },
-    { value: "training_completion", label: "Training Completion" },
-    { value: "leadership_growth", label: "Leadership Growth" },
-    { value: "career_advancement", label: "Career Advancement" },
-  ],
-};
 
 const MEASUREMENT_TYPE_OPTIONS = [
   { value: "numeric_metric", label: "Numeric Metric" },
@@ -77,18 +56,14 @@ const CADENCE_OPTIONS = [
   { value: "manager_scheduled", label: "Manager Scheduled" },
 ] as const;
 
-const ALIGNMENT_OPTIONS = [
-  { value: "mission", label: "Mission" },
-  { value: "value", label: "Value" },
-  { value: "priority", label: "Priority" },
-] as const;
-
 export function PerformanceGoalForm({
   accentColor,
   onClose,
   onSaved,
   defaultEmployeeId = "",
   defaultEmployeeName = "",
+  defaultStrategyGoalId,
+  defaultStrategyGoalTitle,
 }: PerformanceGoalFormProps) {
   // Employee picker state
   const [employeeId, setEmployeeId] = useState(defaultEmployeeId);
@@ -102,7 +77,6 @@ export function PerformanceGoalForm({
   // Form fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [categoryGroup, setCategoryGroup] = useState("");
   const [category, setCategory] = useState("");
   const [measurementType, setMeasurementType] = useState("");
   const [successMetric, setSuccessMetric] = useState("");
@@ -110,7 +84,9 @@ export function PerformanceGoalForm({
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [checkInCadence, setCheckInCadence] = useState("");
-  const [alignment, setAlignment] = useState("");
+  const [strategyGoalId] = useState(defaultStrategyGoalId || "");
+  const [strategyGoalTitle] = useState(defaultStrategyGoalTitle || "");
+  const [notes, setNotes] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -156,32 +132,15 @@ export function PerformanceGoalForm({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset category when categoryGroup changes
-  useEffect(() => {
-    if (categoryGroup) {
-      const validCategories = CATEGORIES_BY_GROUP[categoryGroup] ?? [];
-      const isStillValid = validCategories.some((c) => c.value === category);
-      if (!isStillValid) {
-        setCategory("");
-      }
-    }
-  }, [categoryGroup, category]);
-
-  const filteredCategories = categoryGroup
-    ? (CATEGORIES_BY_GROUP[categoryGroup] ?? [])
-    : [];
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
 
-    // Validate via Zod
     const formData = {
       employeeName,
       employeeId,
       title,
       description,
-      categoryGroup: categoryGroup || undefined,
       category: category || undefined,
       measurementType: measurementType || undefined,
       successMetric,
@@ -189,7 +148,9 @@ export function PerformanceGoalForm({
       customStartDate: timePeriod === "custom" ? customStartDate : undefined,
       customEndDate: timePeriod === "custom" ? customEndDate : undefined,
       checkInCadence: checkInCadence || undefined,
-      alignment: alignment || undefined,
+      strategyGoalId: strategyGoalId || undefined,
+      strategyGoalTitle: strategyGoalTitle || undefined,
+      notes: notes || undefined,
     };
 
     const parsed = goalFormSchema.safeParse(formData);
@@ -368,53 +329,25 @@ export function PerformanceGoalForm({
             )}
           </div>
 
-          {/* Category Group + Category */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Category Group
-              </label>
-              <select
-                value={categoryGroup}
-                onChange={(e) => setCategoryGroup(e.target.value)}
-                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              >
-                <option value="">Select...</option>
-                {CATEGORY_GROUP_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {errors.categoryGroup && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.categoryGroup}
-                </p>
-              )}
-            </div>
-            {categoryGroup && (
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                >
-                  <option value="">Select...</option>
-                  {filteredCategories.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.category && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.category}
-                  </p>
-                )}
-              </div>
+          {/* Goal Type */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Goal Type
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            >
+              <option value="">Select...</option>
+              {GOAL_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {errors.category && (
+              <p className="text-xs text-red-500 mt-1">{errors.category}</p>
             )}
           </div>
 
@@ -523,52 +456,58 @@ export function PerformanceGoalForm({
             )}
           </div>
 
-          {/* Check-in Cadence + Alignment */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Check-in Cadence
-              </label>
-              <select
-                value={checkInCadence}
-                onChange={(e) => setCheckInCadence(e.target.value)}
-                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              >
-                <option value="">Select...</option>
-                {CADENCE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {errors.checkInCadence && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.checkInCadence}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Alignment
-              </label>
-              <select
-                value={alignment}
-                onChange={(e) => setAlignment(e.target.value)}
-                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              >
-                <option value="">Select...</option>
-                {ALIGNMENT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {errors.alignment && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.alignment}
-                </p>
-              )}
-            </div>
+          {/* Check-in Cadence */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Check-in Cadence
+            </label>
+            <select
+              value={checkInCadence}
+              onChange={(e) => setCheckInCadence(e.target.value)}
+              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            >
+              <option value="">Select...</option>
+              {CADENCE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {errors.checkInCadence && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.checkInCadence}
+              </p>
+            )}
+          </div>
+
+          {/* Strategy Alignment (read-only) */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Strategy Alignment
+            </label>
+            {strategyGoalTitle ? (
+              <div className="mt-1 rounded-lg bg-muted px-3 py-2 text-sm text-foreground">
+                {strategyGoalTitle}
+              </div>
+            ) : (
+              <div className="mt-1 rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground italic">
+                Independent goal
+              </div>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Notes <span className="normal-case font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-y"
+              placeholder="Additional context..."
+            />
           </div>
 
           {errors.form && (
@@ -593,7 +532,7 @@ export function PerformanceGoalForm({
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                "Create Goal"
+                "Submit for Review"
               )}
             </button>
           </div>
