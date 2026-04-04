@@ -15,6 +15,7 @@ import {
 } from "@ascenta/db/performance-review-constants";
 import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
+import { useRole } from "@/lib/role/role-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 
 interface ReviewEntry {
@@ -36,9 +37,9 @@ interface ReviewAggregates {
 }
 
 interface ReviewsPanelProps {
-  managerId: string;
   pageKey: string;
   accentColor: string;
+  onSwitchToDoTab?: () => void;
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -59,7 +60,10 @@ function getAvailablePeriods(): string[] {
   return ["Q1", "Q2", "Q3", "Q4", "H1", "H2", "annual"];
 }
 
-export function ReviewsPanel({ managerId, pageKey, accentColor }: ReviewsPanelProps) {
+export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsPanelProps) {
+  const { persona, loading: roleLoading } = useRole();
+  const managerId = persona?.employeeId ?? "";
+
   const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   const [aggregates, setAggregates] = useState<ReviewAggregates>({
     directReports: 0,
@@ -92,14 +96,15 @@ export function ReviewsPanel({ managerId, pageKey, accentColor }: ReviewsPanelPr
   }, [managerId, period]);
 
   useEffect(() => {
-    if (managerId) {
+    if (managerId && !roleLoading) {
       fetchReviews();
-    } else {
+    } else if (!roleLoading) {
       setIsLoading(false);
     }
-  }, [managerId, fetchReviews]);
+  }, [managerId, roleLoading, fetchReviews]);
 
   const handleStartReview = (employeeName: string, employeeId: string) => {
+    onSwitchToDoTab?.();
     sendMessage(
       pageKey,
       `Start a performance review for ${employeeName} (${employeeId}) for ${period}`,
@@ -108,6 +113,7 @@ export function ReviewsPanel({ managerId, pageKey, accentColor }: ReviewsPanelPr
   };
 
   const handleContinueReview = (employeeName: string, reviewId: string) => {
+    onSwitchToDoTab?.();
     sendMessage(
       pageKey,
       `Continue the performance review for ${employeeName} (review ID: ${reviewId})`,

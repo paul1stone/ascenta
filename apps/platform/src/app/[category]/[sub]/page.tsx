@@ -70,9 +70,9 @@ export default function CategorySubPage({
       ) : activeTab === "reviews" ? (
         <div className="flex-1 overflow-y-auto p-6">
           <ReviewsPanel
-            managerId=""
             pageKey={pageKey}
             accentColor={ctx.category.color}
+            onSwitchToDoTab={() => setActiveTab("do")}
           />
         </div>
       ) : (
