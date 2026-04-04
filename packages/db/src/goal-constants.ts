@@ -4,50 +4,22 @@
  */
 
 export const GOAL_CATEGORIES = [
-  "productivity",
-  "quality",
-  "accuracy",
-  "efficiency",
-  "operational_excellence",
-  "customer_impact",
-  "communication",
-  "collaboration",
-  "conflict_resolution",
-  "decision_making",
-  "initiative",
-  "skill_development",
-  "certification",
-  "training_completion",
-  "leadership_growth",
-  "career_advancement",
+  "performance",
+  "development",
+  "culture",
+  "compliance",
+  "operational",
 ] as const;
 
-export const GOAL_CATEGORY_GROUPS: Record<
-  string,
-  (typeof GOAL_CATEGORIES)[number][]
+export const GOAL_CATEGORY_LABELS: Record<
+  (typeof GOAL_CATEGORIES)[number],
+  string
 > = {
-  "Performance Goals": [
-    "productivity",
-    "quality",
-    "accuracy",
-    "efficiency",
-    "operational_excellence",
-    "customer_impact",
-  ],
-  "Leadership Goals": [
-    "communication",
-    "collaboration",
-    "conflict_resolution",
-    "decision_making",
-    "initiative",
-  ],
-  "Development Goals": [
-    "skill_development",
-    "certification",
-    "training_completion",
-    "leadership_growth",
-    "career_advancement",
-  ],
+  performance: "Performance",
+  development: "Development",
+  culture: "Culture",
+  compliance: "Compliance",
+  operational: "Operational",
 };
 
 export const MEASUREMENT_TYPES = [
@@ -65,9 +37,8 @@ export const CHECKIN_CADENCES = [
   "manager_scheduled",
 ] as const;
 
-export const ALIGNMENT_TYPES = ["mission", "value", "priority"] as const;
-
 export const GOAL_STATUSES = [
+  "pending_review",
   "on_track",
   "needs_attention",
   "off_track",

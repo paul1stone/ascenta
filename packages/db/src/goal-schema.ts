@@ -6,17 +6,15 @@
 import mongoose, { Schema, Types } from "mongoose";
 export {
   GOAL_CATEGORIES,
-  GOAL_CATEGORY_GROUPS,
+  GOAL_CATEGORY_LABELS,
   MEASUREMENT_TYPES,
   CHECKIN_CADENCES,
-  ALIGNMENT_TYPES,
   GOAL_STATUSES,
 } from "./goal-constants";
 import {
   GOAL_CATEGORIES,
   MEASUREMENT_TYPES,
   CHECKIN_CADENCES,
-  ALIGNMENT_TYPES,
   GOAL_STATUSES,
 } from "./goal-constants";
 
@@ -63,16 +61,11 @@ const goalSchema = new Schema(
       required: true,
       enum: CHECKIN_CADENCES,
     },
-    alignment: {
-      type: String,
-      required: true,
-      enum: ALIGNMENT_TYPES,
-    },
     status: {
       type: String,
       required: true,
       enum: GOAL_STATUSES,
-      default: "on_track",
+      default: "pending_review",
       index: true,
     },
     owner: {
@@ -90,6 +83,13 @@ const goalSchema = new Schema(
     managerApproved: { type: Boolean, default: false },
     locked: { type: Boolean, default: false },
     workflowRunId: { type: String, default: null },
+    strategyGoalId: {
+      type: Schema.Types.ObjectId,
+      ref: "StrategyGoal",
+      default: null,
+      index: true,
+    },
+    notes: { type: String, default: "" },
   },
   {
     timestamps: true,
@@ -122,13 +122,14 @@ export type Goal_Type = {
     end: Date;
   };
   checkInCadence: (typeof CHECKIN_CADENCES)[number];
-  alignment: (typeof ALIGNMENT_TYPES)[number];
   status: (typeof GOAL_STATUSES)[number];
   owner: string | Types.ObjectId;
   manager: string | Types.ObjectId;
   managerApproved: boolean;
   locked: boolean;
   workflowRunId: string | null;
+  strategyGoalId: string | Types.ObjectId | null;
+  notes: string;
   createdAt: Date;
   updatedAt: Date;
 };
