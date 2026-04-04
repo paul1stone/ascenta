@@ -215,7 +215,7 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
     ],
     tools: [
       {
-        key: "startGoalCreation",
+        key: "startGoalWorkflow",
         label: "Create Goal",
         icon: Target,
         promptSuggestions: [

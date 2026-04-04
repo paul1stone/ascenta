@@ -9,7 +9,8 @@ import {
   generateWorkflowFollowUpTool,
 } from "./workflow-tools";
 import {
-  startGoalCreationTool,
+  startGoalWorkflowTool,
+  openGoalDocumentTool,
   startCheckInTool,
   startPerformanceNoteTool,
   completeGrowWorkflowTool,
@@ -238,7 +239,8 @@ export const defaultChatTools = {
   updateWorkflowField: updateWorkflowFieldTool,
   generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
   generateWorkflowFollowUp: generateWorkflowFollowUpTool,
-  startGoalCreation: startGoalCreationTool,
+  startGoalWorkflow: startGoalWorkflowTool,
+  openGoalDocument: openGoalDocumentTool,
   startCheckIn: startCheckInTool,
   startPerformanceNote: startPerformanceNoteTool,
   completeGrowWorkflow: completeGrowWorkflowTool,

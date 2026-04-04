@@ -16,7 +16,8 @@ import {
   getWorkflowStateSummary,
 } from "@/lib/ai/workflow-tools";
 import {
-  startGoalCreationTool,
+  startGoalWorkflowTool,
+  openGoalDocumentTool,
   startCheckInTool,
   startPerformanceNoteTool,
   completeGrowWorkflowTool,
@@ -186,7 +187,8 @@ export async function POST(req: Request) {
       updateWorkflowField: updateWorkflowFieldTool,
       generateCorrectiveActionDocument: generateCorrectiveActionDocumentTool,
       generateWorkflowFollowUp: generateWorkflowFollowUpTool,
-      startGoalCreation: startGoalCreationTool,
+      startGoalWorkflow: startGoalWorkflowTool,
+      openGoalDocument: openGoalDocumentTool,
       startCheckIn: startCheckInTool,
       startPerformanceNote: startPerformanceNoteTool,
       updateWorkingDocument: updateWorkingDocumentTool,

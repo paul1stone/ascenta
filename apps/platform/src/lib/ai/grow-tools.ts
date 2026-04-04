@@ -11,6 +11,8 @@ import { CheckIn } from "@ascenta/db/checkin-schema";
 import { PerformanceNote } from "@ascenta/db/performance-note-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
 import { WorkflowRun } from "@ascenta/db/workflow-schema";
+import { CompanyFoundation } from "@ascenta/db/foundation-schema";
+import { StrategyGoal } from "@ascenta/db/strategy-goal-schema";
 import {
   startWorkflowRun,
   getWorkflowRun,
@@ -142,50 +144,146 @@ export function parseTimePeriod(
 }
 
 // ---------------------------------------------------------------------------
-// Tool 1: Start Goal Creation
+// Tool 1a: Start Goal Workflow (conversational — does NOT open form yet)
 // ---------------------------------------------------------------------------
 
-export const startGoalCreationTool = tool({
-  description:
-    "Open the goal creation working document for an employee. Call this after using getEmployeeInfo and after asking any clarifying questions. You MUST provide a value for EVERY field — infer from context when not explicitly stated. The user should only need to review the form, not fill it out.",
+export const startGoalWorkflowTool = tool({
+  description: `Start a goal creation workflow for an employee. This fetches company strategy context and begins a multi-step conversation. Do NOT open a working document yet.
+
+After calling this tool, guide the employee through these steps ONE AT A TIME:
+
+**Step 1 — Strategic pillar context:**
+Present the company's mission, vision, and values (from foundation data) plus any company-wide strategy goals. Ask: "Which strategic pillar or company goal does this goal support? You can skip this if your goal is independent." Accept a reference or "skip."
+
+**Step 2 — Department and team focus:**
+Present the employee's department strategy goals (if any). Ask which one this goal aligns to (or none). Then ask goal type as a numbered list:
+1. Performance
+2. Development
+3. Culture
+4. Compliance
+5. Operational
+
+**Step 3 — Goal recommendation:**
+Based on all context (selected pillar, department goal, goal type, employee role/department), generate 4-6 goal recommendations as a numbered list. Include a final option: "Or describe your own goal." User picks a number or writes custom. Draft a goal title and description.
+
+**Step 4 — Metrics and milestones:**
+Suggest 2-3 success metrics based on the goal type and description. Ask user to pick or customize. Discuss target date / time period. Ask about resources needed and potential blockers conversationally (these are NOT persisted). Then call openGoalDocument with all fields.
+
+RULES:
+- Ask ONE question at a time. Wait for the response before moving on.
+- If the user gives rich answers, skip ahead where appropriate.
+- After drafting the goal in step 3, confirm with the user before proceeding.
+- Resources and blockers discussed in step 4 are conversation context only — do not try to save them as fields.
+- When ready, call openGoalDocument with all collected values to open the form.`,
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
     department: z.string().optional(),
     jobTitle: z.string().optional(),
     managerName: z.string().optional(),
-    // ALL fields below should be filled — infer from context when not explicit
-    title: z.string().describe("Concise goal title synthesized from the conversation"),
-    description: z.string().describe("1-2 sentence goal description expanding on the user's intent"),
-    categoryGroup: z.string().describe("'performance', 'leadership', or 'development' — infer from goal nature"),
-    category: z.string().describe("Specific category: productivity, quality, accuracy, efficiency, operational_excellence, customer_impact, communication, collaboration, conflict_resolution, decision_making, initiative, skill_development, certification, training_completion, leadership_growth, career_advancement"),
-    measurementType: z.string().describe("numeric_metric, percentage_target, milestone_completion, behavior_change, or learning_completion — match to what's being measured"),
-    successMetric: z.string().describe("Clear success criteria — restate user's metric or create a reasonable one from context"),
-    timePeriod: z.string().describe("Q1, Q2, Q3, Q4, H1, H2, annual, or custom — use current quarter if user says 'this quarter'"),
-    checkInCadence: z.string().describe("monthly (default for quarterly goals), quarterly (for annual), milestone (for milestone-based), or manager_scheduled"),
-    alignment: z.string().describe("mission (core job performance), value (culture/teamwork), or priority (skill development/strategic) — infer from goal type"),
+  }),
+  execute: async (params) => {
+    await connectDB();
+
+    let foundation = { mission: "", vision: "", values: "" };
+    try {
+      const doc = await CompanyFoundation.findOne().lean();
+      if (doc) {
+        const f = doc as Record<string, unknown>;
+        foundation = {
+          mission: (f.mission as string) || "",
+          vision: (f.vision as string) || "",
+          values: (f.values as string) || "",
+        };
+      }
+    } catch {
+      // silent
+    }
+
+    let companyGoals: { id: string; title: string; horizon: string }[] = [];
+    let departmentGoals: { id: string; title: string; horizon: string }[] = [];
+    try {
+      const allGoals = await StrategyGoal.find({
+        status: { $nin: ["archived", "completed"] },
+      }).lean();
+
+      for (const g of allGoals) {
+        const goal = g as Record<string, unknown>;
+        const entry = {
+          id: String(goal._id),
+          title: goal.title as string,
+          horizon: goal.horizon as string,
+        };
+        if (goal.scope === "company") {
+          companyGoals.push(entry);
+        } else if (
+          goal.scope === "department" &&
+          goal.department === params.department
+        ) {
+          departmentGoals.push(entry);
+        }
+      }
+    } catch {
+      // silent
+    }
+
+    const hasFoundation = foundation.mission || foundation.vision || foundation.values;
+    const hasCompanyGoals = companyGoals.length > 0;
+
+    let message = `Strategy context loaded for ${params.employeeName} (${params.department ?? "unknown dept"}).`;
+    if (!hasFoundation && !hasCompanyGoals) {
+      message += " No company foundation or strategy goals found — skip to step 2.";
+    }
+
+    return {
+      success: true,
+      foundation,
+      companyGoals,
+      departmentGoals,
+      employeeName: params.employeeName,
+      employeeId: params.employeeId,
+      department: params.department ?? "",
+      jobTitle: params.jobTitle ?? "",
+      message,
+    };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Tool 1b: Open Goal Document (end of conversation — opens working document)
+// ---------------------------------------------------------------------------
+
+export const openGoalDocumentTool = tool({
+  description:
+    "Open the goal creation working document with all fields pre-filled. Call this at the END of the goal conversation (after steps 1-4), not at the beginning. The user will review the form and submit.",
+  inputSchema: z.object({
+    employeeName: z.string(),
+    employeeId: z.string(),
+    title: z.string().describe("Goal title from step 3"),
+    description: z.string().describe("Goal description from step 3"),
+    category: z.string().describe("One of: performance, development, culture, compliance, operational"),
+    strategyGoalId: z.string().optional().describe("ObjectId of linked strategy goal, or omit for independent"),
+    strategyGoalTitle: z.string().optional().describe("Display title of linked strategy goal"),
+    measurementType: z.string().describe("numeric_metric, percentage_target, milestone_completion, behavior_change, or learning_completion"),
+    successMetric: z.string().describe("Success criteria from step 4"),
+    timePeriod: z.string().describe("Q1, Q2, Q3, Q4, H1, H2, annual, or custom"),
+    checkInCadence: z.string().describe("monthly, quarterly, milestone, or manager_scheduled"),
+    notes: z.string().optional().describe("Additional context or notes"),
   }),
   execute: async (params) => {
     await ensureWorkflowsSynced();
     const initialInputs: WorkflowInputs = {
       employeeName: params.employeeName,
       employeeId: params.employeeId,
-      department: params.department ?? "",
-      jobTitle: params.jobTitle ?? "",
-      managerName: params.managerName ?? "",
     };
 
     const run = await startWorkflowRun("create-goal", "system", initialInputs);
 
-    // Build pre-filled values from AI-extracted params
-    const prefilled: Record<string, unknown> = {
-      employeeName: params.employeeName,
-      employeeId: params.employeeId,
-    };
+    const prefilled: Record<string, unknown> = {};
     for (const key of [
-      "title", "description", "categoryGroup", "category",
-      "measurementType", "successMetric", "timePeriod",
-      "checkInCadence", "alignment",
+      "employeeName", "employeeId", "title", "description", "category",
+      "strategyGoalId", "strategyGoalTitle", "measurementType", "successMetric",
+      "timePeriod", "checkInCadence", "notes",
     ] as const) {
       if (params[key]) prefilled[key] = params[key];
     }
@@ -202,7 +300,7 @@ export const startGoalCreationTool = tool({
     return {
       success: true,
       runId: run.id,
-      message: `I've opened the goal creation form for ${params.employeeName} with the details pre-filled. You can review and edit the form, or ask me to make changes.`,
+      message: `I've opened the goal form for ${params.employeeName} with everything pre-filled. Review and submit when ready.`,
       workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
     };
   },

@@ -16,7 +16,7 @@ import { useRole } from "@/lib/role/role-context";
 import { getGreeting } from "@/lib/utils/greeting";
 
 const TOOL_KEY_TO_WORKFLOW: Record<string, WorkflowType> = {
-  startGoalCreation: "create-goal",
+  openGoalDocument: "create-goal",
   startCheckIn: "run-check-in",
   startPerformanceNote: "add-performance-note",
   buildMVV: "build-mvv",
