@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Foundation View Redesign Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --accent: #6688bb;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-mid: color-mix(in srgb, var(--accent) 25%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 20%, transparent);
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --header-h: 56px;
+    --sidebar-w: 220px;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .mockup-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .mockup-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* Option selector */
+  .option-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .option-tab {
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border: 2px solid var(--border);
+    background: var(--white);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .option-tab:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+  }
+  .option-tab.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--deep-blue);
+  }
+  .option-tab .option-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* Browser frame */
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+    display: none;
+  }
+  .browser-frame.visible { display: block; }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  .app-layout { display: flex; height: 680px; }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--deep-blue);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-logo {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-logo-icon svg { color: var(--white); }
+  .sidebar-logo-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.9);
+  }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    cursor: default;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .sidebar-item.active {
+    font-weight: 700;
+    color: rgba(255,255,255,0.95);
+    border-left-color: var(--accent);
+    background: rgba(102, 136, 187, 0.15);
+  }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-divider { margin: 4px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+  /* Top header */
+  .top-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .top-header-left { display: flex; align-items: center; gap: 10px; }
+  .top-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--deep-blue);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .top-header-company {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .top-header-right { display: flex; align-items: center; gap: 4px; }
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .header-icon-btn svg { width: 16px; height: 16px; }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+
+  /* Tabs row */
+  .tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+  }
+  .tab-item {
+    padding: 14px 18px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-item.active {
+    color: var(--deep-blue);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+  .tab-item svg { width: 14px; height: 14px; }
+
+  /* Content area */
+  .content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 24px;
+  }
+  .content-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* Page header */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .page-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .edit-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: default;
+  }
+  .edit-btn svg { width: 14px; height: 14px; }
+
+  /* ===== OPTION A: Unified card with dividers ===== */
+  .unified-card {
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    animation: fadeUp 0.4s ease-out;
+  }
+  .unified-card-header {
+    padding: 20px 28px 16px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, white), color-mix(in srgb, var(--accent) 2%, white));
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .unified-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .unified-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+  }
+  .unified-card-icon svg { width: 18px; height: 18px; }
+  .unified-card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .unified-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.08);
+    padding: 4px 10px;
+    border-radius: 99px;
+  }
+  .unified-section {
+    padding: 24px 28px;
+  }
+  .unified-section + .unified-section {
+    border-top: 1px solid var(--border-light);
+  }
+  .unified-section-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .unified-section-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-primary);
+  }
+
+  /* ===== OPTION B: Editorial card with accent borders ===== */
+  .editorial-card {
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    animation: fadeUp 0.4s ease-out;
+  }
+  .editorial-hero {
+    padding: 32px 32px 24px;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 8%, white) 0%, white 70%);
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+  .editorial-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 30%, transparent));
+    border-radius: 0 2px 2px 0;
+  }
+  .editorial-hero-eyebrow {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .editorial-hero-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .editorial-hero-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .editorial-hero-meta .dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+  .editorial-sections {
+    padding: 8px 0;
+  }
+  .editorial-section {
+    padding: 24px 32px;
+    position: relative;
+  }
+  .editorial-section + .editorial-section {
+    border-top: 1px solid var(--border-light);
+  }
+  .editorial-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .editorial-section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .editorial-section-icon svg { width: 14px; height: 14px; }
+  .editorial-section-icon.mission { background: rgba(102, 136, 187, 0.1); color: #6688bb; }
+  .editorial-section-icon.vision { background: rgba(68, 170, 153, 0.1); color: #44aa99; }
+  .editorial-section-icon.values { background: rgba(187, 102, 136, 0.1); color: #bb6688; }
+  .editorial-section-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .editorial-section-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    padding-left: 38px;
+  }
+  .editorial-section-text .value-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .editorial-values-list {
+    padding-left: 38px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .editorial-value-item {
+    display: flex;
+    gap: 10px;
+  }
+  .editorial-value-bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 7px;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+  .editorial-value-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .editorial-value-content strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Annotation cards */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.accent { background: var(--accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Plan — Foundation View Redesign</div>
+  <div class="mockup-title">Foundation: Single Card Options</div>
+  <div class="mockup-subtitle">
+    Two approaches for the published Foundation view. Toggle between them to compare.
+  </div>
+
+  <!-- Option selector -->
+  <div class="option-selector">
+    <button class="option-tab active" onclick="showOption('a')">
+      <span class="option-letter">A</span>Unified Document Card
+    </button>
+    <button class="option-tab" onclick="showOption('b')">
+      <span class="option-letter">B</span>Editorial Card with Accent Icons
+    </button>
+  </div>
+
+  <!-- ===== OPTION A ===== -->
+  <div class="browser-frame visible" id="option-a">
+    <div class="browser-bar">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">app.ascenta.ai / strategy-studio / foundation</div>
+    </div>
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <span class="sidebar-logo-text">ASCENTA</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.6);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+          </a>
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.6);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            Compass
+          </a>
+          <div class="sidebar-divider"></div>
+          <a class="sidebar-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color: #6688bb;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Strategy Studio
+          </a>
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.45);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+            Grow
+          </a>
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.45);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Care
+          </a>
+        </nav>
+      </div>
+
+      <div class="main-area">
+        <div class="top-header">
+          <div class="top-header-left">
+            <div class="top-header-avatar">SC</div>
+            <span class="top-header-company">StoneCyber</span>
+          </div>
+          <div class="top-header-right">
+            <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+            <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-row">
+          <div class="tab-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+            Foundation
+          </div>
+          <div class="tab-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+            Strategy
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-scroll">
+          <div class="content-inner">
+            <div class="page-header">
+              <div>
+                <div class="page-title">Our Foundation</div>
+                <div class="page-meta">Published March 30, 2026</div>
+              </div>
+              <button class="edit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                Edit
+              </button>
+            </div>
+
+            <!-- Option A: Unified card -->
+            <div class="unified-card">
+              <div class="unified-card-header">
+                <div class="unified-card-header-left">
+                  <div class="unified-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  </div>
+                  <span class="unified-card-title">Company Foundation</span>
+                </div>
+                <span class="unified-card-badge">Published</span>
+              </div>
+              <div class="unified-section">
+                <div class="unified-section-label">Mission</div>
+                <div class="unified-section-text">
+                  We empower people to achieve their fitness goals through innovative, science-backed nutrition and personalized wellness solutions. By making healthy living accessible, sustainable, and enjoyable, we help individuals transform their relationship with food and fitness to build stronger, more confident versions of themselves.
+                </div>
+              </div>
+              <div class="unified-section">
+                <div class="unified-section-label">Vision</div>
+                <div class="unified-section-text">
+                  To become the leading trusted partner in personalized health and fitness, where every individual has the tools, knowledge, and support to reach their optimal wellness potential. We envision a world where healthy living is not a luxury, but an achievable lifestyle for everyone.
+                </div>
+              </div>
+              <div class="unified-section">
+                <div class="unified-section-label">Values</div>
+                <div class="unified-section-text">
+                  <strong style="color: var(--text-primary);">Empowerment</strong> — We believe everyone has the potential to achieve their wellness goals. We provide the tools, education, and support to help people take control of their health journey.<br><br>
+                  <strong style="color: var(--text-primary);">Science-First</strong> — All our products and recommendations are grounded in evidence-based research. We prioritize proven methods over trends and ensure our solutions deliver real results.<br><br>
+                  <strong style="color: var(--text-primary);">Authenticity</strong> — We practice what we preach. Our team embodies the healthy lifestyle we promote, and we're honest about both successes and challenges in the wellness journey.<br><br>
+                  <strong style="color: var(--text-primary);">Inclusivity</strong> — Wellness looks different for everyone. We create solutions that work for diverse bodies, lifestyles, and goals without judgment or one-size-fits-all approaches.<br><br>
+                  <strong style="color: var(--text-primary);">Continuous Growth</strong> — Just like fitness, we believe in constant improvement. We actively seek feedback, embrace innovation, and evolve our products and services based on customer needs and scientific advances.<br><br>
+                  <strong style="color: var(--text-primary);">Community</strong> — We foster supportive relationships between our team members and with our customers, creating an environment where everyone feels encouraged to pursue their best selves.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== OPTION B ===== -->
+  <div class="browser-frame" id="option-b">
+    <div class="browser-bar">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">app.ascenta.ai / strategy-studio / foundation</div>
+    </div>
+    <div class="app-layout">
+      <!-- Sidebar (same) -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <span class="sidebar-logo-text">ASCENTA</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.6);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+          </a>
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.6);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            Compass
+          </a>
+          <div class="sidebar-divider"></div>
+          <a class="sidebar-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color: #6688bb;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Strategy Studio
+          </a>
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.45);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+            Grow
+          </a>
+          <a class="sidebar-item" style="color: rgba(255,255,255,0.45);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Care
+          </a>
+        </nav>
+      </div>
+
+      <div class="main-area">
+        <div class="top-header">
+          <div class="top-header-left">
+            <div class="top-header-avatar">SC</div>
+            <span class="top-header-company">StoneCyber</span>
+          </div>
+          <div class="top-header-right">
+            <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+            <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-row">
+          <div class="tab-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+            Foundation
+          </div>
+          <div class="tab-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+            Strategy
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-scroll">
+          <div class="content-inner">
+            <div class="page-header">
+              <div>
+                <div class="page-title">Our Foundation</div>
+                <div class="page-meta">Published March 30, 2026</div>
+              </div>
+              <button class="edit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                Edit
+              </button>
+            </div>
+
+            <!-- Option B: Editorial card -->
+            <div class="editorial-card">
+              <div class="editorial-hero">
+                <div class="editorial-hero-eyebrow">Company Foundation</div>
+                <div class="editorial-hero-title">StoneCyber</div>
+                <div class="editorial-hero-meta">
+                  <span>Published March 30, 2026</span>
+                  <span class="dot"></span>
+                  <span>3 sections</span>
+                </div>
+              </div>
+
+              <div class="editorial-sections">
+                <div class="editorial-section">
+                  <div class="editorial-section-header">
+                    <div class="editorial-section-icon mission">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                    </div>
+                    <span class="editorial-section-title">Mission</span>
+                  </div>
+                  <div class="editorial-section-text">
+                    We empower people to achieve their fitness goals through innovative, science-backed nutrition and personalized wellness solutions. By making healthy living accessible, sustainable, and enjoyable, we help individuals transform their relationship with food and fitness to build stronger, more confident versions of themselves.
+                  </div>
+                </div>
+
+                <div class="editorial-section">
+                  <div class="editorial-section-header">
+                    <div class="editorial-section-icon vision">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <span class="editorial-section-title">Vision</span>
+                  </div>
+                  <div class="editorial-section-text">
+                    To become the leading trusted partner in personalized health and fitness, where every individual has the tools, knowledge, and support to reach their optimal wellness potential. We envision a world where healthy living is not a luxury, but an achievable lifestyle for everyone.
+                  </div>
+                </div>
+
+                <div class="editorial-section">
+                  <div class="editorial-section-header">
+                    <div class="editorial-section-icon values">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    </div>
+                    <span class="editorial-section-title">Values</span>
+                  </div>
+                  <div class="editorial-values-list">
+                    <div class="editorial-value-item">
+                      <div class="editorial-value-bullet"></div>
+                      <div class="editorial-value-content">
+                        <strong>Empowerment</strong> — We believe everyone has the potential to achieve their wellness goals. We provide the tools, education, and support to help people take control of their health journey.
+                      </div>
+                    </div>
+                    <div class="editorial-value-item">
+                      <div class="editorial-value-bullet"></div>
+                      <div class="editorial-value-content">
+                        <strong>Science-First</strong> — All our products and recommendations are grounded in evidence-based research. We prioritize proven methods over trends.
+                      </div>
+                    </div>
+                    <div class="editorial-value-item">
+                      <div class="editorial-value-bullet"></div>
+                      <div class="editorial-value-content">
+                        <strong>Authenticity</strong> — We practice what we preach. Our team embodies the healthy lifestyle we promote.
+                      </div>
+                    </div>
+                    <div class="editorial-value-item">
+                      <div class="editorial-value-bullet"></div>
+                      <div class="editorial-value-content">
+                        <strong>Inclusivity</strong> — Wellness looks different for everyone. We create solutions that work for diverse bodies, lifestyles, and goals.
+                      </div>
+                    </div>
+                    <div class="editorial-value-item">
+                      <div class="editorial-value-bullet"></div>
+                      <div class="editorial-value-content">
+                        <strong>Continuous Growth</strong> — Just like fitness, we believe in constant improvement.
+                      </div>
+                    </div>
+                    <div class="editorial-value-item">
+                      <div class="editorial-value-bullet"></div>
+                      <div class="editorial-value-content">
+                        <strong>Community</strong> — We foster supportive relationships, creating an environment where everyone feels encouraged to pursue their best selves.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">&#x1f4c4;</div>
+      <h4>Option A: Unified Document</h4>
+      <p>Clean and minimal. A single card with a subtle header bar, "Published" badge, and sections separated by light dividers. Section labels use accent-colored uppercase text. Reads like an internal document.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">&#x2728;</div>
+      <h4>Option B: Editorial Layout</h4>
+      <p>More personality. A hero header with company name and accent left-border. Each section has a unique colored icon (Mission=blue, Vision=teal, Values=mauve). Values are parsed into a bulleted list for better readability.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">&#x1f527;</div>
+      <h4>Shared Improvements</h4>
+      <p>Both options consolidate 3 separate cards into 1, remove the redundant "Our Foundation" label-in-card, and add better visual hierarchy. The page header with Edit button stays above the card in both.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showOption(opt) {
+    document.getElementById('option-a').classList.toggle('visible', opt === 'a');
+    document.getElementById('option-b').classList.toggle('visible', opt === 'b');
+    document.querySelectorAll('.option-tab').forEach((tab, i) => {
+      tab.classList.toggle('active', (i === 0 && opt === 'a') || (i === 1 && opt === 'b'));
+    });
+  }
+</script>
+
+</body>
+</html>
