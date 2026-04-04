@@ -25,7 +25,7 @@ export interface PageConversation {
   input: string;
 }
 
-export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note" | "build-mvv" | "strategy-breakdown";
+export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note" | "build-mvv" | "strategy-breakdown" | "performance-review";
 
 export interface WorkingDocumentState {
   isOpen: boolean;
