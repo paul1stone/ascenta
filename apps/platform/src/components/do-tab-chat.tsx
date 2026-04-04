@@ -91,11 +91,22 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
       const wd = parsed.workingDoc;
 
       if (wd.action === "open_working_document" && wd.workflowType) {
-        // Use current persona as source of truth for employee info
-        const employeeId = persona?.id ?? wd.employeeId ?? "";
-        const employeeName = persona
-          ? `${persona.firstName} ${persona.lastName}`
-          : wd.employeeName ?? "";
+        // Use AI-provided employee info if valid, otherwise fall back to current persona
+        const aiEmployeeId = wd.employeeId ?? "";
+        const aiEmployeeName = wd.employeeName ?? "";
+        const hasValidAiEmployee =
+          aiEmployeeId &&
+          aiEmployeeId !== "CURRENT_USER" &&
+          aiEmployeeName &&
+          !aiEmployeeName.toLowerCase().includes("current user");
+        const employeeId = hasValidAiEmployee
+          ? aiEmployeeId
+          : persona?.id ?? "";
+        const employeeName = hasValidAiEmployee
+          ? aiEmployeeName
+          : persona
+            ? `${persona.firstName} ${persona.lastName}`
+            : "";
         const prefilled = {
           ...(wd.prefilled ?? {}),
           employeeId,
