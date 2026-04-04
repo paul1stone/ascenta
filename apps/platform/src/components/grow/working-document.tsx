@@ -9,6 +9,7 @@ import { CheckInForm } from "@/components/grow/forms/check-in-form";
 import { PerformanceNoteForm } from "@/components/grow/forms/performance-note-form";
 import { MVVForm } from "@/components/plan/mvv-form";
 import { StrategyBriefPanel } from "@/components/strategy/strategy-brief-panel";
+import { PerformanceReviewForm } from "./forms/performance-review-form";
 
 // ---------------------------------------------------------------------------
 // Title mapping
@@ -20,6 +21,7 @@ const WORKFLOW_TITLES: Record<WorkflowType, string> = {
   "add-performance-note": "Performance Note",
   "build-mvv": "Mission, Vision & Values",
   "strategy-breakdown": "Strategy Brief",
+  "performance-review": "Performance Review",
 };
 
 // ---------------------------------------------------------------------------
@@ -132,6 +134,17 @@ export function WorkingDocument({ pageKey, accentColor }: WorkingDocumentProps) 
               initialValues={workingDocument.fields}
               onCancel={closeWorkingDocument}
               accentColor={color}
+            />
+          )}
+
+          {workingDocument.workflowType === "performance-review" && (
+            <PerformanceReviewForm
+              initialValues={workingDocument.fields}
+              onFieldChange={updateWorkingDocumentField}
+              onCancel={closeWorkingDocument}
+              reviewId={workingDocument.runId ?? ""}
+              employeeId={workingDocument.employeeId ?? ""}
+              employeeName={workingDocument.employeeName ?? ""}
             />
           )}
         </div>
