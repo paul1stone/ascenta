@@ -93,6 +93,8 @@ export async function POST(req: NextRequest) {
       data.customEndDate,
     );
 
+    const skipReview = body.createdByRole === "hr" || body.createdByRole === "manager";
+
     const goal = await Goal.create({
       title: data.title,
       description: data.description,
@@ -101,8 +103,10 @@ export async function POST(req: NextRequest) {
       successMetric: data.successMetric,
       timePeriod,
       checkInCadence: data.checkInCadence,
-      alignment: data.alignment,
-      status: "on_track",
+      strategyGoalId: data.strategyGoalId || null,
+      notes: data.notes || "",
+      status: skipReview ? "on_track" : "pending_review",
+      managerApproved: skipReview,
       owner: employee.id,
       manager: employee.id,
       workflowRunId: effectiveRunId,
@@ -141,6 +145,63 @@ export async function POST(req: NextRequest) {
     console.error("Grow goals API error:", message);
     return NextResponse.json(
       { success: false, error: "Failed to create goal" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    await connectDB();
+
+    const body = await req.json();
+    const { goalId, action } = body;
+
+    if (!goalId || !action) {
+      return NextResponse.json(
+        { success: false, error: "goalId and action are required" },
+        { status: 400 },
+      );
+    }
+
+    const goal = await Goal.findById(goalId);
+    if (!goal) {
+      return NextResponse.json(
+        { success: false, error: "Goal not found" },
+        { status: 404 },
+      );
+    }
+
+    if (action === "approve") {
+      goal.status = "on_track";
+      goal.managerApproved = true;
+      await goal.save();
+
+      return NextResponse.json({
+        success: true,
+        message: "Goal approved and activated.",
+      });
+    }
+
+    if (action === "request_changes") {
+      goal.managerApproved = false;
+      await goal.save();
+
+      return NextResponse.json({
+        success: true,
+        message: "Changes requested. Employee will be notified.",
+      });
+    }
+
+    return NextResponse.json(
+      { success: false, error: "Invalid action" },
+      { status: 400 },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Grow goals PATCH error:", message);
+    return NextResponse.json(
+      { success: false, error: "Failed to update goal" },
       { status: 500 },
     );
   }
