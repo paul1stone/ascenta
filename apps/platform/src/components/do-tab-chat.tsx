@@ -91,12 +91,22 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
       const wd = parsed.workingDoc;
 
       if (wd.action === "open_working_document" && wd.workflowType) {
+        // Use current persona as source of truth for employee info
+        const employeeId = persona?.id ?? wd.employeeId ?? "";
+        const employeeName = persona
+          ? `${persona.firstName} ${persona.lastName}`
+          : wd.employeeName ?? "";
+        const prefilled = {
+          ...(wd.prefilled ?? {}),
+          employeeId,
+          employeeName,
+        };
         openWorkingDocument(
           wd.workflowType as WorkflowType,
           wd.runId,
-          wd.employeeId ?? "",
-          wd.employeeName ?? "",
-          wd.prefilled ?? {},
+          employeeId,
+          employeeName,
+          prefilled,
           wd.availableGoals,
         );
       } else if (wd.action === "update_working_document" && wd.updates) {
