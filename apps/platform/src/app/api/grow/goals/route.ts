@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import { connectDB } from "@ascenta/db";
 import { Goal } from "@ascenta/db/goal-schema";
 import { CheckIn } from "@ascenta/db/checkin-schema";
@@ -83,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     // Support both MongoDB ObjectId and EMP-style employee IDs
     let employee = await getEmployeeByEmployeeId(data.employeeId);
-    if (!employee && mongoose.Types.ObjectId.isValid(data.employeeId)) {
+    if (!employee && data.employeeId.match(/^[0-9a-fA-F]{24}$/)) {
       const doc = await Employee.findById(data.employeeId);
       if (doc) {
         employee = { id: String(doc._id), employeeId: doc.employeeId } as unknown as typeof employee;
