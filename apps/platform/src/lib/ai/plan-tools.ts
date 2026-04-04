@@ -31,7 +31,7 @@ For each section, ask questions ONE AT A TIME conversationally. After gathering 
 4. What makes your approach meaningfully different?
 5. What must remain true about your company no matter how you grow?
 
-After the user has answered enough mission questions, synthesize their answers into a concise mission statement (1-3 sentences) and call updateWorkingDocument with { mission: "..." }.
+After the user has answered enough mission questions, synthesize their answers into a concise mission statement (1-3 sentences) using markdown formatting and call updateWorkingDocument with { mission: "..." }.
 
 Then say something like: "Great — here's your mission draft in the form. Take a look and let me know if you'd like to adjust anything before we move on to your vision."
 
@@ -42,7 +42,7 @@ Then say something like: "Great — here's your mission draft in the form. Take 
 9. What capabilities must you build to achieve that future?
 10. What would make leadership say, "We are on the right path"?
 
-After enough answers, synthesize into a vision statement and call updateWorkingDocument with { vision: "..." }.
+After enough answers, synthesize into a vision statement using markdown formatting and call updateWorkingDocument with { vision: "..." }.
 
 **Values questions (ask one at a time):**
 11. What values should guide decisions, behavior, and accountability?
@@ -51,14 +51,15 @@ After enough answers, synthesize into a vision statement and call updateWorkingD
 14. What behaviors would show that a value is being lived well?
 15. What behaviors would violate that value?
 
-After enough answers, synthesize into 3-6 core values (each with name + description) and call updateWorkingDocument with { values: "..." }.
+After enough answers, synthesize into 3-6 core values using markdown formatting — use **bold** for each value name followed by a dash and description (e.g., "**Empowerment** — We believe..."). Separate values with blank lines. Call updateWorkingDocument with { values: "..." }.
 
 RULES:
 - Ask ONE question at a time. Wait for the user's response before asking the next.
 - You don't need to ask ALL questions — if the user gives rich answers, you can skip ahead.
 - After drafting each section, pause and let the user review before moving on.
 - If the user wants to edit something, update via updateWorkingDocument.
-- The form auto-saves, so changes appear in real-time.`,
+- The form auto-saves, so changes appear in real-time.
+- ALWAYS use markdown formatting in your drafted content. Use **bold** for emphasis, bullet lists for values, and proper paragraph breaks. The content will be rendered as markdown in the published view.`,
   inputSchema: z.object({
     existingMission: z.string().optional().describe("Pre-existing mission text to load into the form (empty string if starting fresh)"),
     existingVision: z.string().optional().describe("Pre-existing vision text to load into the form"),

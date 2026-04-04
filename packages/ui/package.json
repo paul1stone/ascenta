@@ -42,6 +42,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cmdk": "^1.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
