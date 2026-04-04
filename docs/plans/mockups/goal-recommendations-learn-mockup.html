@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Goal Recommendations from Learn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --accent: #44aa99;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-mid: color-mix(in srgb, var(--accent) 25%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 20%, transparent);
+    --plan-color: #6688bb;
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --header-h: 56px;
+    --sidebar-w: 220px;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .mockup-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .mockup-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  .app-layout { display: flex; height: 780px; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-logo {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--deep-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-logo-icon svg { color: var(--white); }
+  .sidebar-logo-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--deep-blue);
+  }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .sidebar-item.active {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-divider { margin: 4px 12px; border-bottom: 1px solid var(--border); }
+
+  .sidebar-sub {
+    display: block;
+    padding: 6px 14px 6px 42px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: default;
+    white-space: nowrap;
+  }
+  .sidebar-sub.active {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .top-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .top-header-left { display: flex; align-items: center; gap: 10px; }
+  .top-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--deep-blue);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .top-header-company {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .top-header-right { display: flex; align-items: center; gap: 4px; }
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .header-icon-btn svg { width: 16px; height: 16px; }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+  .main-content {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* ================================================================
+     TAB BAR — Learn / Do / Status
+     ================================================================ */
+  .tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .tab-item {
+    padding: 12px 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    cursor: default;
+    transition: all 0.15s;
+  }
+  .tab-item.active {
+    color: var(--accent);
+    font-weight: 700;
+    border-bottom-color: var(--accent);
+  }
+  .tab-item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-left: 6px;
+  }
+
+  /* ================================================================
+     LEARN CONTENT — Sources + Recommendations
+     ================================================================ */
+  .learn-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px;
+    gap: 20px;
+  }
+
+  /* Employee context bar */
+  .employee-context {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    animation: fadeUp 0.4s ease;
+  }
+  .employee-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--deep-blue)));
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .employee-info { flex: 1; }
+  .employee-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .employee-role {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 1px;
+  }
+  .employee-tag {
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* Two-column sources + recommendations */
+  .content-columns {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Left: Sources panel */
+  .sources-panel {
+    width: 340px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: fadeUp 0.5s ease;
+  }
+  .source-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .source-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .source-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .source-card-icon svg { width: 14px; height: 14px; }
+  .source-card-icon.mvv { background: rgba(68, 170, 153, 0.12); color: var(--accent); }
+  .source-card-icon.jd { background: rgba(102, 136, 187, 0.12); color: var(--plan-color); }
+  .source-card-icon.strategy { background: rgba(255, 107, 53, 0.12); color: var(--summit); }
+  .source-card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .source-card-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .source-card-badge {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--accent) 8%, white);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  .source-card-body {
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .source-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .source-item-bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .source-item-bullet.green { background: var(--accent); }
+  .source-item-bullet.blue { background: var(--plan-color); }
+  .source-item-bullet.orange { background: var(--summit); }
+  .source-item-text { flex: 1; }
+  .source-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  /* Right: Recommendations panel */
+  .recommendations-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    animation: fadeUp 0.6s ease;
+  }
+  .recs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .recs-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .recs-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--summit) 10%, transparent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .recs-title-icon svg { width: 14px; height: 14px; color: var(--accent); }
+  .recs-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .recs-actions { display: flex; gap: 8px; }
+  .recs-action-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text-secondary);
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .recs-action-btn svg { width: 13px; height: 13px; }
+  .recs-action-btn.primary {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  /* Goal recommendation card */
+  .goal-rec-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .goal-rec-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-border);
+  }
+  .goal-rec-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .goal-rec-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .goal-rec-checkbox.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .goal-rec-checkbox.checked svg { color: var(--white); }
+  .goal-rec-content { flex: 1; min-width: 0; }
+  .goal-rec-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .goal-rec-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .goal-rec-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .goal-tag {
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .goal-tag.source-mvv {
+    background: rgba(68, 170, 153, 0.1);
+    color: #2d8a7a;
+    border: 1px solid rgba(68, 170, 153, 0.2);
+  }
+  .goal-tag.source-jd {
+    background: rgba(102, 136, 187, 0.1);
+    color: #4a6b9a;
+    border: 1px solid rgba(102, 136, 187, 0.2);
+  }
+  .goal-tag.source-strategy {
+    background: rgba(255, 107, 53, 0.1);
+    color: #c45520;
+    border: 1px solid rgba(255, 107, 53, 0.2);
+  }
+  .goal-tag.category {
+    background: var(--glacier);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .goal-rec-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .goal-rec-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .goal-rec-btn svg { width: 12px; height: 12px; }
+  .goal-rec-btn.create {
+    background: var(--accent);
+    color: var(--white);
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  .goal-rec-btn.chat {
+    background: var(--glacier);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  /* Confidence indicator */
+  .confidence {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .confidence-bar {
+    height: 4px;
+    border-radius: 2px;
+    flex: 1;
+    max-width: 80px;
+    background: var(--border-light);
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .confidence-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Divider with label */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+  }
+  .section-divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-divider-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Open-ended prompt card */
+  .open-ended-card {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--summit) 4%, white), color-mix(in srgb, var(--accent) 4%, white));
+    border: 1px dashed color-mix(in srgb, var(--summit) 30%, var(--border));
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: default;
+    transition: all 0.2s;
+  }
+  .open-ended-card:hover {
+    border-color: var(--summit);
+    box-shadow: 0 2px 12px rgba(255, 107, 53, 0.08);
+  }
+  .open-ended-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 107, 53, 0.1);
+    color: var(--summit);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .open-ended-icon svg { width: 18px; height: 18px; }
+  .open-ended-content { flex: 1; }
+  .open-ended-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 2px;
+  }
+  .open-ended-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .open-ended-arrow {
+    color: var(--summit);
+    flex-shrink: 0;
+  }
+  .open-ended-arrow svg { width: 18px; height: 18px; }
+
+  /* Flow indicator */
+  .flow-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: color-mix(in srgb, var(--accent) 5%, white);
+    border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 11px;
+  }
+  .flow-step.plan { color: var(--plan-color); }
+  .flow-step.grow { color: var(--accent); }
+  .flow-step.summit { color: var(--summit); }
+  .flow-arrow {
+    color: var(--text-muted);
+  }
+  .flow-arrow svg { width: 14px; height: 14px; }
+
+  /* ================================================================
+     ANNOTATION CARDS
+     ================================================================ */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.accent { background: var(--accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Grow — Feature Proposal</div>
+  <div class="mockup-title">Goal Recommendations from Learn</div>
+  <div class="mockup-subtitle">
+    The Learn tab aggregates company mission/vision/values, job descriptions, and Strategy Studio insights to generate personalized goal recommendations. Selected goals flow into the Do tab for creation — either as pre-filled recommendations or open-ended prompts.
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">app.ascenta.ai / grow / performance</div>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <span class="sidebar-logo-text">ASCENTA</span>
+        </div>
+        <nav class="sidebar-nav">
+          <!-- Home -->
+          <div class="sidebar-item" style="color: var(--text-secondary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Home
+          </div>
+          <div class="sidebar-divider"></div>
+
+          <!-- Plan -->
+          <div class="sidebar-item" style="color: #6688bb;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Plan
+          </div>
+
+          <!-- Attract -->
+          <div class="sidebar-item" style="color: #aa8866;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#aa8866" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Attract
+          </div>
+
+          <!-- Launch -->
+          <div class="sidebar-item" style="color: #bb6688;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#bb6688" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            Launch
+          </div>
+
+          <!-- Grow (active) -->
+          <div class="sidebar-item active" style="border-left-color: #44aa99; background: rgba(68, 170, 153, 0.08);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>
+            Grow
+          </div>
+          <a class="sidebar-sub active" style="background: rgba(68, 170, 153, 0.07);">Performance System</a>
+          <a class="sidebar-sub">Coaching & Corrective Action</a>
+          <a class="sidebar-sub">Learning & Development</a>
+          <a class="sidebar-sub">Leadership Library</a>
+
+          <!-- Care -->
+          <div class="sidebar-item" style="color: #cc6677;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#cc6677" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Care
+          </div>
+
+          <!-- Protect -->
+          <div class="sidebar-item" style="color: #8888aa;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8888aa" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+            Protect
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Area -->
+      <div class="main-area">
+        <!-- Top Header -->
+        <div class="top-header">
+          <div class="top-header-left">
+            <div class="top-header-avatar">SC</div>
+            <span class="top-header-company">StoneCyber</span>
+          </div>
+          <div class="top-header-right">
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Bar: Learn / Do / Status -->
+        <div class="tab-bar">
+          <div class="tab-item active">
+            Learn
+            <span class="tab-item-badge">3</span>
+          </div>
+          <div class="tab-item">Do</div>
+          <div class="tab-item">Status</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+          <div class="learn-layout">
+
+            <!-- Employee context bar -->
+            <div class="employee-context">
+              <div class="employee-avatar">MR</div>
+              <div class="employee-info">
+                <div class="employee-name">Maria Rodriguez</div>
+                <div class="employee-role">Senior Software Engineer &middot; Engineering &middot; 2.3 yrs</div>
+              </div>
+              <div class="employee-tag">Q2 2026 Goals</div>
+            </div>
+
+            <!-- Flow indicator -->
+            <div class="flow-indicator">
+              <div class="flow-step plan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Strategy Studio
+              </div>
+              <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+              <div class="flow-step grow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Learn (MVV + JD + Strategy)
+              </div>
+              <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+              <div class="flow-step grow" style="font-weight: 700;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Goal Recommendations
+              </div>
+              <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+              <div class="flow-step summit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/></svg>
+                Do &rarr; Create Goals
+              </div>
+            </div>
+
+            <!-- Two-column layout -->
+            <div class="content-columns">
+
+              <!-- Left: Source inputs -->
+              <div class="sources-panel">
+                <div class="source-label">Source Inputs</div>
+
+                <!-- Mission, Vision, Values card -->
+                <div class="source-card">
+                  <div class="source-card-header">
+                    <div class="source-card-icon mvv">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+                    </div>
+                    <div>
+                      <div class="source-card-title">Mission, Vision & Values</div>
+                      <div class="source-card-subtitle">StoneCyber Organization</div>
+                    </div>
+                    <div class="source-card-badge">Org</div>
+                  </div>
+                  <div class="source-card-body">
+                    <div class="source-item">
+                      <div class="source-item-bullet green"></div>
+                      <div class="source-item-text"><strong style="color: var(--accent); font-weight: 600;">Mission:</strong> Protect enterprises from evolving cyber threats through intelligent, adaptive security solutions.</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet green"></div>
+                      <div class="source-item-text"><strong style="color: var(--accent); font-weight: 600;">Vision:</strong> A world where every organization operates with confidence in their digital security posture.</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet green"></div>
+                      <div class="source-item-text"><strong style="color: var(--accent); font-weight: 600;">Values:</strong> Customer obsession, relentless innovation, transparency in security, team-first collaboration.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Job Description card -->
+                <div class="source-card">
+                  <div class="source-card-header">
+                    <div class="source-card-icon jd">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+                    </div>
+                    <div>
+                      <div class="source-card-title">Job Description</div>
+                      <div class="source-card-subtitle">Sr. Software Engineer</div>
+                    </div>
+                    <div class="source-card-badge">Role</div>
+                  </div>
+                  <div class="source-card-body">
+                    <div class="source-item">
+                      <div class="source-item-bullet blue"></div>
+                      <div class="source-item-text">Design and implement scalable microservices for the threat detection platform</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet blue"></div>
+                      <div class="source-item-text">Mentor junior engineers and lead code reviews across 2 squads</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet blue"></div>
+                      <div class="source-item-text">Own incident response tooling and reduce mean-time-to-detect</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet blue"></div>
+                      <div class="source-item-text">Collaborate with product on technical roadmap and feasibility</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Strategy Studio card -->
+                <div class="source-card">
+                  <div class="source-card-header">
+                    <div class="source-card-icon strategy">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    </div>
+                    <div>
+                      <div class="source-card-title">Strategy Studio</div>
+                      <div class="source-card-subtitle">Q2 2026 Engineering OKRs</div>
+                    </div>
+                    <div class="source-card-badge" style="background: rgba(255, 107, 53, 0.08); color: var(--summit); border-color: rgba(255, 107, 53, 0.15);">Plan</div>
+                  </div>
+                  <div class="source-card-body">
+                    <div class="source-item">
+                      <div class="source-item-bullet orange"></div>
+                      <div class="source-item-text">Reduce P1 incident MTTD from 12min to &lt;5min by end of Q2</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet orange"></div>
+                      <div class="source-item-text">Ship v2 threat intelligence API to 3 enterprise customers</div>
+                    </div>
+                    <div class="source-item">
+                      <div class="source-item-bullet orange"></div>
+                      <div class="source-item-text">Increase engineering team velocity by 20% through tooling improvements</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Recommendations -->
+              <div class="recommendations-panel">
+                <div>
+                  <div class="recs-header">
+                    <div>
+                      <div class="recs-title">
+                        <div class="recs-title-icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+                        </div>
+                        AI Goal Recommendations
+                      </div>
+                      <div class="recs-subtitle">5 recommendations based on MVV, job description, and Q2 strategy</div>
+                    </div>
+                    <div class="recs-actions">
+                      <button class="recs-action-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+                        Regenerate
+                      </button>
+                      <button class="recs-action-btn primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        Send 2 to Do
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recommendation 1 (checked) -->
+                <div class="goal-rec-card" style="border-color: var(--accent-border); background: color-mix(in srgb, var(--accent) 2%, white);">
+                  <div class="goal-rec-top">
+                    <div class="goal-rec-checkbox checked">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="goal-rec-content">
+                      <div class="goal-rec-title">Reduce Threat Detection MTTD to Under 5 Minutes</div>
+                      <div class="goal-rec-desc">Redesign the anomaly correlation pipeline to process threat signals in parallel, targeting a P1 mean-time-to-detect of &lt;5min. Aligns with Q2 engineering OKR and your ownership of incident response tooling.</div>
+                      <div class="goal-rec-tags">
+                        <span class="goal-tag source-strategy">Strategy Studio</span>
+                        <span class="goal-tag source-jd">Job Description</span>
+                        <span class="goal-tag category">Performance</span>
+                      </div>
+                      <div class="confidence">
+                        <div class="confidence-bar"><div class="confidence-fill" style="width: 92%;"></div></div>
+                        <span class="confidence-label">92% match</span>
+                      </div>
+                    </div>
+                    <div class="goal-rec-actions">
+                      <button class="goal-rec-btn create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recommendation 2 (checked) -->
+                <div class="goal-rec-card" style="border-color: var(--accent-border); background: color-mix(in srgb, var(--accent) 2%, white);">
+                  <div class="goal-rec-top">
+                    <div class="goal-rec-checkbox checked">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="goal-rec-content">
+                      <div class="goal-rec-title">Mentor 2 Junior Engineers Through Technical Design Reviews</div>
+                      <div class="goal-rec-desc">Establish a bi-weekly design review cadence for juniors on your squads, with each mentee independently owning a system design doc by end of Q2. Supports team-first collaboration and your mentorship responsibilities.</div>
+                      <div class="goal-rec-tags">
+                        <span class="goal-tag source-mvv">Mission & Values</span>
+                        <span class="goal-tag source-jd">Job Description</span>
+                        <span class="goal-tag category">Development</span>
+                      </div>
+                      <div class="confidence">
+                        <div class="confidence-bar"><div class="confidence-fill" style="width: 88%;"></div></div>
+                        <span class="confidence-label">88% match</span>
+                      </div>
+                    </div>
+                    <div class="goal-rec-actions">
+                      <button class="goal-rec-btn create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recommendation 3 (unchecked) -->
+                <div class="goal-rec-card">
+                  <div class="goal-rec-top">
+                    <div class="goal-rec-checkbox"></div>
+                    <div class="goal-rec-content">
+                      <div class="goal-rec-title">Ship Threat Intelligence API v2 to First Enterprise Customer</div>
+                      <div class="goal-rec-desc">Lead the backend implementation for the v2 API, including rate limiting, audit logging, and customer onboarding tooling. Directly maps to the Q2 enterprise delivery target.</div>
+                      <div class="goal-rec-tags">
+                        <span class="goal-tag source-strategy">Strategy Studio</span>
+                        <span class="goal-tag source-mvv">Mission</span>
+                        <span class="goal-tag category">Delivery</span>
+                      </div>
+                      <div class="confidence">
+                        <div class="confidence-bar"><div class="confidence-fill" style="width: 85%;"></div></div>
+                        <span class="confidence-label">85% match</span>
+                      </div>
+                    </div>
+                    <div class="goal-rec-actions">
+                      <button class="goal-rec-btn chat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                        Refine
+                      </button>
+                      <button class="goal-rec-btn create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recommendation 4 (unchecked) -->
+                <div class="goal-rec-card">
+                  <div class="goal-rec-top">
+                    <div class="goal-rec-checkbox"></div>
+                    <div class="goal-rec-content">
+                      <div class="goal-rec-title">Improve CI/CD Pipeline Reliability to 99.5% Pass Rate</div>
+                      <div class="goal-rec-desc">Identify and fix the top 5 flaky tests, add build caching, and reduce avg. pipeline time by 30%. Drives the 20% velocity improvement OKR through tooling excellence.</div>
+                      <div class="goal-rec-tags">
+                        <span class="goal-tag source-strategy">Strategy Studio</span>
+                        <span class="goal-tag source-jd">Job Description</span>
+                        <span class="goal-tag category">Operational</span>
+                      </div>
+                      <div class="confidence">
+                        <div class="confidence-bar"><div class="confidence-fill" style="width: 78%;"></div></div>
+                        <span class="confidence-label">78% match</span>
+                      </div>
+                    </div>
+                    <div class="goal-rec-actions">
+                      <button class="goal-rec-btn chat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                        Refine
+                      </button>
+                      <button class="goal-rec-btn create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider: Open-ended -->
+                <div class="section-divider">
+                  <div class="section-divider-line"></div>
+                  <div class="section-divider-label">Or create your own</div>
+                  <div class="section-divider-line"></div>
+                </div>
+
+                <!-- Open-ended goal creation card -->
+                <div class="open-ended-card">
+                  <div class="open-ended-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                  </div>
+                  <div class="open-ended-content">
+                    <div class="open-ended-title">Create a Custom Goal with AI Assistance</div>
+                    <div class="open-ended-desc">Open the Do tab to describe a goal in your own words. The AI will use the same MVV, JD, and strategy context to help structure and refine it.</div>
+                  </div>
+                  <div class="open-ended-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation Cards -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2" width="16" height="16"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+      </div>
+      <h4>Three Source Inputs</h4>
+      <p>The Learn tab aggregates company MVV, the employee's job description, and Strategy Studio OKRs into a unified context. This ensures goal recommendations are grounded in both organizational direction and role-specific expectations.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" width="16" height="16"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+      </div>
+      <h4>AI-Powered Recommendations</h4>
+      <p>Each recommendation shows which sources informed it (color-coded tags), a confidence score, and a brief rationale. Managers can select multiple recommendations to batch-send to the Do tab for full goal creation.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" width="16" height="16"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      </div>
+      <h4>Learn &rarr; Do Flow</h4>
+      <p>Selected recommendations pre-fill the goal creation form in the Do tab. The "Create a Custom Goal" option opens the Do chat with the same context injected, so open-ended goals still benefit from MVV, JD, and strategy awareness.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <h4>Strategy Studio Bridge</h4>
+      <p>The Plan &rarr; Grow connection is explicit: Strategy Studio OKRs from the Plan section are surfaced as a source alongside MVV and JD. This closes the loop between organizational strategy and individual goal-setting.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

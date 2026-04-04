@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Strategy Studio AI Translation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --accent: #6688bb;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-mid: color-mix(in srgb, var(--accent) 25%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 20%, transparent);
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --header-h: 56px;
+    --sidebar-w: 220px;
+    --radius: 10px;
+    --grow-teal: #44aa99;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .mockup-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .mockup-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  .app-layout { display: flex; height: 780px; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-logo {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--deep-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-logo-icon svg { color: var(--white); }
+  .sidebar-logo-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--deep-blue);
+  }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .sidebar-item.active {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-divider { margin: 4px 12px; border-bottom: 1px solid var(--border); }
+
+  .sidebar-sub {
+    display: block;
+    padding: 6px 14px 6px 42px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: default;
+    white-space: nowrap;
+  }
+  .sidebar-sub.active {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .top-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .top-header-left { display: flex; align-items: center; gap: 10px; }
+  .top-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--deep-blue);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .top-header-company {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .top-header-right { display: flex; align-items: center; gap: 4px; }
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .header-icon-btn svg { width: 16px; height: 16px; }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-y: auto;
+    padding: 24px 28px;
+    animation: fadeUp 0.4s ease-out;
+  }
+
+  /* ================================================================
+     STEPPER
+     ================================================================ */
+  .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 28px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+    background: var(--white);
+    color: var(--text-muted);
+  }
+  .step-circle.completed {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--white);
+  }
+  .step-circle.active {
+    background: var(--white);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .step-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .step-label.completed { color: var(--text-secondary); }
+  .step-label.active { color: var(--accent); font-weight: 600; }
+  .step-connector {
+    width: 40px;
+    height: 2px;
+    background: var(--border);
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+  .step-connector.completed { background: var(--accent); }
+
+  /* ================================================================
+     HEADER TEXT
+     ================================================================ */
+  .section-heading {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  /* ================================================================
+     TRANSLATION CARDS
+     ================================================================ */
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .translation-card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .translation-card-header {
+    padding: 14px 16px;
+    color: var(--white);
+  }
+  .translation-card-header h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .translation-card-header p {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.85;
+  }
+  .translation-card-body {
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .translation-card-body .field-label {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text-primary);
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  .translation-card-body .field-label:first-child { margin-top: 0; }
+  .translation-card-body .field-value {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .translation-card-body ul {
+    margin: 4px 0 0 16px;
+    padding: 0;
+    list-style: disc;
+  }
+  .translation-card-body ul li {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 3px;
+  }
+
+  /* Warning callout */
+  .warning-callout {
+    margin-top: 4px;
+    padding: 8px 10px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.45;
+  }
+
+  /* Coaching prompts speech bubble style */
+  .coaching-prompt {
+    position: relative;
+    padding: 8px 12px;
+    background: var(--glacier);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    line-height: 1.45;
+    font-style: italic;
+  }
+  .coaching-prompt::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    bottom: -5px;
+    width: 8px;
+    height: 8px;
+    background: var(--glacier);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transform: rotate(45deg);
+  }
+
+  /* Goal template chips */
+  .goal-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .goal-chip {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #0d6958;
+    background: rgba(68, 170, 153, 0.12);
+    border: 1px solid rgba(68, 170, 153, 0.2);
+    white-space: nowrap;
+  }
+
+  /* Italic description */
+  .ideal-behavior {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  /* ================================================================
+     FLOW BANNER
+     ================================================================ */
+  .flow-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(68, 170, 153, 0.06), rgba(102, 136, 187, 0.06));
+    border: 1px solid rgba(68, 170, 153, 0.18);
+    margin-bottom: 20px;
+  }
+  .flow-banner-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(68, 170, 153, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--grow-teal);
+  }
+  .flow-banner-icon svg { width: 16px; height: 16px; }
+  .flow-banner-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .flow-banner-badges {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .flow-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0d6958;
+    background: rgba(68, 170, 153, 0.12);
+    border: 1px solid rgba(68, 170, 153, 0.2);
+  }
+
+  /* ================================================================
+     FOOTER BUTTONS
+     ================================================================ */
+  .page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .btn {
+    padding: 10px 24px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: default;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--white);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .btn-ghost { background: none; color: var(--text-secondary); }
+
+  /* ================================================================
+     ANNOTATION CARDS
+     ================================================================ */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.accent { background: var(--accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ================================================================
+     ANIMATION
+     ================================================================ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Plan — Feature Proposal</div>
+  <div class="mockup-title">Strategy Studio — AI Translation Layer</div>
+  <div class="mockup-subtitle">
+    AI converts company strategy into role-based language. Executives see capability needs, managers see coaching prompts, employees see goal templates — all from the same strategic input.
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">app.ascenta.ai / plan / strategy-studio / translation</div>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <span class="sidebar-logo-text">ASCENTA</span>
+        </div>
+        <nav class="sidebar-nav">
+          <!-- Home -->
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+          </div>
+          <div class="sidebar-divider"></div>
+
+          <!-- Plan (active, expanded) -->
+          <div class="sidebar-item active" style="border-left-color: #6688bb; background: #6688bb20">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Plan
+          </div>
+          <div class="sidebar-sub active" style="background: #6688bb18">Strategy Studio</div>
+          <div class="sidebar-sub">Org Design</div>
+          <div class="sidebar-sub">Workforce Planning</div>
+          <div class="sidebar-sub">Goals</div>
+
+          <!-- Grow -->
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Grow
+          </div>
+
+          <!-- Care -->
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Care
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Area -->
+      <div class="main-area">
+        <!-- Top Header -->
+        <div class="top-header">
+          <div class="top-header-left">
+            <div class="top-header-avatar">SC</div>
+            <span class="top-header-company">StoneCyber</span>
+          </div>
+          <div class="top-header-right">
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+
+          <!-- Stepper -->
+          <div class="stepper">
+            <div class="step">
+              <div class="step-circle completed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed">Mission &amp; Values</span>
+            </div>
+            <div class="step-connector completed"></div>
+            <div class="step">
+              <div class="step-circle completed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed">Strategic Priorities</span>
+            </div>
+            <div class="step-connector completed"></div>
+            <div class="step">
+              <div class="step-circle completed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed">Functional Translation</span>
+            </div>
+            <div class="step-connector completed"></div>
+            <div class="step">
+              <div class="step-circle active">4</div>
+              <span class="step-label active">AI Translation</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step">
+              <div class="step-circle">5</div>
+              <span class="step-label">Publish</span>
+            </div>
+          </div>
+
+          <!-- Header Text -->
+          <div class="section-heading">Strategy translated for every level</div>
+          <div class="section-subtitle">Based on your strategic priority: "Accelerate product-led growth through customer obsession"</div>
+
+          <!-- Three Cards -->
+          <div class="cards-row">
+
+            <!-- Card 1: Executive View -->
+            <div class="translation-card">
+              <div class="translation-card-header" style="background: #534AB7;">
+                <h3>Executive View</h3>
+                <p>Enterprise priorities and capability needs</p>
+              </div>
+              <div class="translation-card-body">
+                <div class="field-label">Strategic Priority:</div>
+                <div class="field-value">Product-Led Growth</div>
+
+                <div class="field-label">Capability Needs:</div>
+                <ul>
+                  <li>Customer analytics competency across product teams</li>
+                  <li>Cross-functional collaboration between Sales and Product</li>
+                  <li>Data-driven decision making at all levels</li>
+                </ul>
+
+                <div class="field-label">Success Metrics:</div>
+                <div class="field-value">NPS &gt; 70, Product adoption +25%, Time-to-value &lt; 14 days</div>
+
+                <div class="field-label">Risk Flags:</div>
+                <div class="warning-callout">Current gap in customer insights tooling; Sales-Product alignment at 42%</div>
+              </div>
+            </div>
+
+            <!-- Card 2: Manager View -->
+            <div class="translation-card">
+              <div class="translation-card-header" style="background: #085041;">
+                <h3>Manager View</h3>
+                <p>Team expectations and coaching prompts</p>
+              </div>
+              <div class="translation-card-body">
+                <div class="field-label">Team Focus Area:</div>
+                <div class="field-value">Customer-centric product delivery</div>
+
+                <div class="field-label">Coaching Prompts:</div>
+                <div style="margin-top: 6px;">
+                  <div class="coaching-prompt">"How are you incorporating customer feedback into sprint planning?"</div>
+                  <div class="coaching-prompt">"What customer outcomes is your team optimizing for?"</div>
+                  <div class="coaching-prompt">"Where is your team's customer obsession strongest? Weakest?"</div>
+                </div>
+
+                <div class="field-label">Expected Behaviors:</div>
+                <div class="field-value">Weekly customer signal reviews, Feature decisions tied to customer data, Cross-team collaboration scores &gt; 4.0</div>
+              </div>
+            </div>
+
+            <!-- Card 3: Employee View -->
+            <div class="translation-card">
+              <div class="translation-card-header" style="background: #085041;">
+                <h3>Employee View</h3>
+                <p>Role contribution and goal templates</p>
+              </div>
+              <div class="translation-card-body">
+                <div class="field-label">Your Role Contributes To:</div>
+                <div class="field-value">Product-Led Growth &rarr; Customer Obsession</div>
+
+                <div class="field-label">What Strong Alignment Looks Like:</div>
+                <div class="ideal-behavior">You proactively seek customer input before building, share customer insights in team standups, and measure your work's impact through customer outcomes — not just delivery velocity.</div>
+
+                <div class="field-label">Suggested Goal Templates:</div>
+                <div class="goal-chips">
+                  <span class="goal-chip">Reduce customer-reported bugs by 30%</span>
+                  <span class="goal-chip">Conduct 5 customer interviews this quarter</span>
+                  <span class="goal-chip">Build cross-functional feedback loop</span>
+                </div>
+
+                <div class="field-label">Decision Rights:</div>
+                <div class="field-value">You own customer experience for your feature area</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Flow Banner -->
+          <div class="flow-banner">
+            <div class="flow-banner-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
+            <div class="flow-banner-text">
+              This translation is stored as reference content &rarr; flows into Goal Creation, Check-ins, Performance Reviews, and Reflect
+            </div>
+            <div class="flow-banner-badges">
+              <span class="flow-badge">Goals</span>
+              <span class="flow-badge">Reviews</span>
+              <span class="flow-badge">Check-ins</span>
+              <span class="flow-badge">Reflect</span>
+            </div>
+          </div>
+
+          <!-- Footer Buttons -->
+          <div class="page-footer">
+            <button class="btn btn-ghost">&larr; Back to Functional Translation</button>
+            <button class="btn btn-primary">Save &amp; Connect to Grow &rarr;</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation Cards -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2" width="16" height="16"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </div>
+      <h4>Same Strategy, Three Languages</h4>
+      <p>One strategic input produces three tailored views. No re-entry, no manual translation — AI handles the cascade.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+      </div>
+      <h4>Not Generic AI</h4>
+      <p>Translations are grounded in your actual mission, values, and priorities. The AI references what leadership entered in Steps 1-3.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" width="16" height="16"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+      </div>
+      <h4>Editable Before Publishing</h4>
+      <p>Leadership reviews and adjusts AI-generated language before it becomes the reference layer for Grow workflows.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,166 @@
+<h2>Performance Review — Chat Flow & AI Tools</h2>
+<p class="subtitle">How Compass guides the manager through each step via working document</p>
+
+<div class="section">
+  <h3>AI Tools (4 new tools in grow-tools.ts)</h3>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+    <div style="background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 10px; padding: 16px;">
+      <div style="font-weight: 600; color: #44aa99; margin-bottom: 8px;">1. startPerformanceReview</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        <strong>Input:</strong> employeeName, employeeId, reviewPeriod<br>
+        <strong>Action:</strong> Creates PerformanceReview record, pulls goals/check-ins/notes/foundation for the period, pre-fills contribution suggestions<br>
+        <strong>Opens:</strong> Working doc at Step 2 (contributions form) with context sidebar
+      </div>
+    </div>
+
+    <div style="background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 10px; padding: 16px;">
+      <div style="font-weight: 600; color: #44aa99; margin-bottom: 8px;">2. generateReviewDraft</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        <strong>Input:</strong> reviewId (contributions already saved)<br>
+        <strong>Action:</strong> AI synthesizes pulled data + manager contributions into review sections, frames language around strategic pillars/values<br>
+        <strong>Opens:</strong> Working doc at Step 3 (draft preview, read-only)
+      </div>
+    </div>
+
+    <div style="background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 10px; padding: 16px;">
+      <div style="font-weight: 600; color: #44aa99; margin-bottom: 8px;">3. finalizeReview</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        <strong>Input:</strong> reviewId + edited sections<br>
+        <strong>Action:</strong> Copies draft → finalDocument with manager edits, sets status to "finalized", records signoff<br>
+        <strong>Opens:</strong> Working doc at Step 4 (editable final version)
+      </div>
+    </div>
+
+    <div style="background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 10px; padding: 16px;">
+      <div style="font-weight: 600; color: #44aa99; margin-bottom: 8px;">4. recommendNextGoals</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        <strong>Input:</strong> reviewId<br>
+        <strong>Action:</strong> AI analyzes review + current strategy to suggest 2-4 next-period goals with rationale<br>
+        <strong>Opens:</strong> Working doc at Step 5 (goal recommendations list with "Create Goal" handoff buttons)
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Chat Conversation Flow</h3>
+  <p class="subtitle">Manager says: "Start a performance review for Sarah Chen"</p>
+
+  <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 16px; max-width: 700px;">
+
+    <!-- Step 1 -->
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div style="min-width: 32px; height: 32px; background: #44aa99; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">1</div>
+      <div style="flex: 1; background: rgba(68,170,153,0.06); border-left: 3px solid #44aa99; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+        <div style="font-weight: 600; color: #e0e8f0; font-size: 14px;">Pull Context (automatic)</div>
+        <div style="font-size: 13px; color: #8a9bb5; margin-top: 4px;">
+          Compass calls <code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;">startPerformanceReview</code> → fetches goals, check-ins, notes, and foundation data for Sarah's review period. Opens working document with contributions form.
+        </div>
+        <div style="font-size: 12px; color: #44aa99; margin-top: 6px; font-style: italic;">
+          💬 "I've pulled Sarah's Q1 data — 4 goals (3 on track, 1 completed), 3 check-ins, and 2 performance notes. I've pre-filled what I can from the data. Please review the contributions section."
+        </div>
+      </div>
+    </div>
+
+    <div style="width: 2px; height: 16px; background: rgba(68,170,153,0.3); margin-left: 15px;"></div>
+
+    <!-- Step 2 -->
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div style="min-width: 32px; height: 32px; background: #44aa99; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">2</div>
+      <div style="flex: 1; background: rgba(68,170,153,0.06); border-left: 3px solid #44aa99; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+        <div style="font-weight: 600; color: #e0e8f0; font-size: 14px;">Manager Contributions (interactive)</div>
+        <div style="font-size: 13px; color: #8a9bb5; margin-top: 4px;">
+          Working doc shows: pre-filled strategic priorities & outcomes from goal data + empty fields for behaviors/additional context. Sidebar shows pulled goals, notes, and which pillars Sarah ladders to. Manager edits/completes the form, or asks Compass to help.
+        </div>
+        <div style="font-size: 12px; color: #44aa99; margin-top: 6px; font-style: italic;">
+          💬 Manager: "She also led the Q1 onboarding redesign" → Compass updates contributions via updateWorkingDocument
+        </div>
+      </div>
+    </div>
+
+    <div style="width: 2px; height: 16px; background: rgba(68,170,153,0.3); margin-left: 15px;"></div>
+
+    <!-- Step 3 -->
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div style="min-width: 32px; height: 32px; background: #44aa99; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">3</div>
+      <div style="flex: 1; background: rgba(68,170,153,0.06); border-left: 3px solid #44aa99; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+        <div style="font-weight: 600; color: #e0e8f0; font-size: 14px;">AI Drafts Review (generation)</div>
+        <div style="font-size: 13px; color: #8a9bb5; margin-top: 4px;">
+          Manager submits contributions → Compass calls <code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;">generateReviewDraft</code>. AI writes: summary, strengths & impact, areas for growth, strategic alignment narrative, overall assessment. Language tied to company pillars/values.
+        </div>
+        <div style="font-size: 12px; color: #44aa99; margin-top: 6px; font-style: italic;">
+          💬 "Here's the draft review. The strengths section highlights Sarah's contributions to our 'Customer Obsession' pillar through the onboarding redesign. Take a look and let me know what to adjust."
+        </div>
+      </div>
+    </div>
+
+    <div style="width: 2px; height: 16px; background: rgba(68,170,153,0.3); margin-left: 15px;"></div>
+
+    <!-- Step 4 -->
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div style="min-width: 32px; height: 32px; background: #44aa99; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">4</div>
+      <div style="flex: 1; background: rgba(68,170,153,0.06); border-left: 3px solid #44aa99; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+        <div style="font-weight: 600; color: #e0e8f0; font-size: 14px;">Manager Reviews & Finalizes (editable)</div>
+        <div style="font-size: 13px; color: #8a9bb5; margin-top: 4px;">
+          Working doc switches to editable mode — all draft sections become text areas. Manager can edit directly or ask Compass: "Make the growth section more specific about presentation skills." When satisfied, clicks Finalize.
+        </div>
+        <div style="font-size: 12px; color: #44aa99; margin-top: 6px; font-style: italic;">
+          💬 "Review finalized. You can download it as a PDF. Would you like to set next-period goals for Sarah?"
+        </div>
+      </div>
+    </div>
+
+    <div style="width: 2px; height: 16px; background: rgba(68,170,153,0.3); margin-left: 15px;"></div>
+
+    <!-- Step 5 -->
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div style="min-width: 32px; height: 32px; background: #44aa99; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">5</div>
+      <div style="flex: 1; background: rgba(68,170,153,0.06); border-left: 3px solid #44aa99; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+        <div style="font-weight: 600; color: #e0e8f0; font-size: 14px;">Goal Recommendations (optional handoff)</div>
+        <div style="font-size: 13px; color: #8a9bb5; margin-top: 4px;">
+          If manager says yes → Compass calls <code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;">recommendNextGoals</code>. Shows 2-4 suggested goals based on review + current strategy. Each has a "Create This Goal" button that hands off to existing <code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;">startGoalCreation</code> tool.
+        </div>
+        <div style="font-size: 12px; color: #6acdbb; margin-top: 6px; font-style: italic;">
+          If "not right now" → Compass saves recommendations to the review record for later. Manager can revisit anytime.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Working Document Form Phases</h3>
+  <p class="subtitle">The side-panel form adapts per step</p>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+      <div style="font-size: 11px; text-transform: uppercase; color: #44aa99; letter-spacing: 1px; margin-bottom: 8px;">Steps 1-2: Input</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        • Context sidebar (goals, notes, pillars)<br>
+        • Pre-filled contributions form<br>
+        • Editable text areas for subjective input<br>
+        • "Generate Draft" button when ready
+      </div>
+    </div>
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+      <div style="font-size: 11px; text-transform: uppercase; color: #44aa99; letter-spacing: 1px; margin-bottom: 8px;">Steps 3-4: Review & Edit</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        • Read-only draft preview (Step 3)<br>
+        • Switches to editable text areas (Step 4)<br>
+        • Section-by-section editing<br>
+        • "Finalize" + "Download PDF" buttons
+      </div>
+    </div>
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+      <div style="font-size: 11px; text-transform: uppercase; color: #44aa99; letter-spacing: 1px; margin-bottom: 8px;">Step 5: Goals</div>
+      <div style="font-size: 13px; color: #8a9bb5; line-height: 1.5;">
+        • Recommended goals list<br>
+        • Rationale per recommendation<br>
+        • "Create This Goal" buttons<br>
+        • "Save for Later" option
+      </div>
+    </div>
+  </div>
+</div>

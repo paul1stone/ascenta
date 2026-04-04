@@ -1,0 +1,86 @@
+<h2>Strategy Breakdown — Tool Flow</h2>
+<p class="subtitle">How the user interacts with the tool from start to finish</p>
+
+<div class="mockup">
+  <div class="mockup-header">User Flow</div>
+  <div class="mockup-body" style="padding: 24px; font-family: system-ui, sans-serif;">
+
+    <!-- Step 1 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #6688bb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">1</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">User selects "Strategy Breakdown" tool in Compass</div>
+        <div style="color: #666; font-size: 13px;">Tool appears in Compass tool selector alongside existing tools. User can also just ask "break down our strategy for me" in chat.</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #6688bb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">2</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">AI fetches strategy context</div>
+        <div style="color: #666; font-size: 13px;">
+          Tool calls <code>getStrategyBreakdown</code> which pulls:<br>
+          • Company-wide strategy goals from Strategy Studio<br>
+          • Department goals for the user's department<br>
+          • User's role &amp; department info<br>
+          • (Optional) User's personal goals from Grow
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #6688bb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">3</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">AI explains strategy in conversation</div>
+        <div style="color: #666; font-size: 13px;">
+          Conversational breakdown tailored to the user's role:<br>
+          • <strong>IC view:</strong> "Here's what the company is focused on, here's your department's priorities, and here's how your work connects."<br>
+          • <strong>Manager view:</strong> "Here's the company strategy, here's your department's goals, and here's how your team's work maps to these."
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #6688bb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">4</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">User asks follow-up questions</div>
+        <div style="color: #666; font-size: 13px;">Natural conversation — user can dig into specific goals, ask about priorities, clarify how things connect. No time limit on this phase.</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #44aa99; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">5</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">AI offers to generate strategy brief</div>
+        <div style="color: #666; font-size: 13px;">After the conversation, AI suggests: "Want me to put this together as a strategy brief you can download?" User confirms.</div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #44aa99; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">6</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Document opens in working document panel</div>
+        <div style="color: #666; font-size: 13px;">
+          50/50 split — chat on left, read-only strategy brief on right.<br>
+          New <code>action: "open_strategy_document"</code> block type.<br>
+          Document is formatted HTML, not a form — no editable fields.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div style="display: flex; align-items: flex-start; gap: 16px;">
+      <div style="min-width: 36px; height: 36px; border-radius: 50%; background: #44aa99; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">7</div>
+      <div>
+        <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">User downloads the brief</div>
+        <div style="color: #666; font-size: 13px;">Download button at the top of the panel. Generates a clean PDF of the strategy brief. User can also ask AI to revise sections before downloading.</div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Find manager by employeeId string
-    const manager = await Employee.findOne({ employeeId: managerId }).lean();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const manager = await Employee.findOne({ employeeId: managerId }).lean() as any;
     if (!manager) {
       return NextResponse.json(
         { success: false, error: "Manager not found" },
@@ -33,27 +34,31 @@ export async function GET(req: NextRequest) {
     }
 
     // Discover direct reports via goals (same pattern as /api/grow/status)
-    const managedGoals = await Goal.find({ manager: manager._id }).lean();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const managedGoals = await Goal.find({ manager: manager._id }).lean() as any[];
     const directReportIds = [
       ...new Set(managedGoals.map((g) => String(g.owner))),
     ];
 
     // Get employee details
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const directReports = await Employee.find({
       _id: { $in: directReportIds },
-    }).lean();
+    }).lean() as any[];
 
     // Get existing reviews for this manager
     const reviewFilter: Record<string, unknown> = { manager: manager._id };
     if (periodLabel) {
       reviewFilter["reviewPeriod.label"] = periodLabel;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reviews = await PerformanceReview.find(reviewFilter)
       .sort({ "reviewPeriod.end": -1 })
-      .lean();
+      .lean() as any[];
 
     // Build review map by employee ID
-    const reviewMap = new Map<string, (typeof reviews)[0]>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const reviewMap = new Map<string, any>();
     for (const review of reviews) {
       const key = `${String(review.employee)}-${review.reviewPeriod.label}`;
       reviewMap.set(key, review);
@@ -127,9 +132,10 @@ export async function POST(req: NextRequest) {
     const data = parsed.data;
 
     // Look up employee
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const employee = await Employee.findOne({
       employeeId: data.employeeId,
-    }).lean();
+    }).lean() as any;
     if (!employee) {
       return NextResponse.json(
         { success: false, error: "Employee not found" },
@@ -138,9 +144,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Look up manager
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const manager = await Employee.findOne({
       employeeId: data.managerId,
-    }).lean();
+    }).lean() as any;
     if (!manager) {
       return NextResponse.json(
         { success: false, error: "Manager not found" },

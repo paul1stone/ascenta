@@ -1,0 +1,167 @@
+<h2>Performance Reviews Tab — UI Layout</h2>
+<p class="subtitle">What the manager sees when they click the "Performance Reviews" tab under Grow</p>
+
+<div class="section">
+  <h3>Two Entry Points</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+    <div style="background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 10px; padding: 16px;">
+      <div style="font-weight: 600; color: #44aa99; margin-bottom: 6px;">Manager-Initiated</div>
+      <div style="font-size: 13px; color: #8a9bb5;">Manager tells Compass "start a review for Sarah" or clicks "Start Review" button in the table. Compass calls <code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;">startPerformanceReview</code>.</div>
+    </div>
+    <div style="background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 10px; padding: 16px;">
+      <div style="font-weight: 600; color: #44aa99; margin-bottom: 6px;">System-Prompted</div>
+      <div style="font-size: 13px; color: #8a9bb5;">When a review period approaches (e.g., Q1 ending), a banner appears at the top of the tab: "Q1 reviews are due — 3 of 5 direct reports haven't been started." Links to start each.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Reviews Tab Mockup</h3>
+
+  <div class="mockup">
+    <div class="mockup-header">Grow / Performance → Reviews Tab</div>
+    <div class="mockup-body" style="padding: 0;">
+
+      <!-- Period Banner -->
+      <div style="background: rgba(68,170,153,0.12); border-bottom: 1px solid rgba(68,170,153,0.2); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 8px; height: 8px; background: #ff6b35; border-radius: 50; animation: pulse 2s infinite;"></div>
+          <span style="font-size: 13px; color: #e0e8f0;"><strong>Q1 2026 reviews due April 15</strong> — 2 of 5 direct reports not started</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <select style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #e0e8f0; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+            <option>Q1 2026</option>
+            <option>Q4 2025</option>
+            <option>Q3 2025</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px 20px;">
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #8a9bb5; letter-spacing: 0.5px;">Direct Reports</div>
+          <div style="font-size: 24px; font-weight: 700; color: #e0e8f0; margin-top: 4px;">5</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #8a9bb5; letter-spacing: 0.5px;">Not Started</div>
+          <div style="font-size: 24px; font-weight: 700; color: #ff6b35; margin-top: 4px;">2</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #8a9bb5; letter-spacing: 0.5px;">In Progress</div>
+          <div style="font-size: 24px; font-weight: 700; color: #44aa99; margin-top: 4px;">1</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #8a9bb5; letter-spacing: 0.5px;">Finalized</div>
+          <div style="font-size: 24px; font-weight: 700; color: #6688bb; margin-top: 4px;">2</div>
+        </div>
+      </div>
+
+      <!-- Employee Table -->
+      <div style="padding: 0 20px 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <th style="text-align: left; padding: 10px 12px; color: #8a9bb5; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Employee</th>
+              <th style="text-align: left; padding: 10px 12px; color: #8a9bb5; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Department</th>
+              <th style="text-align: center; padding: 10px 12px; color: #8a9bb5; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Goals</th>
+              <th style="text-align: center; padding: 10px 12px; color: #8a9bb5; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
+              <th style="text-align: center; padding: 10px 12px; color: #8a9bb5; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Step</th>
+              <th style="text-align: right; padding: 10px 12px; color: #8a9bb5; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Finalized -->
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 12px; color: #e0e8f0; font-weight: 500;">Sarah Chen</td>
+              <td style="padding: 12px; color: #8a9bb5;">Engineering</td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5;">4</td>
+              <td style="padding: 12px; text-align: center;">
+                <span style="background: rgba(102,136,187,0.15); color: #6688bb; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">Finalized</span>
+              </td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5; font-size: 12px;">—</td>
+              <td style="padding: 12px; text-align: right;">
+                <span style="color: #6688bb; font-size: 12px; cursor: pointer;">Download PDF</span>
+              </td>
+            </tr>
+            <!-- Finalized -->
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 12px; color: #e0e8f0; font-weight: 500;">Marcus Johnson</td>
+              <td style="padding: 12px; color: #8a9bb5;">Engineering</td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5;">3</td>
+              <td style="padding: 12px; text-align: center;">
+                <span style="background: rgba(102,136,187,0.15); color: #6688bb; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">Finalized</span>
+              </td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5; font-size: 12px;">—</td>
+              <td style="padding: 12px; text-align: right;">
+                <span style="color: #6688bb; font-size: 12px; cursor: pointer;">Download PDF</span>
+              </td>
+            </tr>
+            <!-- In Progress -->
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 12px; color: #e0e8f0; font-weight: 500;">Priya Patel</td>
+              <td style="padding: 12px; color: #8a9bb5;">Design</td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5;">3</td>
+              <td style="padding: 12px; text-align: center;">
+                <span style="background: rgba(68,170,153,0.15); color: #44aa99; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">In Progress</span>
+              </td>
+              <td style="padding: 12px; text-align: center; color: #44aa99; font-size: 12px;">Draft</td>
+              <td style="padding: 12px; text-align: right;">
+                <span style="color: #44aa99; font-size: 12px; cursor: pointer;">Continue →</span>
+              </td>
+            </tr>
+            <!-- Not Started -->
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 12px; color: #e0e8f0; font-weight: 500;">Alex Rivera</td>
+              <td style="padding: 12px; color: #8a9bb5;">Product</td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5;">5</td>
+              <td style="padding: 12px; text-align: center;">
+                <span style="background: rgba(255,107,53,0.15); color: #ff6b35; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">Not Started</span>
+              </td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5; font-size: 12px;">—</td>
+              <td style="padding: 12px; text-align: right;">
+                <span style="background: rgba(68,170,153,0.15); color: #44aa99; padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500;">Start Review</span>
+              </td>
+            </tr>
+            <!-- Not Started -->
+            <tr>
+              <td style="padding: 12px; color: #e0e8f0; font-weight: 500;">Jordan Kim</td>
+              <td style="padding: 12px; color: #8a9bb5;">Marketing</td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5;">2</td>
+              <td style="padding: 12px; text-align: center;">
+                <span style="background: rgba(255,107,53,0.15); color: #ff6b35; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">Not Started</span>
+              </td>
+              <td style="padding: 12px; text-align: center; color: #8a9bb5; font-size: 12px;">—</td>
+              <td style="padding: 12px; text-align: right;">
+                <span style="background: rgba(68,170,153,0.15); color: #44aa99; padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500;">Start Review</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Key UI Behaviors</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+      <div style="font-weight: 600; color: #e0e8f0; font-size: 13px; margin-bottom: 6px;">Start Review (button click)</div>
+      <div style="font-size: 12px; color: #8a9bb5; line-height: 1.5;">Sends a pre-filled message to Compass: "Start a performance review for [employee] for [period]". Triggers the chat-guided flow.</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+      <div style="font-weight: 600; color: #e0e8f0; font-size: 13px; margin-bottom: 6px;">Continue → (resume in-progress)</div>
+      <div style="font-size: 12px; color: #8a9bb5; line-height: 1.5;">Reopens the working document at the current step. Compass re-loads context and picks up where the manager left off.</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+      <div style="font-weight: 600; color: #e0e8f0; font-size: 13px; margin-bottom: 6px;">Period Selector</div>
+      <div style="font-size: 12px; color: #8a9bb5; line-height: 1.5;">Dropdown to view past review periods. Table filters to show reviews for that period. Default: current/most recent period.</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+      <div style="font-weight: 600; color: #e0e8f0; font-size: 13px; margin-bottom: 6px;">Nudge Banner</div>
+      <div style="font-size: 12px; color: #8a9bb5; line-height: 1.5;">Appears when review period is within 2 weeks of due date and not all reviews are finalized. Shows count of remaining reviews.</div>
+    </div>
+  </div>
+</div>

@@ -59,7 +59,8 @@ export async function GET(
     await connectDB();
     const { id } = await params;
 
-    const review = await PerformanceReview.findById(id).lean();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const review = await PerformanceReview.findById(id).lean() as any;
     if (!review) {
       return NextResponse.json(
         { success: false, error: "Review not found" },
@@ -74,29 +75,31 @@ export async function GET(
       );
     }
 
-    const employee = await Employee.findById(review.employee).lean();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const employee = await Employee.findById(review.employee).lean() as any;
     const employeeName = employee
       ? `${employee.firstName} ${employee.lastName}`
       : "Unknown Employee";
 
     const final = review.finalDocument;
+    const reviewPeriod = review.reviewPeriod;
 
     // Build sections map for artifact renderer
     const sections: Record<string, string> = {
       header: [
         `**Employee:** ${employeeName}`,
         `**Department:** ${employee?.department ?? "N/A"}`,
-        `**Review Period:** ${review.reviewPeriod.label} (${formatDate(review.reviewPeriod.start)} — ${formatDate(review.reviewPeriod.end)})`,
+        `**Review Period:** ${reviewPeriod?.label ?? "N/A"} (${formatDate(reviewPeriod?.start)} — ${formatDate(reviewPeriod?.end)})`,
         `**Date:** ${formatDate(new Date())}`,
       ].join("\n\n"),
-      summary: final.summary || "",
-      strengthsAndImpact: final.strengthsAndImpact || "",
-      areasForGrowth: final.areasForGrowth || "",
-      strategicAlignment: final.strategicAlignment || "",
-      overallAssessment: final.overallAssessment || "",
+      summary: final?.summary || "",
+      strengthsAndImpact: final?.strengthsAndImpact || "",
+      areasForGrowth: final?.areasForGrowth || "",
+      strategicAlignment: final?.strategicAlignment || "",
+      overallAssessment: final?.overallAssessment || "",
       signoff: [
-        `**Manager:** ${final.managerSignoff?.name || "N/A"}`,
-        `**Date:** ${final.managerSignoff?.at ? formatDate(final.managerSignoff.at) : "N/A"}`,
+        `**Manager:** ${final?.managerSignoff?.name || "N/A"}`,
+        `**Date:** ${final?.managerSignoff?.at ? formatDate(final.managerSignoff.at) : "N/A"}`,
       ].join("\n\n"),
     };
 

@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Alignment Reporting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================================================================
+     ASCENTA DESIGN TOKENS
+     ================================================================ */
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --accent: #44aa99;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-mid: color-mix(in srgb, var(--accent) 25%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 20%, transparent);
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --header-h: 56px;
+    --sidebar-w: 220px;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ================================================================
+     MOCKUP WRAPPER
+     ================================================================ */
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .mockup-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .mockup-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* ================================================================
+     BROWSER FRAME
+     ================================================================ */
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  /* ================================================================
+     APP SHELL
+     ================================================================ */
+  .app-layout { display: flex; height: 780px; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-logo {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--deep-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-logo-icon svg { color: var(--white); }
+  .sidebar-logo-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--deep-blue);
+  }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .sidebar-item.active {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-divider { margin: 4px 12px; border-bottom: 1px solid var(--border); }
+
+  .sidebar-sub {
+    display: block;
+    padding: 6px 14px 6px 42px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: default;
+    white-space: nowrap;
+  }
+  .sidebar-sub.active {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* --- Top Header --- */
+  .top-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .top-header-left { display: flex; align-items: center; gap: 10px; }
+  .top-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--deep-blue);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .top-header-company {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .top-header-right { display: flex; align-items: center; gap: 4px; }
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .header-icon-btn svg { width: 16px; height: 16px; }
+
+  /* --- Main Area --- */
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* ================================================================
+     DASHBOARD STYLES
+     ================================================================ */
+  .dashboard {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .dashboard-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .dashboard-topbar-left { display: flex; flex-direction: column; gap: 4px; }
+  .dashboard-topbar-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dashboard-topbar-title svg { color: var(--accent); width: 20px; height: 20px; }
+  .dashboard-topbar-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .period-pills {
+    display: flex;
+    gap: 6px;
+  }
+  .period-pill {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: default;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text-secondary);
+  }
+  .period-pill.active {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+  }
+
+  /* Stat Cards Row */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+    border-top: 3px solid var(--accent);
+    animation: fadeUp 0.4s ease both;
+    animation-delay: 0.1s;
+  }
+  .stat-card.blue { border-top-color: #3b82f6; }
+  .stat-card.orange { border-top-color: #f97316; }
+  .stat-card.red { border-top-color: #ef4444; }
+
+  .stat-card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+  }
+  .stat-card-number {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--deep-blue);
+    line-height: 1;
+  }
+  .stat-card-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .stat-card-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+  .stat-mini-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 10px;
+  }
+  .stat-mini-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+  .stat-mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+  .stat-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .status-dot.green { background: #22c55e; }
+  .status-dot.yellow { background: #eab308; }
+  .status-dot.orange { background: #f97316; }
+  .status-dot.red { background: #ef4444; }
+
+  /* Two-col rows */
+  .two-col { display: grid; gap: 14px; margin-bottom: 16px; }
+  .two-col.r2 { grid-template-columns: 3fr 2fr; }
+  .two-col.r3 { grid-template-columns: 1fr 1fr; }
+
+  .dash-card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .dash-card.delay-2 { animation-delay: 0.2s; }
+  .dash-card.delay-3 { animation-delay: 0.3s; }
+
+  .dash-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .dash-card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dash-card-title svg { width: 16px; height: 16px; color: var(--text-muted); }
+
+  /* Horizontal stacked bars */
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .bar-label {
+    width: 140px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    overflow: hidden;
+    display: flex;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px 0 0 4px;
+    transition: width 0.6s ease;
+  }
+  .bar-pct {
+    width: 36px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .bar-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .bar-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-right: 4px;
+  }
+  .bar-callout {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 8px 12px;
+    background: #fef3c7;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #92400e;
+  }
+  .bar-callout svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* Review language card */
+  .review-big-stat {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--deep-blue);
+    line-height: 1;
+  }
+  .review-big-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+  .review-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .review-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-top: 1px solid var(--border-light);
+    font-size: 12px;
+  }
+  .review-item-name { font-weight: 500; color: var(--text-primary); }
+  .review-item-value { display: flex; align-items: center; gap: 4px; font-weight: 600; }
+  .review-item-value.green { color: #22c55e; }
+  .review-item-value.warn { color: #f97316; }
+  .review-note {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: var(--accent-soft);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Manager support card */
+  .insight-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .insight-item:last-child { border-bottom: none; }
+  .insight-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .insight-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 1px;
+  }
+  .insight-icon.red-bg { background: rgba(239,68,68,0.1); color: #ef4444; }
+  .insight-icon.yellow-bg { background: rgba(234,179,8,0.1); color: #eab308; }
+  .insight-icon.blue-bg { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  .insight-text {
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .insight-suggestion {
+    margin-left: 32px;
+    padding: 6px 10px;
+    background: var(--glacier);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .insight-suggestion svg { width: 12px; height: 12px; }
+
+  /* Capability gap card */
+  .gap-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .gap-row:last-child { border-bottom: none; }
+  .gap-name {
+    width: 160px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .gap-indicators {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .gap-indicator-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .gap-indicator-label { width: 52px; text-align: right; }
+  .gap-bar-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-light);
+    overflow: hidden;
+  }
+  .gap-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+  .gap-bar-fill.red { background: #ef4444; }
+  .gap-bar-fill.yellow { background: #eab308; }
+  .gap-bar-fill.green { background: #22c55e; }
+  .gap-footer {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ================================================================
+     ANNOTATION CARDS
+     ================================================================ */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.accent { background: var(--accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ================================================================
+     ANIMATION
+     ================================================================ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Grow — Feature Proposal</div>
+  <div class="mockup-title">Alignment Reporting — Canopy View</div>
+  <div class="mockup-subtitle">
+    Executive dashboard showing how goals, reviews, and check-ins align to strategic priorities. Identifies coverage gaps and where managers need support translating strategy into action.
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">app.ascenta.ai / grow / performance / alignment</div>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <span class="sidebar-logo-text">ASCENTA</span>
+        </div>
+        <nav class="sidebar-nav">
+          <!-- Home -->
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Home
+          </div>
+          <div class="sidebar-divider"></div>
+
+          <!-- Plan -->
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6688bb"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Plan
+          </div>
+
+          <!-- Grow (active, expanded) -->
+          <div class="sidebar-item active" style="border-left-color: #44aa99; background: #44aa9920">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #44aa99"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>
+            Grow
+          </div>
+          <div class="sidebar-sub active" style="background: #44aa9918">Performance System</div>
+          <div class="sidebar-sub">Coaching & Corrective Action</div>
+          <div class="sidebar-sub">Learning & Development</div>
+          <div class="sidebar-sub">Leadership Library</div>
+
+          <!-- Care -->
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #cc6677"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Care
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Area -->
+      <div class="main-area">
+        <!-- Top Header -->
+        <div class="top-header">
+          <div class="top-header-left">
+            <div class="top-header-avatar">SC</div>
+            <span class="top-header-company">StoneCyber</span>
+          </div>
+          <div class="top-header-right">
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+          <div class="dashboard">
+
+            <!-- Top Bar -->
+            <div class="dashboard-topbar">
+              <div class="dashboard-topbar-left">
+                <div class="dashboard-topbar-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5"/><path d="M12 12H3"/><path d="M21 12h-4"/><path d="M21 12l-3-3"/><path d="M21 12l-3 3"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/></svg>
+                  Strategic Alignment — Canopy View
+                </div>
+                <div class="dashboard-topbar-subtitle">How goals and reviews connect to company strategy</div>
+              </div>
+              <div class="period-pills">
+                <div class="period-pill active">Q1 2026</div>
+                <div class="period-pill">Q2 2026</div>
+                <div class="period-pill">FY 2026</div>
+              </div>
+            </div>
+
+            <!-- Row 1: 4 Stat Cards -->
+            <div class="stat-row">
+              <!-- Product-Led Growth -->
+              <div class="stat-card">
+                <div class="stat-card-title">Product-Led Growth</div>
+                <div class="stat-card-number">78%</div>
+                <div class="stat-card-label">goals aligned</div>
+                <div class="stat-card-sub">42 active goals</div>
+                <div class="stat-mini-bars">
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 90%; background: var(--accent); border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 72%; background: var(--accent); opacity: 0.7; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 60%; background: var(--accent); opacity: 0.4; border-radius: 2px;"></div></div>
+                </div>
+                <div class="stat-status">
+                  <span class="status-dot green"></span>
+                  <span style="color: #22c55e;">Strong</span>
+                </div>
+              </div>
+
+              <!-- Customer Obsession -->
+              <div class="stat-card blue">
+                <div class="stat-card-title">Customer Obsession</div>
+                <div class="stat-card-number">64%</div>
+                <div class="stat-card-label">goals aligned</div>
+                <div class="stat-card-sub">31 active goals</div>
+                <div class="stat-mini-bars">
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 80%; background: #3b82f6; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 55%; background: #3b82f6; opacity: 0.7; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 48%; background: #3b82f6; opacity: 0.4; border-radius: 2px;"></div></div>
+                </div>
+                <div class="stat-status">
+                  <span class="status-dot yellow"></span>
+                  <span style="color: #eab308;">Growing</span>
+                </div>
+              </div>
+
+              <!-- Operational Excellence -->
+              <div class="stat-card orange">
+                <div class="stat-card-title">Operational Excellence</div>
+                <div class="stat-card-number">45%</div>
+                <div class="stat-card-label">goals aligned</div>
+                <div class="stat-card-sub">22 active goals</div>
+                <div class="stat-mini-bars">
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 55%; background: #f97316; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 40%; background: #f97316; opacity: 0.7; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 30%; background: #f97316; opacity: 0.4; border-radius: 2px;"></div></div>
+                </div>
+                <div class="stat-status">
+                  <span class="status-dot orange"></span>
+                  <span style="color: #f97316;">Needs Attention</span>
+                </div>
+              </div>
+
+              <!-- Talent Development -->
+              <div class="stat-card red">
+                <div class="stat-card-title">Talent Development</div>
+                <div class="stat-card-number">23%</div>
+                <div class="stat-card-label">goals aligned</div>
+                <div class="stat-card-sub">11 active goals</div>
+                <div class="stat-mini-bars">
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 30%; background: #ef4444; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 20%; background: #ef4444; opacity: 0.7; border-radius: 2px;"></div></div>
+                  <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width: 12%; background: #ef4444; opacity: 0.4; border-radius: 2px;"></div></div>
+                </div>
+                <div class="stat-status">
+                  <span class="status-dot red"></span>
+                  <span style="color: #ef4444;">Gap Identified</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: 60/40 -->
+            <div class="two-col r2">
+              <!-- Goal Alignment by Department -->
+              <div class="dash-card delay-2">
+                <div class="dash-card-header">
+                  <div class="dash-card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5" rx="1"/><rect x="12" y="9" width="3" height="9" rx="1"/><rect x="17" y="5" width="3" height="13" rx="1"/></svg>
+                    Goal Alignment by Department
+                  </div>
+                </div>
+
+                <div class="bar-row">
+                  <div class="bar-label">Product Engineering</div>
+                  <div class="bar-track"><div class="bar-fill" style="width: 85%;"></div></div>
+                  <div class="bar-pct">85%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Customer Success</div>
+                  <div class="bar-track"><div class="bar-fill" style="width: 72%;"></div></div>
+                  <div class="bar-pct">72%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Sales</div>
+                  <div class="bar-track"><div class="bar-fill" style="width: 58%;"></div></div>
+                  <div class="bar-pct">58%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Marketing</div>
+                  <div class="bar-track"><div class="bar-fill" style="width: 41%;"></div></div>
+                  <div class="bar-pct">41%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Operations</div>
+                  <div class="bar-track"><div class="bar-fill" style="width: 34%;"></div></div>
+                  <div class="bar-pct">34%</div>
+                </div>
+
+                <div class="bar-legend">
+                  <span><span class="bar-legend-swatch" style="background: var(--accent);"></span> Strategy-Aligned</span>
+                  <span><span class="bar-legend-swatch" style="background: #e2e8f0;"></span> No Pillar Link</span>
+                </div>
+
+                <div class="bar-callout">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                  3 departments below 50% alignment threshold
+                </div>
+              </div>
+
+              <!-- Review Language Consistency -->
+              <div class="dash-card delay-2">
+                <div class="dash-card-header">
+                  <div class="dash-card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Review Language Consistency
+                  </div>
+                </div>
+
+                <div class="review-big-stat">67%</div>
+                <div class="review-big-label">of reviews reference strategic priorities</div>
+                <div class="review-sub">Average 2.3 pillar references per review</div>
+
+                <div class="review-item">
+                  <span class="review-item-name">Product-Led Growth</span>
+                  <span class="review-item-value green">78% of reviews &#10003;</span>
+                </div>
+                <div class="review-item">
+                  <span class="review-item-name">Customer Obsession</span>
+                  <span class="review-item-value green">61% of reviews &#10003;</span>
+                </div>
+                <div class="review-item">
+                  <span class="review-item-name">Talent Development</span>
+                  <span class="review-item-value warn">12% of reviews &#9888;</span>
+                </div>
+
+                <div class="review-note">
+                  Reviews referencing strategy are 2.4x more actionable
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: 50/50 -->
+            <div class="two-col r3">
+              <!-- Where Managers Need Support -->
+              <div class="dash-card delay-3">
+                <div class="dash-card-header">
+                  <div class="dash-card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    Where Managers Need Support
+                  </div>
+                </div>
+
+                <div class="insight-item">
+                  <div class="insight-header">
+                    <div class="insight-icon red-bg">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    </div>
+                    <div class="insight-text">Marketing team has 0 goals linked to Product-Led Growth despite being a focus area</div>
+                  </div>
+                  <div class="insight-suggestion">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    Run a strategy cascading session with Marketing leadership
+                  </div>
+                </div>
+
+                <div class="insight-item">
+                  <div class="insight-header">
+                    <div class="insight-icon yellow-bg">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="insight-text">5 managers haven't used coaching prompts from Strategy Studio</div>
+                  </div>
+                  <div class="insight-suggestion">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    Send Leadership Library resource on strategic goal-setting
+                  </div>
+                </div>
+
+                <div class="insight-item">
+                  <div class="insight-header">
+                    <div class="insight-icon blue-bg">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                    </div>
+                    <div class="insight-text">Operations goals are mostly operational — no development or culture goals</div>
+                  </div>
+                  <div class="insight-suggestion">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    AI can generate role-specific development goal templates
+                  </div>
+                </div>
+              </div>
+
+              <!-- Capability Gap Radar -->
+              <div class="dash-card delay-3">
+                <div class="dash-card-header">
+                  <div class="dash-card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    Capability Gap Radar
+                  </div>
+                </div>
+
+                <!-- Customer Analytics -->
+                <div class="gap-row">
+                  <div class="gap-name">Customer Analytics</div>
+                  <div class="gap-indicators">
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Priority</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill red" style="width: 90%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">High</span>
+                    </div>
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Readiness</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill red" style="width: 20%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">Low</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cross-functional Collaboration -->
+                <div class="gap-row">
+                  <div class="gap-name">Cross-functional Collaboration</div>
+                  <div class="gap-indicators">
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Priority</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill yellow" style="width: 85%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">High</span>
+                    </div>
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Readiness</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill yellow" style="width: 50%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">Med</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Data-Driven Decisions -->
+                <div class="gap-row">
+                  <div class="gap-name">Data-Driven Decisions</div>
+                  <div class="gap-indicators">
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Priority</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill green" style="width: 55%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">Med</span>
+                    </div>
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Readiness</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill green" style="width: 55%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">Med</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Technical Leadership -->
+                <div class="gap-row">
+                  <div class="gap-name">Technical Leadership</div>
+                  <div class="gap-indicators">
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Priority</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill green" style="width: 55%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">Med</span>
+                    </div>
+                    <div class="gap-indicator-row">
+                      <span class="gap-indicator-label">Readiness</span>
+                      <div class="gap-bar-track"><div class="gap-bar-fill green" style="width: 80%;"></div></div>
+                      <span style="font-size:10px; color:var(--text-muted); width:32px;">High</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="gap-footer">Gaps from strategy input + goal/review analysis</div>
+              </div>
+            </div>
+
+          </div><!-- /dashboard -->
+        </div><!-- /main-content -->
+      </div><!-- /main-area -->
+    </div><!-- /app-layout -->
+  </div><!-- /browser-frame -->
+
+  <!-- Annotation Cards -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">&#127919;</div>
+      <h4>Strategy as Measurement</h4>
+      <p>Not tracking KPIs — tracking whether people understand and act on the strategy. Are goals connected? Are reviews referencing priorities?</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">&#9889;</div>
+      <h4>Actionable Insights</h4>
+      <p>Every gap comes with a suggested action. Ascenta doesn't just report problems — it recommends next steps like coaching resources or cascading sessions.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">&#9888;</div>
+      <h4>Not a Scoreboard</h4>
+      <p>Ascenta avoids OKR tracking or finance reporting. This dashboard answers: "Is our strategy landing in how people work?" — the human side of execution.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

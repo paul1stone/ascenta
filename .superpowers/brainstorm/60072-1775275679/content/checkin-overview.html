@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check-in Page Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #0c1e3d; }
+
+  .app-shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* Tab bar mimicking the real app */
+  .tab-bar { display: flex; gap: 32px; border-bottom: 2px solid #e2e8f0; margin-bottom: 32px; padding-bottom: 0; }
+  .tab { padding: 8px 4px 12px; font-size: 14px; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: #0c1e3d; font-weight: 600; border-bottom-color: #44aa99; }
+
+  /* Page header */
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; }
+  .btn-primary { background: #44aa99; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+  .stat-card .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #0c1e3d; }
+  .stat-card .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .stat-card.alert .value { color: #dc2626; }
+  .stat-card.good .value { color: #44aa99; }
+
+  /* Check-in list */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .section-header h2 { font-size: 16px; font-weight: 600; }
+  .section-header .filter { font-size: 13px; color: #64748b; cursor: pointer; }
+
+  .checkin-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+  .checkin-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.15s; }
+  .checkin-card:hover { border-color: #44aa99; box-shadow: 0 2px 8px rgba(68,170,153,0.1); }
+
+  .avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: white; flex-shrink: 0; }
+  .avatar.blue { background: #3b82f6; }
+  .avatar.green { background: #44aa99; }
+  .avatar.orange { background: #ff6b35; }
+  .avatar.purple { background: #8b5cf6; }
+
+  .checkin-info { flex: 1; }
+  .checkin-info .name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+  .checkin-info .detail { font-size: 13px; color: #64748b; }
+
+  .checkin-meta { display: flex; align-items: center; gap: 16px; }
+
+  .phase-indicator { display: flex; gap: 4px; align-items: center; }
+  .phase-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; }
+  .phase-dot.complete { background: #44aa99; }
+  .phase-dot.current { background: #44aa99; animation: pulse 1.5s infinite; }
+  .phase-dot.upcoming { background: #e2e8f0; }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .phase-label { font-size: 12px; color: #64748b; margin-left: 4px; }
+
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge.prep { background: #fef3c7; color: #92400e; }
+  .badge.ready { background: #d1fae5; color: #065f46; }
+  .badge.overdue { background: #fee2e2; color: #991b1b; }
+  .badge.completed { background: #f0fdf4; color: #166534; }
+  .badge.waiting { background: #ede9fe; color: #5b21b6; }
+
+  .date-text { font-size: 13px; color: #94a3b8; white-space: nowrap; }
+
+  /* Past check-ins table */
+  .past-table { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+  .past-table table { width: 100%; border-collapse: collapse; }
+  .past-table th { text-align: left; padding: 12px 16px; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+  .past-table td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+  .past-table tr:last-child td { border-bottom: none; }
+
+  .goals-linked { display: flex; gap: 4px; flex-wrap: wrap; }
+  .goal-pill { padding: 2px 8px; border-radius: 12px; font-size: 11px; background: #f1f5f9; color: #475569; }
+
+  .action-count { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #64748b; }
+
+  /* Annotation callout */
+  .annotation { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; display: flex; align-items: flex-start; gap: 8px; }
+  .annotation strong { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <div class="tab">Goals</div>
+    <div class="tab">Performance Reviews</div>
+    <div class="tab active">Check-ins</div>
+    <div class="tab">Reflect</div>
+  </div>
+
+  <div class="annotation">
+    <strong>Mockup:</strong> This is the Check-ins tab landing view (Manager perspective). Click into any card to see the 3-phase check-in flow.
+  </div>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h1>Check-ins</h1>
+    <button class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      New Check-in
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card good">
+      <div class="label">Completion Rate</div>
+      <div class="value">78%</div>
+      <div class="sub">Last 30 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Upcoming</div>
+      <div class="value">4</div>
+      <div class="sub">Next 2 weeks</div>
+    </div>
+    <div class="stat-card alert">
+      <div class="label">Overdue</div>
+      <div class="value">1</div>
+      <div class="sub">Needs attention</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Completed</div>
+      <div class="value">12</div>
+      <div class="sub">This quarter</div>
+    </div>
+  </div>
+
+  <!-- Upcoming / In-progress check-ins -->
+  <div class="section-header">
+    <h2>Active & Upcoming</h2>
+    <span class="filter">View all</span>
+  </div>
+
+  <div class="checkin-list">
+    <!-- Overdue -->
+    <div class="checkin-card">
+      <div class="avatar orange">MR</div>
+      <div class="checkin-info">
+        <div class="name">Marcus Rivera</div>
+        <div class="detail">Software Engineer · Q2 Performance Goals</div>
+      </div>
+      <div class="checkin-meta">
+        <div class="phase-indicator">
+          <div class="phase-dot complete"></div>
+          <div class="phase-dot complete"></div>
+          <div class="phase-dot upcoming"></div>
+          <span class="phase-label">Prep done</span>
+        </div>
+        <span class="badge overdue">Overdue</span>
+        <span class="date-text">Due Mar 28</span>
+      </div>
+    </div>
+
+    <!-- Ready for conversation -->
+    <div class="checkin-card">
+      <div class="avatar blue">SK</div>
+      <div class="checkin-info">
+        <div class="name">Sarah Kim</div>
+        <div class="detail">Product Designer · Design System & Onboarding Goals</div>
+      </div>
+      <div class="checkin-meta">
+        <div class="phase-indicator">
+          <div class="phase-dot complete"></div>
+          <div class="phase-dot current"></div>
+          <div class="phase-dot upcoming"></div>
+          <span class="phase-label">Ready to meet</span>
+        </div>
+        <span class="badge ready">Ready</span>
+        <span class="date-text">Due Apr 5</span>
+      </div>
+    </div>
+
+    <!-- Waiting on employee -->
+    <div class="checkin-card">
+      <div class="avatar purple">JT</div>
+      <div class="checkin-info">
+        <div class="name">James Thompson</div>
+        <div class="detail">Data Analyst · Q2 Analytics Pipeline Goal</div>
+      </div>
+      <div class="checkin-meta">
+        <div class="phase-indicator">
+          <div class="phase-dot complete"></div>
+          <div class="phase-dot upcoming"></div>
+          <div class="phase-dot upcoming"></div>
+          <span class="phase-label">Waiting on employee</span>
+        </div>
+        <span class="badge waiting">Awaiting Input</span>
+        <span class="date-text">Due Apr 10</span>
+      </div>
+    </div>
+
+    <!-- Not started -->
+    <div class="checkin-card">
+      <div class="avatar green">AP</div>
+      <div class="checkin-info">
+        <div class="name">Aisha Patel</div>
+        <div class="detail">Marketing Manager · Campaign & Brand Goals</div>
+      </div>
+      <div class="checkin-meta">
+        <div class="phase-indicator">
+          <div class="phase-dot upcoming"></div>
+          <div class="phase-dot upcoming"></div>
+          <div class="phase-dot upcoming"></div>
+          <span class="phase-label">Not started</span>
+        </div>
+        <span class="badge prep">Prep needed</span>
+        <span class="date-text">Due Apr 15</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Past check-ins -->
+  <div class="section-header">
+    <h2>Completed</h2>
+    <span class="filter">Filter</span>
+  </div>
+
+  <div class="past-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Goals Covered</th>
+          <th>Date</th>
+          <th>Actions</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sarah Kim</strong></td>
+          <td>
+            <div class="goals-linked">
+              <span class="goal-pill">Design System v2</span>
+              <span class="goal-pill">Onboarding Flow</span>
+            </div>
+          </td>
+          <td>Mar 15, 2026</td>
+          <td><span class="action-count">3 open / 5 total</span></td>
+          <td><span class="badge completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td><strong>Marcus Rivera</strong></td>
+          <td>
+            <div class="goals-linked">
+              <span class="goal-pill">API Performance</span>
+            </div>
+          </td>
+          <td>Mar 10, 2026</td>
+          <td><span class="action-count">0 open / 4 total</span></td>
+          <td><span class="badge completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td><strong>James Thompson</strong></td>
+          <td>
+            <div class="goals-linked">
+              <span class="goal-pill">Analytics Pipeline</span>
+              <span class="goal-pill">Data Quality</span>
+            </div>
+          </td>
+          <td>Mar 1, 2026</td>
+          <td><span class="action-count">1 open / 3 total</span></td>
+          <td><span class="badge completed">Completed</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

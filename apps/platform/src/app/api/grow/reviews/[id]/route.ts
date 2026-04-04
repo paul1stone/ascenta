@@ -11,7 +11,8 @@ export async function GET(
     await connectDB();
     const { id } = await params;
 
-    const review = await PerformanceReview.findById(id).lean();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const review = await PerformanceReview.findById(id).lean() as any;
     if (!review) {
       return NextResponse.json(
         { success: false, error: "Review not found" },

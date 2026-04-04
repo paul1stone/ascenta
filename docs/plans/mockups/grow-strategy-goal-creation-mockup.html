@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Strategy-Aligned Goal Creation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================================================================
+     ASCENTA DESIGN TOKENS
+     ================================================================ */
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --accent: #44aa99;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-mid: color-mix(in srgb, var(--accent) 25%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 20%, transparent);
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --header-h: 56px;
+    --sidebar-w: 220px;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ================================================================
+     MOCKUP WRAPPER
+     ================================================================ */
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .mockup-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .mockup-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* ================================================================
+     BROWSER FRAME
+     ================================================================ */
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  /* ================================================================
+     APP SHELL
+     ================================================================ */
+  .app-layout { display: flex; height: 780px; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-logo {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--deep-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-logo-icon svg { color: var(--white); }
+  .sidebar-logo-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--deep-blue);
+  }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .sidebar-item.active {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-divider { margin: 4px 12px; border-bottom: 1px solid var(--border); }
+
+  .sidebar-sub {
+    display: block;
+    padding: 6px 14px 6px 42px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: default;
+    white-space: nowrap;
+  }
+  .sidebar-sub.active {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* --- Top Header --- */
+  .top-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .top-header-left { display: flex; align-items: center; gap: 10px; }
+  .top-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--deep-blue);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .top-header-company {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .top-header-right { display: flex; align-items: center; gap: 4px; }
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .header-icon-btn svg { width: 16px; height: 16px; }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+  .main-content {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* ================================================================
+     CHAT PANEL
+     ================================================================ */
+  .chat-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+  }
+  .chat-header-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--deep-blue);
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 8px 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--glacier);
+  }
+
+  .message { padding: 8px 16px; }
+  .message-bubble {
+    border-radius: 16px;
+    border: 1px solid;
+    padding: 16px;
+    transition: all 0.15s;
+  }
+  .message.user .message-bubble {
+    border-color: rgba(12, 30, 61, 0.15);
+    background: rgba(12, 30, 61, 0.03);
+  }
+  .message.assistant .message-bubble {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: var(--accent-border);
+  }
+  .message-inner { display: flex; gap: 12px; }
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+  }
+  .message.user .message-avatar { background: var(--deep-blue); }
+  .message.assistant .message-avatar { background: var(--summit); }
+  .message-avatar svg { width: 16px; height: 16px; }
+  .message-content { flex: 1; min-width: 0; }
+  .message-sender {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--deep-blue);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .message-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-primary);
+  }
+  .message.user .message-text { color: rgba(12, 30, 61, 0.9); }
+  .message-text strong { color: var(--accent); font-weight: 600; }
+
+  .tool-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--summit);
+    background: rgba(255, 107, 53, 0.1);
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+  .tool-badge svg { width: 12px; height: 12px; }
+
+  .chat-input-area { padding: 0 16px 16px; flex-shrink: 0; }
+  .chat-input-box {
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    box-shadow: 0 8px 30px rgba(12, 30, 61, 0.05);
+    overflow: hidden;
+  }
+  .chat-input-row { display: flex; align-items: flex-end; gap: 8px; padding: 8px; }
+  .chat-input {
+    flex: 1;
+    border: none;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: transparent;
+    font-family: inherit;
+    padding: 8px 6px;
+    min-height: 44px;
+    resize: none;
+    outline: none;
+  }
+  .chat-submit-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: var(--summit);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    flex-shrink: 0;
+  }
+  .chat-submit-btn svg { width: 18px; height: 18px; }
+
+  /* ================================================================
+     WORKING DOCUMENT PANEL
+     ================================================================ */
+  .working-doc-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 12px;
+  }
+  .working-doc-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    border: 1px solid;
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 32px -4px color-mix(in srgb, var(--accent) 12%, transparent),
+                0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
+    overflow: hidden;
+  }
+  .working-doc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 8%, white),
+      color-mix(in srgb, var(--accent) 4%, white)
+    );
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 15%, var(--border));
+  }
+  .working-doc-header-left { display: flex; align-items: center; gap: 8px; }
+  .working-doc-header-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .working-doc-header-icon svg { width: 14px; height: 14px; }
+  .working-doc-header-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--deep-blue);
+  }
+  .close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    font-size: 16px;
+  }
+  .working-doc-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .working-doc-footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  /* ================================================================
+     SHARED UI
+     ================================================================ */
+  .btn {
+    padding: 10px 24px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: default;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--white);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .btn-ghost { background: none; color: var(--text-secondary); }
+
+  /* ================================================================
+     FORM STYLES
+     ================================================================ */
+  .form-section { display: flex; flex-direction: column; gap: 8px; }
+  .form-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .form-label-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .form-helper {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* Pill chips */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--white);
+    border: 1px solid var(--border);
+    cursor: default;
+    transition: all 0.15s;
+  }
+  .pill.selected {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  /* Styled select */
+  .form-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--white);
+    cursor: default;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+
+  /* Goal suggestion cards */
+  .goal-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border-left: 3px solid var(--border);
+    background: var(--white);
+    cursor: default;
+    transition: all 0.15s;
+  }
+  .goal-card.selected {
+    border-left-color: var(--accent);
+    background: rgba(68, 170, 153, 0.05);
+  }
+  .goal-card-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: transparent;
+  }
+  .goal-card.selected .goal-card-check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--white);
+  }
+  .goal-card-check svg { width: 12px; height: 12px; }
+  .goal-card-body { flex: 1; min-width: 0; }
+  .goal-card-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-primary);
+  }
+  .goal-card-tag {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* Custom goal input */
+  .custom-goal-input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-muted);
+    background: transparent;
+    outline: none;
+    width: 100%;
+  }
+
+  /* Metric rows */
+  .metric-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--glacier);
+    border: 1px solid var(--border-light);
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .metric-row svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+
+  /* Date input */
+  .form-input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--white);
+    outline: none;
+  }
+
+  /* ================================================================
+     ANNOTATION CARDS
+     ================================================================ */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.accent { background: var(--accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ================================================================
+     ANIMATION
+     ================================================================ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .message { animation: fadeUp 0.4s ease both; }
+  .message:nth-child(1) { animation-delay: 0s; }
+  .message:nth-child(2) { animation-delay: 0.15s; }
+  .message:nth-child(3) { animation-delay: 0.3s; }
+  .working-doc-card { animation: fadeUp 0.5s ease 0.35s both; }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Grow — Feature Proposal</div>
+  <div class="mockup-title">Goal Creation — Strategy-Aligned</div>
+  <div class="mockup-subtitle">
+    Employees create goals with strategic context. AI suggests pillar-aligned templates and metrics — the employee selects, customizes, and the manager confirms.
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">app.ascenta.ai / grow / performance</div>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <span class="sidebar-logo-text">ASCENTA</span>
+        </div>
+        <nav class="sidebar-nav">
+          <!-- Home -->
+          <div class="sidebar-item" style="color: var(--text-secondary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Home
+          </div>
+          <div class="sidebar-divider"></div>
+
+          <!-- Plan -->
+          <div class="sidebar-item" style="color: #6688bb;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Plan
+          </div>
+
+          <!-- Grow (active) -->
+          <div class="sidebar-item active" style="border-left-color: #44aa99; background: #44aa9920;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>
+            Grow
+          </div>
+          <a class="sidebar-sub active" style="background: #44aa9918;">Performance System</a>
+          <a class="sidebar-sub">Coaching &amp; Corrective Action</a>
+          <a class="sidebar-sub">Learning &amp; Development</a>
+          <a class="sidebar-sub">Leadership Library</a>
+
+          <!-- Care -->
+          <div class="sidebar-item" style="color: #cc6677;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#cc6677" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Care
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Area -->
+      <div class="main-area">
+        <!-- Top Header -->
+        <div class="top-header">
+          <div class="top-header-left">
+            <div class="top-header-avatar">SC</div>
+            <span class="top-header-company">StoneCyber</span>
+          </div>
+          <div class="top-header-right">
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Content: Chat + Working Doc -->
+        <div class="main-content">
+
+          <!-- Left: Chat Panel -->
+          <div class="chat-panel">
+            <div class="chat-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="chat-header-title">Performance</span>
+                <span class="tool-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 13V2l8 4-8 4"/><path d="M20.55 10.23A9 9 0 1 1 8 4.94"/><path d="M8 10a5 5 0 1 0 8.9 2.02"/></svg>
+                  Create Goal
+                </span>
+              </div>
+            </div>
+
+            <div class="chat-messages">
+              <!-- Message 1: User -->
+              <div class="message user">
+                <div class="message-bubble">
+                  <div class="message-inner">
+                    <div class="message-avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                    </div>
+                    <div class="message-content">
+                      <div class="message-sender">You</div>
+                      <div class="message-text">I'd like to create a new goal for Sarah Chen on the engineering team</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message 2: Assistant (Employee Lookup) -->
+              <div class="message assistant">
+                <div class="message-bubble">
+                  <div class="message-inner">
+                    <div class="message-avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                    </div>
+                    <div class="message-content">
+                      <div class="message-sender">
+                        Ascenta
+                        <span class="tool-badge">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                          Employee Lookup
+                        </span>
+                      </div>
+                      <div class="message-text">I found Sarah Chen — Senior Software Engineer in the Product Engineering team. I can see your company's strategic priorities include <strong>Product-Led Growth</strong> and <strong>Customer Obsession</strong>. Let me pull up a goal creation form with strategy-aligned suggestions.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message 3: Assistant (Create Goal) -->
+              <div class="message assistant">
+                <div class="message-bubble">
+                  <div class="message-inner">
+                    <div class="message-avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                    </div>
+                    <div class="message-content">
+                      <div class="message-sender">
+                        Ascenta
+                        <span class="tool-badge">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 13V2l8 4-8 4"/><path d="M20.55 10.23A9 9 0 1 1 8 4.94"/><path d="M8 10a5 5 0 1 0 8.9 2.02"/></svg>
+                          Create Goal
+                        </span>
+                      </div>
+                      <div class="message-text">I've opened a goal creation form for Sarah with strategic context pre-loaded. Based on her role and your company's priorities, I've suggested goals aligned to the <strong>Product-Led Growth</strong> pillar.<br><br>You can review and adjust the pre-filled fields in the side panel, or ask me to change anything.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-area">
+              <div class="chat-input-box">
+                <div class="chat-input-row">
+                  <textarea class="chat-input" placeholder="Ask Ascenta to adjust the goal, change metrics, or pick a different pillar..." rows="1"></textarea>
+                  <button class="chat-submit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Working Document Panel -->
+          <div class="working-doc-panel">
+            <div class="working-doc-card">
+              <!-- Header -->
+              <div class="working-doc-header">
+                <div class="working-doc-header-left">
+                  <div class="working-doc-header-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 13V2l8 4-8 4"/><path d="M20.55 10.23A9 9 0 1 1 8 4.94"/><path d="M8 10a5 5 0 1 0 8.9 2.02"/></svg>
+                  </div>
+                  <span class="working-doc-header-title">New Goal — Sarah Chen</span>
+                </div>
+                <button class="close-btn">&times;</button>
+              </div>
+
+              <!-- Body -->
+              <div class="working-doc-body">
+
+                <!-- Section 1: Strategic Alignment -->
+                <div class="form-section">
+                  <div class="form-label">STRATEGIC PILLAR</div>
+                  <div class="pill-row">
+                    <span class="pill selected">Product-Led Growth</span>
+                    <span class="pill">Operational Excellence</span>
+                    <span class="pill">Talent Development</span>
+                    <span class="pill">Market Expansion</span>
+                  </div>
+                  <div class="form-helper">Linked from Strategy Studio &rarr; AI Translation Layer</div>
+                </div>
+
+                <!-- Section 2: Department & Goal Type -->
+                <div class="form-section">
+                  <div class="form-label">DEPARTMENT ALIGNMENT</div>
+                  <select class="form-select">
+                    <option>Product Engineering — Customer-centric delivery</option>
+                  </select>
+                </div>
+
+                <div class="form-section">
+                  <div class="form-label">GOAL TYPE</div>
+                  <div class="pill-row">
+                    <span class="pill selected">Performance</span>
+                    <span class="pill">Development</span>
+                    <span class="pill">Culture</span>
+                    <span class="pill">Operational</span>
+                  </div>
+                </div>
+
+                <!-- Section 3: Goal Recommendations -->
+                <div class="form-section">
+                  <div class="form-label form-label-with-icon">
+                    SUGGESTED GOALS
+                    <span style="font-size: 14px;">&#10024;</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Goal 1 (selected) -->
+                    <div class="goal-card selected">
+                      <div class="goal-card-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <div class="goal-card-body">
+                        <div class="goal-card-text">Reduce customer-reported P1 bugs by 40% through proactive monitoring</div>
+                        <span class="goal-card-tag">Product-Led Growth</span>
+                      </div>
+                    </div>
+                    <!-- Goal 2 -->
+                    <div class="goal-card">
+                      <div class="goal-card-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <div class="goal-card-body">
+                        <div class="goal-card-text">Implement customer feedback loop for feature prioritization</div>
+                        <span class="goal-card-tag" style="background: rgba(255, 107, 53, 0.1); color: var(--summit);">Customer Obsession</span>
+                      </div>
+                    </div>
+                    <!-- Goal 3 -->
+                    <div class="goal-card">
+                      <div class="goal-card-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <div class="goal-card-body">
+                        <div class="goal-card-text">Lead cross-team initiative to improve API response times by 50%</div>
+                        <span class="goal-card-tag" style="background: rgba(102, 136, 187, 0.1); color: #6688bb;">Operational Excellence</span>
+                      </div>
+                    </div>
+                    <!-- Goal 4 -->
+                    <div class="goal-card">
+                      <div class="goal-card-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <div class="goal-card-body">
+                        <div class="goal-card-text">Mentor two junior engineers on customer-centric development practices</div>
+                        <span class="goal-card-tag" style="background: rgba(187, 102, 136, 0.1); color: #bb6688;">Talent Development</span>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="text" class="custom-goal-input" placeholder="Or write a custom goal..." />
+                </div>
+
+                <!-- Section 4: Metrics & Milestones -->
+                <div class="form-section">
+                  <div class="form-label">SUCCESS METRICS</div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="metric-row">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+                      P1 bug count: 24 &rarr; target 14 by Q3 2026
+                    </div>
+                    <div class="metric-row">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      Mean time to resolution: 4.2h &rarr; target 2.5h
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="form-label">TARGET DATE</div>
+                  <input type="text" class="form-input" value="September 30, 2026" readonly style="width: 200px;" />
+                </div>
+
+              </div>
+
+              <!-- Footer -->
+              <div class="working-doc-footer">
+                <button class="btn btn-primary">Submit for Manager Review</button>
+                <button class="btn btn-ghost">Save Draft</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation Cards -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">&#9650;</div>
+      <h4>Strategy Flows Down</h4>
+      <p>Strategic pillars from the Strategy Studio appear as selectable context during goal creation. Employees see how their work connects to company direction.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">&#9733;</div>
+      <h4>AI-Suggested, Human-Selected</h4>
+      <p>Ascenta suggests 4-6 goals based on the employee's role, team focus, and strategic priorities. The employee chooses or writes their own.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">&#9673;</div>
+      <h4>Metrics, Not Guesswork</h4>
+      <p>AI suggests specific metrics based on the selected goal type. Employees customize targets, not define measurement frameworks from scratch.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">&#10003;</div>
+      <h4>Manager Confirms</h4>
+      <p>Goals aren't final until the manager reviews and activates them. This creates mutual commitment and ensures alignment.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

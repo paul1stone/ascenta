@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check-in Detail — Sarah Kim</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #0c1e3d; }
+
+  .app-shell { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* Breadcrumb */
+  .breadcrumb { font-size: 13px; color: #64748b; margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+  .breadcrumb a { color: #44aa99; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  /* Employee header */
+  .employee-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+  .avatar { width: 52px; height: 52px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: white; flex-shrink: 0; }
+  .employee-header .info h1 { font-size: 22px; font-weight: 700; }
+  .employee-header .info .subtitle { font-size: 14px; color: #64748b; }
+  .header-right { margin-left: auto; text-align: right; }
+  .header-right .due { font-size: 13px; color: #64748b; }
+  .header-right .due strong { color: #0c1e3d; }
+  .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-top: 4px; }
+  .badge.ready { background: #d1fae5; color: #065f46; }
+
+  /* Phase stepper */
+  .phase-stepper { display: flex; align-items: stretch; margin-bottom: 36px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+  .phase-step { flex: 1; padding: 18px 24px; position: relative; cursor: pointer; transition: background 0.15s; border-right: 1px solid #e2e8f0; }
+  .phase-step:last-child { border-right: none; }
+  .phase-step:hover { background: #f8fafc; }
+  .phase-step.active { background: #f0fdfa; }
+  .phase-step.completed { background: #fafafa; }
+
+  .phase-step .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .phase-step.completed .step-num { background: #44aa99; color: white; }
+  .phase-step.active .step-num { background: #0c1e3d; color: white; }
+  .phase-step.upcoming .step-num { background: #e2e8f0; color: #94a3b8; }
+
+  .phase-step .step-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .phase-step.completed .step-title { color: #64748b; }
+  .phase-step.upcoming .step-title { color: #94a3b8; }
+  .phase-step .step-desc { font-size: 12px; color: #94a3b8; line-height: 1.4; }
+  .phase-step.active .step-desc { color: #64748b; }
+
+  .checkmark { font-size: 14px; }
+
+  /* Active phase content area */
+  .phase-content { display: flex; gap: 24px; }
+
+  /* Left: main content */
+  .main-col { flex: 1; }
+
+  /* Right: sidebar */
+  .sidebar { width: 320px; flex-shrink: 0; }
+
+  /* Section cards */
+  .section-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+  .section-card .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  .section-card .card-header h3 { font-size: 14px; font-weight: 600; }
+  .section-card .card-header .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f1f5f9; color: #64748b; }
+  .section-card .card-body { padding: 20px; }
+
+  /* Guided prompts */
+  .prompt-group { margin-bottom: 20px; }
+  .prompt-group:last-child { margin-bottom: 0; }
+  .prompt-label { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .prompt-label .required { color: #dc2626; font-size: 11px; }
+  .prompt-hint { font-size: 12px; color: #94a3b8; margin-bottom: 8px; font-style: italic; }
+  .prompt-textarea { width: 100%; min-height: 80px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; color: #0c1e3d; }
+  .prompt-textarea:focus { outline: none; border-color: #44aa99; box-shadow: 0 0 0 3px rgba(68,170,153,0.1); }
+  .prompt-textarea::placeholder { color: #cbd5e1; }
+
+  /* Pre-filled employee text */
+  .employee-response { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 14px; line-height: 1.6; color: #475569; }
+  .employee-response .attribution { font-size: 11px; color: #94a3b8; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Goal cards in sidebar */
+  .goal-item { padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
+  .goal-item:last-child { border-bottom: none; }
+  .goal-item .goal-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .goal-item .goal-meta { font-size: 12px; color: #64748b; margin-bottom: 8px; }
+  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+  .progress-bar .fill { height: 100%; border-radius: 3px; }
+  .fill.green { background: #44aa99; }
+  .fill.yellow { background: #eab308; }
+  .progress-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+  /* AI prep brief */
+  .ai-brief { background: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%); border: 1px solid #99d5cb; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 1.6; color: #475569; }
+  .ai-brief .ai-label { font-size: 11px; font-weight: 700; color: #44aa99; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .ai-brief ul { margin: 8px 0 0 16px; }
+  .ai-brief li { margin-bottom: 4px; }
+
+  /* Button row */
+  .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+  .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-primary { background: #44aa99; color: white; }
+  .btn-secondary { background: white; color: #0c1e3d; border: 1px solid #e2e8f0; }
+
+  /* Annotation */
+  .annotation { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; display: flex; align-items: flex-start; gap: 8px; }
+  .annotation strong { white-space: nowrap; }
+
+  /* Separator */
+  .divider { border: none; border-top: 1px solid #f1f5f9; margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="#">Check-ins</a>
+    <span>/</span>
+    <span>Sarah Kim</span>
+  </div>
+
+  <!-- Employee header -->
+  <div class="employee-header">
+    <div class="avatar">SK</div>
+    <div class="info">
+      <h1>Check-in with Sarah Kim</h1>
+      <div class="subtitle">Product Designer · Design Team · Monthly cadence</div>
+    </div>
+    <div class="header-right">
+      <div class="due">Due <strong>Apr 5, 2026</strong></div>
+      <span class="badge ready">Ready to Meet</span>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Mockup:</strong> Detail view — Phase 2 (Conversation) is active. Phase 1 (Prep) is complete. Click the phase steps to navigate between them.
+  </div>
+
+  <!-- Phase stepper -->
+  <div class="phase-stepper">
+    <div class="phase-step completed" onclick="showPhase(1)">
+      <div class="step-num"><span class="checkmark">&#10003;</span></div>
+      <div class="step-title">Pre-check-in Prep</div>
+      <div class="step-desc">AI brief generated · Employee self-assessment submitted · Manager reviewed</div>
+    </div>
+    <div class="phase-step active" onclick="showPhase(2)">
+      <div class="step-num">2</div>
+      <div class="step-title">The Conversation</div>
+      <div class="step-desc">Guided prompts · Progress · Blockers · Recognition</div>
+    </div>
+    <div class="phase-step upcoming" onclick="showPhase(3)">
+      <div class="step-num">3</div>
+      <div class="step-title">Post-check-in Actions</div>
+      <div class="step-desc">Action items · Goal updates · Notes saved</div>
+    </div>
+  </div>
+
+  <!-- Phase 2: Conversation (active) -->
+  <div class="phase-content" id="phase-2">
+    <div class="main-col">
+
+      <!-- Employee's self-assessment (from Phase 1) -->
+      <div class="section-card">
+        <div class="card-header">
+          <h3>Employee Self-Assessment</h3>
+          <span class="tag">From Sarah · Submitted Apr 2</span>
+        </div>
+        <div class="card-body">
+          <div class="employee-response">
+            <div class="attribution">Progress Update</div>
+            Design system v2 components are 70% complete. Shipped the new button, input, and card primitives to production. Badge and tooltip are in review. Onboarding flow wireframes are done but waiting on copy.
+          </div>
+          <div style="height: 12px;"></div>
+          <div class="employee-response">
+            <div class="attribution">Obstacles</div>
+            Copy team is backlogged — onboarding flow is blocked until I get final copy. Also need design review bandwidth from the team lead for the remaining components.
+          </div>
+          <div style="height: 12px;"></div>
+          <div class="employee-response">
+            <div class="attribution">Support Needed</div>
+            Could use help prioritizing between the design system backlog and the onboarding deadline. They're competing for the same time.
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversation guided prompts -->
+      <div class="section-card">
+        <div class="card-header">
+          <h3>Conversation Notes</h3>
+          <span class="tag">Manager</span>
+        </div>
+        <div class="card-body">
+          <div class="prompt-group">
+            <div class="prompt-label">Progress Observed <span class="required">Required</span></div>
+            <div class="prompt-hint">What progress have you seen since the last check-in? Reference specific work.</div>
+            <textarea class="prompt-textarea" placeholder="e.g., Strong execution on the design system primitives. The button and input components are already being adopted by the frontend team..."></textarea>
+          </div>
+
+          <hr class="divider">
+
+          <div class="prompt-group">
+            <div class="prompt-label">Blockers & Discussion <span class="required">Required</span></div>
+            <div class="prompt-hint">What came up in conversation? Blockers, concerns, course corrections?</div>
+            <textarea class="prompt-textarea" placeholder="e.g., We discussed the copy team bottleneck. Agreed to escalate to the PM to get a dedicated copywriter for onboarding..."></textarea>
+          </div>
+
+          <hr class="divider">
+
+          <div class="prompt-group">
+            <div class="prompt-label">Coaching & Development</div>
+            <div class="prompt-hint">Any coaching moments, skill development, or growth conversations?</div>
+            <textarea class="prompt-textarea" placeholder="e.g., Encouraged Sarah to present the design system at the next eng all-hands — good visibility opportunity..."></textarea>
+          </div>
+
+          <hr class="divider">
+
+          <div class="prompt-group">
+            <div class="prompt-label">Recognition</div>
+            <div class="prompt-hint">Anything worth calling out? Wins, effort, collaboration?</div>
+            <textarea class="prompt-textarea" placeholder="e.g., Great job getting the primitives shipped ahead of schedule despite the team being short-staffed..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary">Save & Continue to Actions</button>
+        <button class="btn btn-secondary">Save Draft</button>
+      </div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- AI Prep Brief -->
+      <div class="section-card">
+        <div class="card-header">
+          <h3>AI Prep Brief</h3>
+          <span class="tag" style="background: #f0fdfa; color: #44aa99;">AI-generated</span>
+        </div>
+        <div class="card-body" style="padding: 16px;">
+          <div class="ai-brief">
+            <div class="ai-label">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#44aa99" stroke-width="1.5"/><path d="M8 5v3M8 10h.01" stroke="#44aa99" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Suggested talking points
+            </div>
+            <ul>
+              <li>Design system is ahead of schedule — acknowledge the momentum</li>
+              <li>Onboarding is blocked on copy — discuss escalation path</li>
+              <li>Sarah flagged a prioritization conflict — help her sequence the work</li>
+              <li>Last check-in action item (accessibility audit) — follow up on status</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Goals -->
+      <div class="section-card">
+        <div class="card-header">
+          <h3>Linked Goals</h3>
+        </div>
+        <div class="card-body">
+          <div class="goal-item">
+            <div class="goal-name">Design System v2</div>
+            <div class="goal-meta">Performance · Due Jun 30</div>
+            <div class="progress-bar"><div class="fill green" style="width: 70%;"></div></div>
+            <div class="progress-label">70% — On Track</div>
+          </div>
+          <div class="goal-item">
+            <div class="goal-name">Onboarding Flow Redesign</div>
+            <div class="goal-meta">Performance · Due May 15</div>
+            <div class="progress-bar"><div class="fill yellow" style="width: 35%;"></div></div>
+            <div class="progress-label">35% — Needs Attention</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Previous check-in summary -->
+      <div class="section-card">
+        <div class="card-header">
+          <h3>Last Check-in</h3>
+          <span class="tag">Mar 15</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size: 13px; color: #475569; line-height: 1.6;">
+            Discussed component library progress and accessibility standards. Sarah committed to an accessibility audit of the new primitives.
+          </div>
+          <div style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
+            <strong style="color: #64748b;">Open actions:</strong> Accessibility audit (in progress), Update component docs
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

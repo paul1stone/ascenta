@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascenta — Do Chat Placement: A/B Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-blue: #0c1e3d;
+    --summit: #ff6b35;
+    --summit-hover: #e85a2a;
+    --glacier: #f8fafc;
+    --accent: #44aa99;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-mid: color-mix(in srgb, var(--accent) 25%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 20%, transparent);
+    --text-primary: #0c1e3d;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
+    --header-h: 56px;
+    --sidebar-w: 220px;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--glacier);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockup-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .mockup-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .mockup-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .mockup-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .option-section {
+    margin-bottom: 56px;
+  }
+  .option-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--summit);
+    margin-bottom: 6px;
+  }
+  .option-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .option-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* Browser Frame */
+  .browser-frame {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--glacier);
+    border-bottom: 1px solid var(--border);
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .browser-dots span:first-child { background: #feb2b2; }
+  .browser-dots span:nth-child(2) { background: #fefcbf; }
+  .browser-dots span:nth-child(3) { background: #c6f6d5; }
+  .browser-url {
+    flex: 1;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+  }
+
+  /* App Shell */
+  .app-layout { display: flex; height: 620px; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-logo {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--deep-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-logo-icon svg { color: var(--white); }
+  .sidebar-logo-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--deep-blue);
+  }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .sidebar-item.active {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-divider { margin: 4px 12px; border-bottom: 1px solid var(--border); }
+
+  .sidebar-sub {
+    display: block;
+    padding: 6px 14px 6px 42px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: default;
+    white-space: nowrap;
+  }
+  .sidebar-sub.active {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Top Header */
+  .top-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .top-header-left { display: flex; align-items: center; gap: 10px; }
+  .top-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--deep-blue);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .top-header-company {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .top-header-right { display: flex; align-items: center; gap: 4px; }
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+  }
+  .header-icon-btn svg { width: 16px; height: 16px; }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--glacier);
+  }
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Tabs */
+  .page-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 24px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+  .page-tab {
+    padding: 14px 20px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    cursor: default;
+  }
+  .page-tab.active {
+    color: var(--accent);
+    font-weight: 700;
+    border-bottom-color: var(--accent);
+  }
+
+  /* Goals Content */
+  .goals-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .goals-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .goals-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--deep-blue);
+  }
+  .goals-count {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* Goal Card */
+  .goal-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    animation: fadeUp 0.3s ease-out both;
+  }
+  .goal-card:nth-child(2) { animation-delay: 0.05s; }
+  .goal-card:nth-child(3) { animation-delay: 0.1s; }
+  .goal-card:nth-child(4) { animation-delay: 0.15s; }
+
+  .goal-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: default;
+  }
+  .goal-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .goal-status-dot.on-track { background: #22c55e; }
+  .goal-status-dot.needs-attention { background: #f59e0b; }
+  .goal-status-dot.off-track { background: #ef4444; }
+
+  .goal-card-title {
+    flex: 1;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--deep-blue);
+  }
+  .goal-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .goal-tag {
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .goal-tag.performance { background: rgba(68, 170, 153, 0.1); color: #44aa99; }
+  .goal-tag.leadership { background: rgba(102, 136, 187, 0.1); color: #6688bb; }
+  .goal-tag.development { background: rgba(187, 102, 136, 0.1); color: #bb6688; }
+
+  .goal-period {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .goal-chevron {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+
+  /* Annotation Cards */
+  .annotation-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .annotation-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .annotation-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  .annotation-card-icon.accent { background: var(--accent-soft); }
+  .annotation-card-icon.blue { background: rgba(59, 130, 246, 0.1); }
+  .annotation-card-icon.orange { background: rgba(255, 107, 53, 0.1); }
+  .annotation-card h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    margin-bottom: 4px;
+  }
+  .annotation-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ===== OPTION-SPECIFIC STYLES ===== */
+
+  /* Bottom Drawer */
+  .bottom-drawer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 280px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 30px rgba(12, 30, 61, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+  .drawer-handle-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    cursor: default;
+  }
+  .drawer-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 10px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .drawer-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .drawer-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--summit);
+  }
+  .drawer-messages {
+    flex: 1;
+    padding: 12px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .drawer-msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .drawer-msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 11px;
+  }
+  .drawer-msg-avatar.user { background: var(--deep-blue); }
+  .drawer-msg-avatar.bot { background: var(--summit); }
+  .drawer-msg-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 10px;
+    max-width: 80%;
+  }
+  .drawer-msg.user .drawer-msg-text {
+    background: rgba(12, 30, 61, 0.04);
+    border: 1px solid rgba(12, 30, 61, 0.08);
+  }
+  .drawer-msg.bot .drawer-msg-text {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--accent-border);
+  }
+  .drawer-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 20px 14px;
+    border-top: 1px solid var(--border-light);
+  }
+  .drawer-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-muted);
+    background: var(--glacier);
+    outline: none;
+  }
+  .drawer-send {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: var(--summit);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* FAB */
+  .fab-button {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--summit);
+    color: var(--white);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.35), 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 10;
+    cursor: default;
+  }
+  .fab-button svg { width: 24px; height: 24px; }
+  .fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+  }
+
+  /* FAB Modal */
+  .fab-modal {
+    position: absolute;
+    bottom: 90px;
+    right: 24px;
+    width: 380px;
+    height: 400px;
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(12, 30, 61, 0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+  }
+  .fab-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--summit) 6%, white), white);
+  }
+  .fab-modal-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fab-modal-title svg { color: var(--summit); width: 16px; height: 16px; }
+  .close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    font-size: 16px;
+  }
+  .fab-modal-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--glacier);
+  }
+  .fab-modal-input {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Side Panel Overlay */
+  .side-panel-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 380px;
+    height: 100%;
+    background: var(--white);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 30px rgba(12, 30, 61, 0.08);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+  .side-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .side-panel-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .side-panel-title svg { color: var(--summit); width: 16px; height: 16px; }
+  .side-panel-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--glacier);
+  }
+  .side-panel-input {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .dimmed-content {
+    opacity: 0.6;
+  }
+
+  /* Pro/Con tags */
+  .tradeoff-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .pro-tag, .con-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 99px;
+  }
+  .pro-tag {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+  }
+  .con-tag {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-wrapper">
+  <div class="mockup-label">Ascenta Grow — A/B Exploration</div>
+  <div class="mockup-title">Do Chat Placement: Alternative Options</div>
+  <div class="mockup-subtitle">
+    Three alternative chat placement strategies for comparison. The current plan places Do as a top-level nav item with its own dedicated page. These options explore inline chat patterns for A/B testing.
+  </div>
+
+  <!-- ============================================================
+       OPTION 1: BOTTOM DRAWER
+       ============================================================ -->
+  <div class="option-section">
+    <div class="option-label">Option A</div>
+    <div class="option-title">Bottom Drawer</div>
+    <div class="option-desc">Chat pulls up from the bottom as a resizable drawer, overlaying the Goals tab content. Always accessible via a tab at the bottom edge.</div>
+
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">app.ascenta.ai / grow / performance</div>
+      </div>
+      <div class="app-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            </div>
+            <span class="sidebar-logo-text">ASCENTA</span>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-item" style="color: var(--text-secondary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Home
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-item" style="color: #6688bb;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              Plan
+            </div>
+            <div class="sidebar-item active" style="border-left-color: #44aa99; background: rgba(68,170,153,0.08); color: var(--text-primary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838.838-2.872a2 2 0 0 1 .506-.855z"/></svg>
+              Grow
+            </div>
+            <div class="sidebar-sub active" style="background: rgba(68,170,153,0.06);">Performance System</div>
+            <div class="sidebar-sub">Coaching & Corrective</div>
+            <div class="sidebar-sub">Learning & Dev</div>
+            <div class="sidebar-item" style="color: #cc6677;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#cc6677" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Care
+            </div>
+            <div class="sidebar-item" style="color: #8888aa;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8888aa" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              Protect
+            </div>
+          </nav>
+        </div>
+
+        <div class="main-area">
+          <div class="top-header">
+            <div class="top-header-left">
+              <div class="top-header-avatar">SC</div>
+              <span class="top-header-company">StoneCyber</span>
+            </div>
+            <div class="top-header-right">
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
+            </div>
+          </div>
+
+          <div class="main-content">
+            <!-- Tabs -->
+            <div class="page-tabs">
+              <div class="page-tab active">Goals</div>
+              <div class="page-tab">Performance Reviews</div>
+              <div class="page-tab">Check-ins</div>
+              <div class="page-tab">Reflect</div>
+            </div>
+
+            <!-- Goals (dimmed behind drawer) -->
+            <div class="goals-content dimmed-content">
+              <div class="goals-header">
+                <div>
+                  <div class="goals-title">My Goals</div>
+                  <div class="goals-count">3 active goals</div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot on-track"></div>
+                  <div class="goal-card-title">Increase customer retention rate to 95%</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag performance">Performance</span>
+                    <span class="goal-period">Q1 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot needs-attention"></div>
+                  <div class="goal-card-title">Complete leadership certification program</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag leadership">Leadership</span>
+                    <span class="goal-period">H1 2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Drawer -->
+            <div class="bottom-drawer">
+              <div class="drawer-handle-bar"><div class="drawer-handle"></div></div>
+              <div class="drawer-header">
+                <div class="drawer-title">
+                  <div class="dot"></div>
+                  Ascenta Do
+                </div>
+                <button class="close-btn">×</button>
+              </div>
+              <div class="drawer-messages">
+                <div class="drawer-msg user">
+                  <div class="drawer-msg-avatar user">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">How's my retention goal tracking?</div>
+                </div>
+                <div class="drawer-msg bot">
+                  <div class="drawer-msg-avatar bot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">Your retention rate is at <strong style="color: var(--accent);">92.4%</strong> — up 1.8% from last month. You're on pace to hit 95% by end of Q1.</div>
+                </div>
+              </div>
+              <div class="drawer-input-row">
+                <input class="drawer-input" placeholder="Ask about goals, create check-ins, add notes..." readonly>
+                <button class="drawer-send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tradeoff-bar">
+      <span class="pro-tag">+ Always accessible</span>
+      <span class="pro-tag">+ Familiar pattern (support widgets)</span>
+      <span class="con-tag">- Obscures content below fold</span>
+      <span class="con-tag">- Form/doc space very limited</span>
+      <span class="con-tag">- Resizing adds complexity</span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       OPTION 2: FLOATING FAB + MODAL
+       ============================================================ -->
+  <div class="option-section">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Floating Action Button + Chat Modal</div>
+    <div class="option-desc">A persistent FAB in the bottom-right opens a chat popover. Unobtrusive when closed, but constrained in size when open. Working doc forms would need to break out to a full page.</div>
+
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">app.ascenta.ai / grow / performance</div>
+      </div>
+      <div class="app-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            </div>
+            <span class="sidebar-logo-text">ASCENTA</span>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-item" style="color: var(--text-secondary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Home
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-item" style="color: #6688bb;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              Plan
+            </div>
+            <div class="sidebar-item active" style="border-left-color: #44aa99; background: rgba(68,170,153,0.08); color: var(--text-primary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838.838-2.872a2 2 0 0 1 .506-.855z"/></svg>
+              Grow
+            </div>
+            <div class="sidebar-sub active" style="background: rgba(68,170,153,0.06);">Performance System</div>
+            <div class="sidebar-sub">Coaching & Corrective</div>
+            <div class="sidebar-sub">Learning & Dev</div>
+            <div class="sidebar-item" style="color: #cc6677;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#cc6677" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Care
+            </div>
+            <div class="sidebar-item" style="color: #8888aa;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8888aa" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              Protect
+            </div>
+          </nav>
+        </div>
+
+        <div class="main-area">
+          <div class="top-header">
+            <div class="top-header-left">
+              <div class="top-header-avatar">SC</div>
+              <span class="top-header-company">StoneCyber</span>
+            </div>
+            <div class="top-header-right">
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
+            </div>
+          </div>
+
+          <div class="main-content">
+            <div class="page-tabs">
+              <div class="page-tab active">Goals</div>
+              <div class="page-tab">Performance Reviews</div>
+              <div class="page-tab">Check-ins</div>
+              <div class="page-tab">Reflect</div>
+            </div>
+
+            <div class="goals-content">
+              <div class="goals-header">
+                <div>
+                  <div class="goals-title">My Goals</div>
+                  <div class="goals-count">3 active goals</div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot on-track"></div>
+                  <div class="goal-card-title">Increase customer retention rate to 95%</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag performance">Performance</span>
+                    <span class="goal-period">Q1 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot needs-attention"></div>
+                  <div class="goal-card-title">Complete leadership certification program</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag leadership">Leadership</span>
+                    <span class="goal-period">H1 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot on-track"></div>
+                  <div class="goal-card-title">Build cross-functional data literacy workshop</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag development">Development</span>
+                    <span class="goal-period">Q2 2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAB Modal (open state) -->
+            <div class="fab-modal">
+              <div class="fab-modal-header">
+                <div class="fab-modal-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  Ascenta Do
+                </div>
+                <button class="close-btn">×</button>
+              </div>
+              <div class="fab-modal-messages">
+                <div class="drawer-msg bot">
+                  <div class="drawer-msg-avatar bot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">Hey Jason! I can help you create goals, run check-ins, add performance notes, or anything else. What would you like to do?</div>
+                </div>
+                <div class="drawer-msg user">
+                  <div class="drawer-msg-avatar user">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">Create a new Q2 goal for improving team velocity</div>
+                </div>
+                <div class="drawer-msg bot">
+                  <div class="drawer-msg-avatar bot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">I'll set up that goal for you. Opening the form now...</div>
+                </div>
+              </div>
+              <div class="fab-modal-input">
+                <input class="drawer-input" placeholder="Ask anything..." readonly>
+                <button class="drawer-send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tradeoff-bar">
+      <span class="pro-tag">+ Doesn't obscure content when closed</span>
+      <span class="pro-tag">+ Familiar pattern (Intercom, Drift)</span>
+      <span class="con-tag">- Modal too small for forms/docs</span>
+      <span class="con-tag">- Feels like support chat, not a core tool</span>
+      <span class="con-tag">- Must break out to full page for workflows</span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       OPTION 3: SIDE PANEL OVERLAY
+       ============================================================ -->
+  <div class="option-section">
+    <div class="option-label">Option C</div>
+    <div class="option-title">Right Side Panel Overlay</div>
+    <div class="option-desc">Chat slides in from the right as an overlay panel (like Slack's thread view). Content underneath remains visible but dimmed. Could potentially expand for form workflows.</div>
+
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">app.ascenta.ai / grow / performance</div>
+      </div>
+      <div class="app-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            </div>
+            <span class="sidebar-logo-text">ASCENTA</span>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-item" style="color: var(--text-secondary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Home
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-item" style="color: #6688bb;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6688bb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              Plan
+            </div>
+            <div class="sidebar-item active" style="border-left-color: #44aa99; background: rgba(68,170,153,0.08); color: var(--text-primary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#44aa99" stroke-width="2"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838.838-2.872a2 2 0 0 1 .506-.855z"/></svg>
+              Grow
+            </div>
+            <div class="sidebar-sub active" style="background: rgba(68,170,153,0.06);">Performance System</div>
+            <div class="sidebar-sub">Coaching & Corrective</div>
+            <div class="sidebar-sub">Learning & Dev</div>
+            <div class="sidebar-item" style="color: #cc6677;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#cc6677" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Care
+            </div>
+            <div class="sidebar-item" style="color: #8888aa;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8888aa" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              Protect
+            </div>
+          </nav>
+        </div>
+
+        <div class="main-area">
+          <div class="top-header">
+            <div class="top-header-left">
+              <div class="top-header-avatar">SC</div>
+              <span class="top-header-company">StoneCyber</span>
+            </div>
+            <div class="top-header-right">
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="header-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+              <button class="header-icon-btn" style="background: rgba(255, 107, 53, 0.08); color: var(--summit);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="main-content">
+            <div class="page-tabs">
+              <div class="page-tab active">Goals</div>
+              <div class="page-tab">Performance Reviews</div>
+              <div class="page-tab">Check-ins</div>
+              <div class="page-tab">Reflect</div>
+            </div>
+
+            <div class="goals-content" style="opacity: 0.5;">
+              <div class="goals-header">
+                <div>
+                  <div class="goals-title">My Goals</div>
+                  <div class="goals-count">3 active goals</div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot on-track"></div>
+                  <div class="goal-card-title">Increase customer retention rate to 95%</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag performance">Performance</span>
+                    <span class="goal-period">Q1 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot needs-attention"></div>
+                  <div class="goal-card-title">Complete leadership certification program</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag leadership">Leadership</span>
+                    <span class="goal-period">H1 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div class="goal-card">
+                <div class="goal-card-header">
+                  <div class="goal-status-dot on-track"></div>
+                  <div class="goal-card-title">Build cross-functional data literacy workshop</div>
+                  <div class="goal-card-meta">
+                    <span class="goal-tag development">Development</span>
+                    <span class="goal-period">Q2 2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Side Panel Overlay -->
+            <div class="side-panel-overlay">
+              <div class="side-panel-header">
+                <div class="side-panel-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  Ascenta Do
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <button class="close-btn" title="Expand to full page" style="font-size: 14px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+                  </button>
+                  <button class="close-btn">×</button>
+                </div>
+              </div>
+              <div class="side-panel-messages">
+                <div class="drawer-msg bot">
+                  <div class="drawer-msg-avatar bot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">Hey Jason! What would you like to work on?</div>
+                </div>
+                <div class="drawer-msg user">
+                  <div class="drawer-msg-avatar user">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">Run a check-in for my retention goal</div>
+                </div>
+                <div class="drawer-msg bot">
+                  <div class="drawer-msg-avatar bot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  </div>
+                  <div class="drawer-msg-text">I'll prepare the check-in form. Expanding to full view for the form...</div>
+                </div>
+              </div>
+              <div class="side-panel-input">
+                <input class="drawer-input" placeholder="Ask anything..." readonly>
+                <button class="drawer-send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tradeoff-bar">
+      <span class="pro-tag">+ Content stays visible (dimmed)</span>
+      <span class="pro-tag">+ Expand button for heavy workflows</span>
+      <span class="pro-tag">+ Slack-like familiarity</span>
+      <span class="con-tag">- Still constrained for forms when inline</span>
+      <span class="con-tag">- Two modes (panel vs full page) adds complexity</span>
+    </div>
+  </div>
+
+  <!-- Annotation Cards -->
+  <div class="annotation-bar">
+    <div class="annotation-card">
+      <div class="annotation-card-icon accent">💬</div>
+      <h4>Recommended: Dedicated Page</h4>
+      <p>The current plan (Do as top-level nav item) gives full-screen real estate. No form/doc conflicts. These options are alternatives for A/B comparison if inline chat proves more natural.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon orange">📐</div>
+      <h4>Form Space Is The Key Tradeoff</h4>
+      <p>All inline options struggle with the working document pattern (goal forms, check-in forms) which needs ~50% screen width. The dedicated page avoids this entirely.</p>
+    </div>
+    <div class="annotation-card">
+      <div class="annotation-card-icon blue">🔀</div>
+      <h4>Hybrid Is Possible</h4>
+      <p>Option C (side panel) with an "expand" button is the closest hybrid — quick chats stay inline, heavy workflows expand to full page. More complex to build but most flexible.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
