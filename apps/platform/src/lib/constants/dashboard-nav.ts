@@ -244,6 +244,15 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
           { label: "Development observation", promptTemplate: "Add a development note for {{directReport}} on areas for growth" },
         ],
       },
+      {
+        key: "startPerformanceReview",
+        label: "Start Review",
+        icon: ClipboardCheck,
+        promptSuggestions: [
+          { label: "Start performance review", promptTemplate: "Start a performance review for [employee name]" },
+          { label: "Begin Q1 team review", promptTemplate: "Begin Q1 review for my team" },
+        ],
+      },
     ],
   },
   "grow/coaching": {
