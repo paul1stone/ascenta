@@ -15,43 +15,17 @@ import {
   SelectValue,
 } from "@ascenta/ui/select";
 import { goalFormSchema, type GoalFormValues } from "@/lib/validations/goal";
+import { GOAL_CATEGORY_LABELS } from "@ascenta/db/goal-constants";
 import { User } from "lucide-react";
 import { EmployeePicker } from "./employee-picker";
 
 // ---------------------------------------------------------------------------
-// Category groups → filtered categories
+// Options
 // ---------------------------------------------------------------------------
 
-const CATEGORY_GROUP_OPTIONS = [
-  { value: "performance", label: "Performance Goals" },
-  { value: "leadership", label: "Leadership Goals" },
-  { value: "development", label: "Development Goals" },
-] as const;
-
-const CATEGORIES_BY_GROUP: Record<string, { value: string; label: string }[]> = {
-  performance: [
-    { value: "productivity", label: "Productivity" },
-    { value: "quality", label: "Quality" },
-    { value: "accuracy", label: "Accuracy" },
-    { value: "efficiency", label: "Efficiency" },
-    { value: "operational_excellence", label: "Operational Excellence" },
-    { value: "customer_impact", label: "Customer Impact" },
-  ],
-  leadership: [
-    { value: "communication", label: "Communication" },
-    { value: "collaboration", label: "Collaboration" },
-    { value: "conflict_resolution", label: "Conflict Resolution" },
-    { value: "decision_making", label: "Decision Making" },
-    { value: "initiative", label: "Initiative" },
-  ],
-  development: [
-    { value: "skill_development", label: "Skill Development" },
-    { value: "certification", label: "Certification" },
-    { value: "training_completion", label: "Training Completion" },
-    { value: "leadership_growth", label: "Leadership Growth" },
-    { value: "career_advancement", label: "Career Advancement" },
-  ],
-};
+const CATEGORY_OPTIONS = Object.entries(GOAL_CATEGORY_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const MEASUREMENT_TYPE_OPTIONS = [
   { value: "numeric_metric", label: "Numeric Metric" },
@@ -79,12 +53,6 @@ const CADENCE_OPTIONS = [
   { value: "manager_scheduled", label: "Manager Scheduled" },
 ] as const;
 
-const ALIGNMENT_OPTIONS = [
-  { value: "mission", label: "Mission" },
-  { value: "value", label: "Value" },
-  { value: "priority", label: "Priority" },
-] as const;
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -109,7 +77,6 @@ export function GoalCreationForm({
       employeeId: "",
       title: "",
       description: "",
-      categoryGroup: undefined,
       category: undefined,
       measurementType: undefined,
       successMetric: "",
@@ -117,7 +84,9 @@ export function GoalCreationForm({
       customStartDate: "",
       customEndDate: "",
       checkInCadence: undefined,
-      alignment: undefined,
+      strategyGoalId: "",
+      strategyGoalTitle: "",
+      notes: "",
       ...initialValues,
     },
   });
@@ -129,7 +98,6 @@ export function GoalCreationForm({
     formState: { errors, isSubmitting },
   } = form;
 
-  const categoryGroup = watch("categoryGroup");
   const timePeriod = watch("timePeriod");
 
   // Sync every field change back to the chat context
@@ -141,25 +109,6 @@ export function GoalCreationForm({
     });
     return () => subscription.unsubscribe();
   }, [watch, onFieldChange]);
-
-  // Reset category when categoryGroup changes
-  useEffect(() => {
-    const current = watch("category");
-    if (categoryGroup) {
-      const validCategories = CATEGORIES_BY_GROUP[categoryGroup] ?? [];
-      const isStillValid = validCategories.some((c) => c.value === current);
-      if (!isStillValid) {
-        setValue("category", undefined as unknown as GoalFormValues["category"], {
-          shouldValidate: false,
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryGroup, setValue]);
-
-  const filteredCategories = categoryGroup
-    ? (CATEGORIES_BY_GROUP[categoryGroup] ?? [])
-    : [];
 
   const handleFormSubmit = form.handleSubmit(async () => {
     await onSubmit();
@@ -216,65 +165,34 @@ export function GoalCreationForm({
         )}
       </div>
 
-      {/* Category Group */}
+      {/* Category */}
       <div className="space-y-1.5">
-        <Label htmlFor="categoryGroup">
-          Category Group <span className="text-destructive">*</span>
+        <Label htmlFor="category">
+          Category <span className="text-destructive">*</span>
         </Label>
         <Select
-          value={watch("categoryGroup") ?? ""}
+          value={watch("category") ?? ""}
           onValueChange={(v: string) =>
-            setValue("categoryGroup", v as GoalFormValues["categoryGroup"], {
+            setValue("category", v as GoalFormValues["category"], {
               shouldValidate: true,
             })
           }
         >
-          <SelectTrigger id="categoryGroup">
-            <SelectValue placeholder="Select group" />
+          <SelectTrigger id="category">
+            <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORY_GROUP_OPTIONS.map((opt) => (
+            {CATEGORY_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {errors.categoryGroup && (
-          <p className="text-xs text-destructive">{errors.categoryGroup.message}</p>
+        {errors.category && (
+          <p className="text-xs text-destructive">{errors.category.message}</p>
         )}
       </div>
-
-      {/* Category (conditional on categoryGroup) */}
-      {categoryGroup && (
-        <div className="space-y-1.5">
-          <Label htmlFor="category">
-            Category <span className="text-destructive">*</span>
-          </Label>
-          <Select
-            value={watch("category") ?? ""}
-            onValueChange={(v: string) =>
-              setValue("category", v as GoalFormValues["category"], {
-                shouldValidate: true,
-              })
-            }
-          >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredCategories.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && (
-            <p className="text-xs text-destructive">{errors.category.message}</p>
-          )}
-        </div>
-      )}
 
       {/* Measurement Type */}
       <div className="space-y-1.5">
@@ -415,33 +333,15 @@ export function GoalCreationForm({
         )}
       </div>
 
-      {/* Alignment */}
+      {/* Notes (optional) */}
       <div className="space-y-1.5">
-        <Label htmlFor="alignment">
-          Alignment <span className="text-destructive">*</span>
-        </Label>
-        <Select
-          value={watch("alignment") ?? ""}
-          onValueChange={(v: string) =>
-            setValue("alignment", v as GoalFormValues["alignment"], {
-              shouldValidate: true,
-            })
-          }
-        >
-          <SelectTrigger id="alignment">
-            <SelectValue placeholder="Select alignment" />
-          </SelectTrigger>
-          <SelectContent>
-            {ALIGNMENT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.alignment && (
-          <p className="text-xs text-destructive">{errors.alignment.message}</p>
-        )}
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          rows={2}
+          placeholder="Any additional context or notes"
+          {...register("notes")}
+        />
       </div>
 
       {/* Submit/cancel bar */}

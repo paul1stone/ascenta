@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@ascenta/ui";
-import { GOAL_CATEGORY_GROUPS } from "@ascenta/db/goal-constants";
+import { GOAL_CATEGORY_LABELS } from "@ascenta/db/goal-constants";
 
 interface GoalCardProps {
   goal: {
@@ -37,19 +37,12 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Completed",
 };
 
-function getCategoryGroup(category: string): string {
-  for (const [group, cats] of Object.entries(GOAL_CATEGORY_GROUPS)) {
-    if ((cats as readonly string[]).includes(category)) {
-      return group.replace(" Goals", "");
-    }
-  }
-  return category;
-}
-
-const GROUP_COLORS: Record<string, { bg: string; text: string }> = {
-  Performance: { bg: "rgba(68, 170, 153, 0.1)", text: "#44aa99" },
-  Leadership: { bg: "rgba(102, 136, 187, 0.1)", text: "#6688bb" },
-  Development: { bg: "rgba(187, 102, 136, 0.1)", text: "#bb6688" },
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  performance: { bg: "rgba(68, 170, 153, 0.1)", text: "#44aa99" },
+  development: { bg: "rgba(102, 136, 187, 0.1)", text: "#6688bb" },
+  culture: { bg: "rgba(187, 102, 136, 0.1)", text: "#bb6688" },
+  compliance: { bg: "rgba(136, 136, 170, 0.1)", text: "#8888aa" },
+  operational: { bg: "rgba(170, 136, 102, 0.1)", text: "#aa8866" },
 };
 
 function formatTimePeriod(start: string, end: string): string {
@@ -78,8 +71,8 @@ function formatDate(dateStr: string): string {
 export function GoalCard({ goal, accentColor }: GoalCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const group = getCategoryGroup(goal.category);
-  const groupColor = GROUP_COLORS[group] ?? { bg: "rgba(148,163,184,0.1)", text: "#94a3b8" };
+  const categoryColor = CATEGORY_COLORS[goal.category] ?? { bg: "rgba(148,163,184,0.1)", text: "#94a3b8" };
+  const categoryLabel = GOAL_CATEGORY_LABELS[goal.category as keyof typeof GOAL_CATEGORY_LABELS] ?? goal.category;
   const statusColor = STATUS_COLORS[goal.status] ?? "#6b7280";
 
   return (
@@ -98,9 +91,9 @@ export function GoalCard({ goal, accentColor }: GoalCardProps) {
         </span>
         <span
           className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-          style={{ backgroundColor: groupColor.bg, color: groupColor.text }}
+          style={{ backgroundColor: categoryColor.bg, color: categoryColor.text }}
         >
-          {group}
+          {categoryLabel}
         </span>
         <span className="shrink-0 text-xs font-medium text-muted-foreground">
           {formatTimePeriod(goal.timePeriod.start, goal.timePeriod.end)}

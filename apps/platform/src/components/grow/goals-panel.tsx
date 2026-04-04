@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@ascenta/ui/table";
-import { GOAL_CATEGORY_GROUPS } from "@ascenta/db/goal-constants";
+import { GOAL_CATEGORY_LABELS } from "@ascenta/db/goal-constants";
 import { PerformanceGoalForm } from "@/components/grow/performance-goal-form";
 import {
   EmployeeCombobox,
@@ -33,6 +33,8 @@ interface GoalData {
   status: string;
   lastCheckInDate: string | null;
   createdAt: string;
+  strategyGoalId: string | null;
+  notes: string;
 }
 
 interface GoalsPanelProps {
@@ -40,6 +42,7 @@ interface GoalsPanelProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  pending_review: "#8b5cf6",
   on_track: "#22c55e",
   needs_attention: "#f59e0b",
   off_track: "#ef4444",
@@ -47,26 +50,20 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  pending_review: "Pending Review",
   on_track: "On Track",
   needs_attention: "Needs Attention",
   off_track: "Off Track",
   completed: "Completed",
 };
 
-const GROUP_COLORS: Record<string, { bg: string; text: string }> = {
-  Performance: { bg: "rgba(68, 170, 153, 0.1)", text: "#44aa99" },
-  Leadership: { bg: "rgba(102, 136, 187, 0.1)", text: "#6688bb" },
-  Development: { bg: "rgba(187, 102, 136, 0.1)", text: "#bb6688" },
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  performance: { bg: "rgba(68, 170, 153, 0.1)", text: "#44aa99" },
+  development: { bg: "rgba(102, 136, 187, 0.1)", text: "#6688bb" },
+  culture: { bg: "rgba(187, 102, 136, 0.1)", text: "#bb6688" },
+  compliance: { bg: "rgba(136, 136, 170, 0.1)", text: "#8888aa" },
+  operational: { bg: "rgba(170, 136, 102, 0.1)", text: "#aa8866" },
 };
-
-function getCategoryGroup(category: string): string {
-  for (const [group, cats] of Object.entries(GOAL_CATEGORY_GROUPS)) {
-    if ((cats as readonly string[]).includes(category)) {
-      return group.replace(" Goals", "");
-    }
-  }
-  return category;
-}
 
 function formatTimePeriod(start: string, end: string): string {
   const s = new Date(start);
@@ -167,7 +164,10 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
     );
   }
 
-  const activeGoals = goals.filter((g) => g.status !== "completed");
+  const pendingGoals = goals.filter((g) => g.status === "pending_review");
+  const activeGoals = goals.filter(
+    (g) => g.status !== "completed" && g.status !== "pending_review",
+  );
   const completedGoals = goals.filter((g) => g.status === "completed");
 
   function renderGoalTable(goalList: GoalData[]) {
@@ -187,12 +187,14 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
             {goalList.map((goal) => {
               const isExpanded = expandedId === goal.id;
               const statusColor = STATUS_COLORS[goal.status] ?? "#6b7280";
-              const group = getCategoryGroup(goal.category);
-              const groupColor =
-                GROUP_COLORS[group] ?? {
-                  bg: "rgba(148,163,184,0.1)",
-                  text: "#94a3b8",
-                };
+              const categoryColor = CATEGORY_COLORS[goal.category] ?? {
+                bg: "rgba(148,163,184,0.1)",
+                text: "#94a3b8",
+              };
+              const categoryLabel =
+                GOAL_CATEGORY_LABELS[
+                  goal.category as keyof typeof GOAL_CATEGORY_LABELS
+                ] ?? goal.category;
 
               return (
                 <TableRow
@@ -281,6 +283,75 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                               </p>
                             </div>
                           </div>
+                          {goal.strategyGoalId && (
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Strategy Alignment
+                              </p>
+                              <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-muted text-foreground">
+                                Linked to strategy goal
+                              </span>
+                            </div>
+                          )}
+                          {goal.notes && (
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Notes
+                              </p>
+                              <p className="text-sm font-normal text-foreground leading-relaxed">
+                                {goal.notes}
+                              </p>
+                            </div>
+                          )}
+                          {goal.status === "pending_review" &&
+                            canViewOthers &&
+                            !isViewingSelf && (
+                              <div className="flex items-center gap-2 pt-1">
+                                <button
+                                  onClick={async () => {
+                                    await fetch("/api/grow/goals", {
+                                      method: "PATCH",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        goalId: goal.id,
+                                        action: "approve",
+                                      }),
+                                    });
+                                    fetchGoals();
+                                  }}
+                                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+                                  style={{ backgroundColor: "#22c55e" }}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    await fetch("/api/grow/goals", {
+                                      method: "PATCH",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        goalId: goal.id,
+                                        action: "request_changes",
+                                      }),
+                                    });
+                                    fetchGoals();
+                                  }}
+                                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  Request Changes
+                                </button>
+                                <a
+                                  href={`/do?prompt=Review%20this%20goal%20for%20${encodeURIComponent(goal.title)}`}
+                                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  Review with Compass
+                                </a>
+                              </div>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -297,11 +368,11 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                     <span
                       className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap"
                       style={{
-                        backgroundColor: groupColor.bg,
-                        color: groupColor.text,
+                        backgroundColor: categoryColor.bg,
+                        color: categoryColor.text,
                       }}
                     >
-                      {group}
+                      {categoryLabel}
                     </span>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
@@ -396,6 +467,7 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
               {isViewingSelf ? "My Goals" : `${viewingEmployeeName}'s Goals`}
             </h2>
             <span className="text-xs text-muted-foreground">
+              {pendingGoals.length > 0 && `${pendingGoals.length} pending, `}
               {activeGoals.length} active
               {completedGoals.length > 0 &&
                 `, ${completedGoals.length} completed`}
@@ -440,6 +512,14 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
           </div>
         ) : (
           <div className="space-y-5">
+            {pendingGoals.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Pending Review
+                </p>
+                {renderGoalTable(pendingGoals)}
+              </div>
+            )}
             {activeGoals.length > 0 && renderGoalTable(activeGoals)}
             {completedGoals.length > 0 && (
               <div>
