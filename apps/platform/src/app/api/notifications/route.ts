@@ -6,6 +6,7 @@ import {
   WorkflowDefinition,
   AuditEvent,
 } from "@ascenta/db/workflow-schema";
+import { Goal } from "@ascenta/db/goal-schema";
 
 interface Notification {
   id: string;
@@ -122,6 +123,34 @@ export async function GET() {
       }
     } catch (error) {
       console.error("Error fetching audit events:", error);
+    }
+
+    // 5. Goals pending review (last 7 days)
+    try {
+      const pendingGoals = await Goal.find({
+        status: "pending_review",
+        createdAt: { $gt: sevenDaysAgo },
+      })
+        .populate("owner", "firstName lastName")
+        .lean();
+
+      for (const goal of pendingGoals) {
+        const g = goal as Record<string, unknown>;
+        const owner = g.owner as Record<string, unknown> | null;
+        const ownerName = owner
+          ? `${owner.firstName} ${owner.lastName}`
+          : "An employee";
+        allNotifications.push({
+          id: `goal-pending-${g._id}`,
+          type: "goal_pending_review",
+          title: "Goal Pending Review",
+          message: `${ownerName} submitted a goal for review: ${g.title}`,
+          timestamp: g.createdAt as Date,
+          read: false,
+        });
+      }
+    } catch {
+      // silent
     }
 
     // Combine all, sort by timestamp desc, limit 20

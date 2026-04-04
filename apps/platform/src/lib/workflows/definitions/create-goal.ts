@@ -60,29 +60,12 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
 
     // Category (GROW-102)
     {
-      fieldKey: "categoryGroup",
-      label: "Goal Category Group",
+      fieldKey: "category",
+      label: "Goal Category",
       type: "dropdown",
       required: true,
       sortOrder: 5,
       groupName: "Classification",
-      options: [
-        { value: "performance", label: "Performance Goals" },
-        { value: "leadership", label: "Leadership Goals" },
-        { value: "development", label: "Development Goals" },
-      ],
-    },
-    {
-      fieldKey: "category",
-      label: "Specific Category",
-      type: "dropdown",
-      required: true,
-      sortOrder: 6,
-      groupName: "Classification",
-      conditionalOn: {
-        fieldKey: "categoryGroup",
-        operator: "not_empty",
-      },
       options: [
         // Performance
         { value: "productivity", label: "Productivity" },
@@ -112,7 +95,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "How will progress be measured?",
       type: "dropdown",
       required: true,
-      sortOrder: 7,
+      sortOrder: 6,
       groupName: "Measurement",
       options: [
         { value: "numeric_metric", label: "Numeric Metric (e.g., reduce from X to Y)" },
@@ -139,7 +122,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       helpText:
         "Be specific: 'Reduce average resolution time from 48h to 24h for 4 consecutive weeks'",
       required: true,
-      sortOrder: 8,
+      sortOrder: 7,
       groupName: "Measurement",
     },
 
@@ -149,7 +132,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "Time Period",
       type: "dropdown",
       required: true,
-      sortOrder: 9,
+      sortOrder: 8,
       groupName: "Timeline",
       options: [
         { value: "Q1", label: "Q1 (Jan-Mar)" },
@@ -167,7 +150,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "Start Date",
       type: "date",
       required: false,
-      sortOrder: 10,
+      sortOrder: 9,
       groupName: "Timeline",
       conditionalOn: {
         fieldKey: "timePeriod",
@@ -180,7 +163,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "End Date",
       type: "date",
       required: false,
-      sortOrder: 11,
+      sortOrder: 10,
       groupName: "Timeline",
       conditionalOn: {
         fieldKey: "timePeriod",
@@ -195,7 +178,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "Check-in Cadence",
       type: "dropdown",
       required: true,
-      sortOrder: 12,
+      sortOrder: 11,
       groupName: "Check-ins",
       options: [
         { value: "monthly", label: "Monthly" },
@@ -211,7 +194,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "What does this goal align to?",
       type: "dropdown",
       required: true,
-      sortOrder: 13,
+      sortOrder: 12,
       groupName: "Alignment",
       options: [
         { value: "mission", label: "Company Mission" },
