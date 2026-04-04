@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@ascenta/db";
 import { Goal } from "@ascenta/db/goal-schema";
 import { CheckIn } from "@ascenta/db/checkin-schema";
+import { Employee } from "@ascenta/db/employee-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
 import { WorkflowRun } from "@ascenta/db/workflow-schema";
 import { logAuditEvent } from "@/lib/workflows";
@@ -79,7 +81,14 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data;
 
-    const employee = await getEmployeeByEmployeeId(data.employeeId);
+    // Support both MongoDB ObjectId and EMP-style employee IDs
+    let employee = await getEmployeeByEmployeeId(data.employeeId);
+    if (!employee && mongoose.Types.ObjectId.isValid(data.employeeId)) {
+      const doc = await Employee.findById(data.employeeId);
+      if (doc) {
+        employee = { id: String(doc._id), employeeId: doc.employeeId } as unknown as typeof employee;
+      }
+    }
     if (!employee) {
       return NextResponse.json(
         { success: false, error: "Employee not found" },
