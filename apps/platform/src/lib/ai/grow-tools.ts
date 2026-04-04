@@ -9,6 +9,7 @@ import { connectDB } from "@ascenta/db";
 import { Goal } from "@ascenta/db/goal-schema";
 import { CheckIn } from "@ascenta/db/checkin-schema";
 import { PerformanceNote } from "@ascenta/db/performance-note-schema";
+import { PerformanceReview } from "@ascenta/db/performance-review-schema";
 import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
 import { WorkflowRun } from "@ascenta/db/workflow-schema";
 import { CompanyFoundation } from "@ascenta/db/foundation-schema";
@@ -450,6 +451,222 @@ export const updateWorkingDocumentTool = tool({
       success: true,
       message: "I've updated the form with your changes.",
       workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(payload)}${WORKING_DOC_SUFFIX}`,
+    };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Tool 6: Start Performance Review
+// ---------------------------------------------------------------------------
+
+export const startPerformanceReviewTool = tool({
+  description:
+    "Start a performance review for an employee. Pulls their goals, check-ins, performance notes, and company foundation data for the review period. Opens a working document with the contributions form.",
+  inputSchema: z.object({
+    employeeName: z.string().describe("Full name of the employee being reviewed"),
+    employeeId: z.string().describe("Employee ID (e.g., EMP1001)"),
+    reviewPeriod: z
+      .enum(["Q1", "Q2", "Q3", "Q4", "H1", "H2", "annual", "custom"])
+      .describe("The review period"),
+    customStartDate: z.string().optional().describe("Custom start date (ISO string) if reviewPeriod is 'custom'"),
+    customEndDate: z.string().optional().describe("Custom end date (ISO string) if reviewPeriod is 'custom'"),
+  }),
+  execute: async (params) => {
+    await connectDB();
+
+    const employee = await getEmployeeByEmployeeId(params.employeeId);
+    if (!employee) {
+      return { success: false, error: `Employee ${params.employeeName} (${params.employeeId}) not found.` };
+    }
+
+    const timePeriod = parseTimePeriod(params.reviewPeriod, params.customStartDate, params.customEndDate);
+
+    // Check for existing review — resume if found
+    const existing = await PerformanceReview.findOne({
+      employee: employee.id,
+      "reviewPeriod.label": params.reviewPeriod,
+      status: { $nin: ["not_started"] },
+    });
+    if (existing) {
+      const review = existing;
+      const workingDocPayload = {
+        action: "open_working_document" as const,
+        workflowType: "performance-review" as const,
+        runId: String(review._id),
+        employeeId: params.employeeId,
+        employeeName: params.employeeName,
+        prefilled: {
+          reviewId: String(review._id),
+          currentStep: review.currentStep,
+          reviewPeriodLabel: review.reviewPeriod.label,
+          alignedGoals: review.alignedGoals,
+          checkInSummaries: review.checkInSummaries,
+          performanceNotes: review.performanceNotes,
+          foundation: review.foundation,
+          strategyGoals: review.strategyGoals,
+          strategicPriorities: review.contributions?.strategicPriorities || "",
+          outcomesAchieved: review.contributions?.outcomesAchieved || "",
+          behaviors: review.contributions?.behaviors || "",
+          additionalContext: review.contributions?.additionalContext || "",
+          draftSummary: review.draft?.summary || "",
+          draftStrengthsAndImpact: review.draft?.strengthsAndImpact || "",
+          draftAreasForGrowth: review.draft?.areasForGrowth || "",
+          draftStrategicAlignment: review.draft?.strategicAlignment || "",
+          draftOverallAssessment: review.draft?.overallAssessment || "",
+          finalSummary: review.finalDocument?.summary || "",
+          finalStrengthsAndImpact: review.finalDocument?.strengthsAndImpact || "",
+          finalAreasForGrowth: review.finalDocument?.areasForGrowth || "",
+          finalStrategicAlignment: review.finalDocument?.strategicAlignment || "",
+          finalOverallAssessment: review.finalDocument?.overallAssessment || "",
+          goalRecommendations: review.goalRecommendations || [],
+        },
+      };
+
+      return {
+        success: true,
+        resumed: true,
+        reviewId: String(review._id),
+        message: `Resuming performance review for ${params.employeeName} (${params.reviewPeriod}). Currently on step: ${review.currentStep}.`,
+        workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
+      };
+    }
+
+    // Pull goals for the period
+    const goals = await Goal.find({
+      owner: employee.id,
+      "timePeriod.start": { $lte: timePeriod.end },
+      "timePeriod.end": { $gte: timePeriod.start },
+    }).lean();
+
+    const alignedGoals = goals.map((g) => ({
+      goalId: g._id,
+      title: g.title,
+      category: g.category,
+      status: g.status,
+      alignment: g.alignment || "mission",
+      successMetric: g.successMetric,
+    }));
+
+    // Pull check-ins linked to these goals
+    const goalIds = goals.map((g) => g._id);
+    const checkIns = await CheckIn.find({
+      goals: { $in: goalIds },
+      status: "completed",
+    })
+      .sort({ completedAt: -1 })
+      .lean();
+
+    const checkInSummaries = checkIns.map((c) => ({
+      checkInId: c._id,
+      completedAt: c.completedAt,
+      managerNotes: [c.managerProgressObserved, c.managerCoachingNeeded, c.managerRecognition]
+        .filter(Boolean)
+        .join(" | "),
+      employeeNotes: [c.employeeProgress, c.employeeObstacles, c.employeeSupportNeeded]
+        .filter(Boolean)
+        .join(" | "),
+    }));
+
+    // Pull performance notes for the period
+    const notes = await PerformanceNote.find({
+      employee: employee.id,
+      createdAt: { $gte: timePeriod.start, $lte: timePeriod.end },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const performanceNotesSummary = notes.map((n) => ({
+      noteId: n._id,
+      type: n.type,
+      observation: n.observation,
+      createdAt: n.createdAt,
+    }));
+
+    // Pull foundation data
+    const foundationDoc = await CompanyFoundation.findOne({ status: "published" }).lean() as Record<string, unknown> | null;
+    const foundationData = {
+      mission: (foundationDoc?.mission as string) || "",
+      values: (foundationDoc?.values as string) || "",
+    };
+
+    // Pull strategy goals linked to employee's goals
+    const strategyGoalIds = goals
+      .map((g) => g.strategyGoalId)
+      .filter(Boolean);
+    const strategyGoals = strategyGoalIds.length > 0
+      ? await StrategyGoal.find({ _id: { $in: strategyGoalIds } }).lean()
+      : [];
+    const strategyGoalsSummary = strategyGoals.map((sg) => ({
+      strategyGoalId: sg._id,
+      title: sg.title,
+      horizon: sg.horizon,
+    }));
+
+    // Pre-fill contributions from goal data
+    const outcomesList = goals
+      .filter((g) => g.status === "completed")
+      .map((g) => `• ${g.title}: ${g.successMetric}`)
+      .join("\n");
+
+    const prioritiesList = strategyGoals.length > 0
+      ? strategyGoals.map((sg) => `• ${sg.title}`).join("\n")
+      : goals
+          .map((g) => g.category)
+          .filter((v, i, a) => a.indexOf(v) === i)
+          .map((c) => `• ${c.replace(/_/g, " ")}`)
+          .join("\n");
+
+    // Create the review record
+    const review = await PerformanceReview.create({
+      employee: employee.id,
+      manager: employee.id, // Same as employee for now (no auth)
+      reviewPeriod: {
+        start: timePeriod.start,
+        end: timePeriod.end,
+        label: params.reviewPeriod,
+      },
+      status: "in_progress",
+      currentStep: "contributions",
+      alignedGoals,
+      checkInSummaries,
+      performanceNotes: performanceNotesSummary,
+      foundation: foundationData,
+      strategyGoals: strategyGoalsSummary,
+      contributions: {
+        strategicPriorities: prioritiesList,
+        outcomesAchieved: outcomesList,
+        behaviors: "",
+        additionalContext: "",
+      },
+    });
+
+    const workingDocPayload = {
+      action: "open_working_document" as const,
+      workflowType: "performance-review" as const,
+      runId: String(review._id),
+      employeeId: params.employeeId,
+      employeeName: params.employeeName,
+      prefilled: {
+        reviewId: String(review._id),
+        currentStep: "contributions",
+        reviewPeriodLabel: params.reviewPeriod,
+        alignedGoals,
+        checkInSummaries,
+        performanceNotes: performanceNotesSummary,
+        foundation: foundationData,
+        strategyGoals: strategyGoalsSummary,
+        strategicPriorities: prioritiesList,
+        outcomesAchieved: outcomesList,
+        behaviors: "",
+        additionalContext: "",
+      },
+    };
+
+    return {
+      success: true,
+      reviewId: String(review._id),
+      message: `Performance review started for ${params.employeeName} (${params.reviewPeriod}). Pulled ${goals.length} goals, ${checkIns.length} check-ins, and ${notes.length} performance notes. ${strategyGoals.length > 0 ? `Employee's goals align to ${strategyGoals.length} strategy goal(s).` : ""} ${foundationDoc ? "Company foundation data loaded." : "No published foundation data found — review will proceed without pillar framing."} I've pre-filled strategic priorities and outcomes from the data. Please review and add your observations on behaviors and any additional context.`,
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
     };
   },
 });
