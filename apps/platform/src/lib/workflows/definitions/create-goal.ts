@@ -9,7 +9,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
   slug: "create-goal",
   name: "Create Goal",
   description:
-    "Guide a manager through creating a structured performance goal for an employee, with category selection, measurement criteria, and alignment to company priorities.",
+    "Guide a manager through creating a structured performance goal for an employee, with goal type selection, objective statement, key results, and support agreement.",
   category: "grow",
   audience: "manager",
   riskLevel: "low",
@@ -39,91 +39,25 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
 
     // Goal Details
     {
-      fieldKey: "title",
-      label: "Goal Title",
-      type: "text",
-      placeholder: "A short, clear title for this goal",
-      helpText: "Example: 'Reduce ticket resolution time by 50%'",
+      fieldKey: "objectiveStatement",
+      label: "Objective Statement",
+      type: "textarea",
+      placeholder: "One sentence naming the outcome and why it matters (min 15 words)",
       required: true,
       sortOrder: 3,
       groupName: "Goal Details",
     },
     {
-      fieldKey: "description",
-      label: "Goal Description",
-      type: "textarea",
-      placeholder: "Describe the goal in detail — what does success look like?",
+      fieldKey: "goalType",
+      label: "Goal Type",
+      type: "dropdown",
       required: true,
       sortOrder: 4,
       groupName: "Goal Details",
-    },
-
-    // Category (GROW-102)
-    {
-      fieldKey: "category",
-      label: "Goal Category",
-      type: "dropdown",
-      required: true,
-      sortOrder: 5,
-      groupName: "Classification",
       options: [
-        // Performance
-        { value: "productivity", label: "Productivity" },
-        { value: "quality", label: "Quality" },
-        { value: "accuracy", label: "Accuracy" },
-        { value: "efficiency", label: "Efficiency" },
-        { value: "operational_excellence", label: "Operational Excellence" },
-        { value: "customer_impact", label: "Customer/Patient Impact" },
-        // Leadership
-        { value: "communication", label: "Communication" },
-        { value: "collaboration", label: "Collaboration" },
-        { value: "conflict_resolution", label: "Conflict Resolution" },
-        { value: "decision_making", label: "Decision Making" },
-        { value: "initiative", label: "Initiative" },
-        // Development
-        { value: "skill_development", label: "Skill Development" },
-        { value: "certification", label: "Certification" },
-        { value: "training_completion", label: "Training Completion" },
-        { value: "leadership_growth", label: "Leadership Growth" },
-        { value: "career_advancement", label: "Career Advancement" },
+        { value: "performance", label: "Performance Goal" },
+        { value: "development", label: "Development Goal" },
       ],
-    },
-
-    // Measurement (GROW-103)
-    {
-      fieldKey: "measurementType",
-      label: "How will progress be measured?",
-      type: "dropdown",
-      required: true,
-      sortOrder: 6,
-      groupName: "Measurement",
-      options: [
-        { value: "numeric_metric", label: "Numeric Metric (e.g., reduce from X to Y)" },
-        { value: "percentage_target", label: "Percentage Target (e.g., achieve 95%)" },
-        {
-          value: "milestone_completion",
-          label: "Milestone Completion (e.g., launch by date)",
-        },
-        {
-          value: "behavior_change",
-          label: "Behavior Change (e.g., consistently demonstrates X)",
-        },
-        {
-          value: "learning_completion",
-          label: "Learning Completion (e.g., finish course/cert)",
-        },
-      ],
-    },
-    {
-      fieldKey: "successMetric",
-      label: "Success Metric",
-      type: "textarea",
-      placeholder: "Define the specific, measurable target",
-      helpText:
-        "Be specific: 'Reduce average resolution time from 48h to 24h for 4 consecutive weeks'",
-      required: true,
-      sortOrder: 7,
-      groupName: "Measurement",
     },
 
     // Time Period
@@ -132,7 +66,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "Time Period",
       type: "dropdown",
       required: true,
-      sortOrder: 8,
+      sortOrder: 5,
       groupName: "Timeline",
       options: [
         { value: "Q1", label: "Q1 (Jan-Mar)" },
@@ -150,7 +84,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "Start Date",
       type: "date",
       required: false,
-      sortOrder: 9,
+      sortOrder: 6,
       groupName: "Timeline",
       conditionalOn: {
         fieldKey: "timePeriod",
@@ -163,7 +97,7 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "End Date",
       type: "date",
       required: false,
-      sortOrder: 10,
+      sortOrder: 7,
       groupName: "Timeline",
       conditionalOn: {
         fieldKey: "timePeriod",
@@ -178,40 +112,35 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       label: "Check-in Cadence",
       type: "dropdown",
       required: true,
-      sortOrder: 11,
+      sortOrder: 8,
       groupName: "Check-ins",
       options: [
+        { value: "every_check_in", label: "Every Check-in" },
         { value: "monthly", label: "Monthly" },
         { value: "quarterly", label: "Quarterly" },
-        { value: "milestone", label: "At Milestones" },
-        { value: "manager_scheduled", label: "Manager Scheduled" },
       ],
     },
 
-    // Alignment
+    // Support
     {
-      fieldKey: "alignment",
-      label: "What does this goal align to?",
-      type: "dropdown",
-      required: true,
-      sortOrder: 12,
-      groupName: "Alignment",
-      options: [
-        { value: "mission", label: "Company Mission" },
-        { value: "value", label: "Company Value/Principle" },
-        { value: "priority", label: "Strategic Priority" },
-      ],
+      fieldKey: "supportAgreement",
+      label: "Support Agreement",
+      type: "textarea",
+      placeholder: "What will the manager provide? (resources, access, time, coaching)",
+      required: false,
+      sortOrder: 9,
+      groupName: "Support",
     },
   ],
 
   guardrails: [
     {
-      id: "missing-success-metric",
-      name: "missing_success_metric",
-      description: "Goals must have a measurable success metric",
-      triggerCondition: { field: "successMetric", operator: "is_empty" },
+      id: "missing-objective-statement",
+      name: "missing_objective_statement",
+      description: "Goals must have an objective statement",
+      triggerCondition: { field: "objectiveStatement", operator: "is_empty" },
       severity: "hard_stop",
-      message: "A goal cannot be created without a defined success metric.",
+      message: "A goal cannot be created without a defined objective statement.",
       sortOrder: 1,
       isActive: true,
     },
@@ -236,10 +165,10 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       description:
         "Get AI suggestions to make this goal more specific and measurable",
       icon: "Lightbulb",
-      requiredInputs: ["title", "description"],
+      requiredInputs: ["objectiveStatement", "keyResults"],
       outputType: "analysis",
       promptTemplate:
-        "Review this goal and suggest improvements to make it more SMART (Specific, Measurable, Achievable, Relevant, Time-bound). Goal title: {{title}}. Description: {{description}}. Category: {{category}}.",
+        "Review this goal and suggest improvements to make it more SMART (Specific, Measurable, Achievable, Relevant, Time-bound). Objective Statement: {{objectiveStatement}}. Key Results: {{keyResults}}.",
       sortOrder: 1,
       isActive: true,
     },
@@ -249,10 +178,10 @@ export const createGoalWorkflow: WorkflowDefinitionConfig = {
       description:
         "Get relevant Leadership Library principles for this goal area",
       icon: "BookOpen",
-      requiredInputs: ["category"],
+      requiredInputs: ["goalType"],
       outputType: "analysis",
       promptTemplate:
-        "Based on the goal category '{{category}}', suggest relevant leadership principles and development approaches from the Leadership Library that would help the employee succeed.",
+        "Based on the goal type '{{goalType}}', suggest relevant leadership principles and development approaches from the Leadership Library that would help the employee succeed.",
       sortOrder: 2,
       isActive: true,
     },
