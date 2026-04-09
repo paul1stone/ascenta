@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Target, Loader2, Plus, Compass, ChevronRight } from "lucide-react";
+import { Target, Loader2, Plus, Compass, ChevronRight, Check, Circle } from "lucide-react";
 import { cn } from "@ascenta/ui";
 import {
   Table,
@@ -11,7 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@ascenta/ui/table";
-import { GOAL_CATEGORY_LABELS } from "@ascenta/db/goal-constants";
+import {
+  GOAL_TYPE_LABELS,
+  GOAL_STATUS_LABELS,
+  KEY_RESULT_STATUS_LABELS,
+  CHECKIN_CADENCE_LABELS,
+} from "@ascenta/db/goal-constants";
 import { PerformanceGoalForm } from "@/components/grow/performance-goal-form";
 import {
   EmployeeCombobox,
@@ -20,21 +25,25 @@ import {
 import { useRole } from "@/lib/role/role-context";
 import Link from "next/link";
 
+interface KeyResult {
+  title: string;
+  status: string;
+}
+
 interface GoalData {
   id: string;
-  title: string;
-  description: string;
-  category: string;
-  measurementType: string;
-  successMetric: string;
+  objectiveStatement: string;
+  goalType: string;
+  keyResults?: KeyResult[];
   timePeriod: { start: string; end: string };
   checkInCadence: string;
-  alignment: string;
   status: string;
   lastCheckInDate: string | null;
   createdAt: string;
   strategyGoalId: string | null;
   notes: string;
+  employeeConfirmed: boolean;
+  managerConfirmed: boolean;
 }
 
 interface GoalsPanelProps {
@@ -42,27 +51,17 @@ interface GoalsPanelProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending_review: "#8b5cf6",
-  on_track: "#22c55e",
+  draft: "#94a3b8",
+  pending_confirmation: "#8b5cf6",
+  active: "#22c55e",
   needs_attention: "#f59e0b",
-  off_track: "#ef4444",
+  blocked: "#ef4444",
   completed: "#6b7280",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending_review: "Pending Review",
-  on_track: "On Track",
-  needs_attention: "Needs Attention",
-  off_track: "Off Track",
-  completed: "Completed",
-};
-
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+const GOAL_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   performance: { bg: "rgba(68, 170, 153, 0.1)", text: "#44aa99" },
   development: { bg: "rgba(102, 136, 187, 0.1)", text: "#6688bb" },
-  culture: { bg: "rgba(187, 102, 136, 0.1)", text: "#bb6688" },
-  compliance: { bg: "rgba(136, 136, 170, 0.1)", text: "#8888aa" },
-  operational: { bg: "rgba(170, 136, 102, 0.1)", text: "#aa8866" },
 };
 
 function formatTimePeriod(start: string, end: string): string {
@@ -74,13 +73,6 @@ function formatTimePeriod(start: string, end: string): string {
     year: "numeric",
   });
   return `${sMonth} – ${eMonth}`;
-}
-
-function formatLabel(value: string): string {
-  return value
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 function formatDate(dateStr: string): string {
@@ -164,9 +156,10 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
     );
   }
 
-  const pendingGoals = goals.filter((g) => g.status === "pending_review");
-  const activeGoals = goals.filter(
-    (g) => g.status !== "completed" && g.status !== "pending_review",
+  const draftGoals = goals.filter((g) => g.status === "draft");
+  const pendingGoals = goals.filter((g) => g.status === "pending_confirmation");
+  const activeGoals = goals.filter((g) =>
+    ["active", "needs_attention", "blocked"].includes(g.status),
   );
   const completedGoals = goals.filter((g) => g.status === "completed");
 
@@ -178,7 +171,8 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-4">Goal</TableHead>
               <TableHead className="whitespace-nowrap">Status</TableHead>
-              <TableHead className="whitespace-nowrap">Category</TableHead>
+              <TableHead className="whitespace-nowrap">Type</TableHead>
+              <TableHead className="whitespace-nowrap">Key Results</TableHead>
               <TableHead className="whitespace-nowrap">Timeline</TableHead>
               <TableHead className="w-8" />
             </TableRow>
@@ -187,14 +181,17 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
             {goalList.map((goal) => {
               const isExpanded = expandedId === goal.id;
               const statusColor = STATUS_COLORS[goal.status] ?? "#6b7280";
-              const categoryColor = CATEGORY_COLORS[goal.category] ?? {
+              const typeColor = GOAL_TYPE_COLORS[goal.goalType] ?? {
                 bg: "rgba(148,163,184,0.1)",
                 text: "#94a3b8",
               };
-              const categoryLabel =
-                GOAL_CATEGORY_LABELS[
-                  goal.category as keyof typeof GOAL_CATEGORY_LABELS
-                ] ?? goal.category;
+              const typeLabel =
+                GOAL_TYPE_LABELS[goal.goalType as keyof typeof GOAL_TYPE_LABELS] ??
+                goal.goalType;
+
+              const achievedKRs =
+                goal.keyResults?.filter((kr) => kr.status === "achieved").length ?? 0;
+              const totalKRs = goal.keyResults?.length ?? 0;
 
               return (
                 <TableRow
@@ -210,7 +207,40 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                         className="size-2 shrink-0 rounded-full"
                         style={{ backgroundColor: statusColor }}
                       />
-                      <span className="truncate">{goal.title}</span>
+                      <span className="truncate">{goal.objectiveStatement}</span>
+                      {/* Dual confirmation indicators */}
+                      <div className="flex items-center gap-1 ml-1 shrink-0">
+                        <span
+                          title="Employee confirmed"
+                          className={cn(
+                            "flex items-center justify-center size-4 rounded-full",
+                            goal.employeeConfirmed
+                              ? "text-emerald-600"
+                              : "text-muted-foreground/40",
+                          )}
+                        >
+                          {goal.employeeConfirmed ? (
+                            <Check className="size-3" />
+                          ) : (
+                            <Circle className="size-3" />
+                          )}
+                        </span>
+                        <span
+                          title="Manager confirmed"
+                          className={cn(
+                            "flex items-center justify-center size-4 rounded-full",
+                            goal.managerConfirmed
+                              ? "text-emerald-600"
+                              : "text-muted-foreground/40",
+                          )}
+                        >
+                          {goal.managerConfirmed ? (
+                            <Check className="size-3" />
+                          ) : (
+                            <Circle className="size-3" />
+                          )}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Expanded detail */}
@@ -225,51 +255,50 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="pt-3 pb-1 pl-[18px] space-y-3">
-                          {goal.description && (
+                          {/* Key Results list */}
+                          {goal.keyResults && goal.keyResults.length > 0 && (
                             <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                                Description
+                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                                Key Results
                               </p>
-                              <p className="text-sm font-normal text-foreground leading-relaxed">
-                                {goal.description}
-                              </p>
+                              <ul className="space-y-1">
+                                {goal.keyResults.map((kr, i) => (
+                                  <li
+                                    key={i}
+                                    className="flex items-center gap-2 text-sm font-normal text-foreground"
+                                  >
+                                    <span
+                                      className={cn(
+                                        "size-1.5 rounded-full shrink-0",
+                                        kr.status === "achieved"
+                                          ? "bg-emerald-500"
+                                          : kr.status === "in_progress"
+                                            ? "bg-amber-400"
+                                            : kr.status === "missed"
+                                              ? "bg-red-400"
+                                              : "bg-slate-300",
+                                      )}
+                                    />
+                                    <span>{kr.title}</span>
+                                    <span className="text-[11px] text-muted-foreground">
+                                      {KEY_RESULT_STATUS_LABELS[
+                                        kr.status as keyof typeof KEY_RESULT_STATUS_LABELS
+                                      ] ?? kr.status}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           )}
-                          <div className="grid grid-cols-2 gap-4">
-                            {goal.successMetric && (
-                              <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                                  Success Metric
-                                </p>
-                                <p className="text-sm font-normal text-foreground">
-                                  {goal.successMetric}
-                                </p>
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                                Measurement
-                              </p>
-                              <p className="text-sm font-normal text-foreground">
-                                {formatLabel(goal.measurementType)}
-                              </p>
-                            </div>
-                          </div>
                           <div className="grid grid-cols-3 gap-4">
                             <div>
                               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
                                 Check-in Cadence
                               </p>
                               <p className="text-sm font-normal text-foreground">
-                                {formatLabel(goal.checkInCadence)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                                Alignment
-                              </p>
-                              <p className="text-sm font-normal text-foreground capitalize">
-                                {goal.alignment}
+                                {CHECKIN_CADENCE_LABELS[
+                                  goal.checkInCadence as keyof typeof CHECKIN_CADENCE_LABELS
+                                ] ?? goal.checkInCadence}
                               </p>
                             </div>
                             <div>
@@ -282,6 +311,20 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                                   : "None yet"}
                               </p>
                             </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Confirmed By
+                              </p>
+                              <p className="text-sm font-normal text-foreground">
+                                {goal.employeeConfirmed && goal.managerConfirmed
+                                  ? "Both"
+                                  : goal.employeeConfirmed
+                                    ? "Employee"
+                                    : goal.managerConfirmed
+                                      ? "Manager"
+                                      : "Neither"}
+                              </p>
+                            </div>
                           </div>
                           {goal.strategyGoalId && (
                             <div>
@@ -289,7 +332,7 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                                 Strategy Alignment
                               </p>
                               <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-muted text-foreground">
-                                Linked to strategy goal
+                                Strategy linked
                               </span>
                             </div>
                           )}
@@ -303,12 +346,71 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                               </p>
                             </div>
                           )}
-                          {goal.status === "pending_review" &&
-                            canViewOthers &&
-                            !isViewingSelf && (
-                              <div className="flex items-center gap-2 pt-1">
-                                <button
-                                  onClick={async () => {
+                          {/* Action buttons */}
+                          <div className="flex items-center gap-2 pt-1 flex-wrap">
+                            {/* Pending confirmation: show Confirm (for managers) */}
+                            {goal.status === "pending_confirmation" &&
+                              canViewOthers &&
+                              !isViewingSelf && (
+                                <>
+                                  <button
+                                    onClick={async () => {
+                                      await fetch("/api/grow/goals", {
+                                        method: "PATCH",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          goalId: goal.id,
+                                          action: "confirm",
+                                          role: "manager",
+                                        }),
+                                      });
+                                      fetchGoals();
+                                    }}
+                                    className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+                                    style={{ backgroundColor: "#22c55e" }}
+                                  >
+                                    Confirm
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      await fetch("/api/grow/goals", {
+                                        method: "PATCH",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          goalId: goal.id,
+                                          action: "request_changes",
+                                        }),
+                                      });
+                                      fetchGoals();
+                                    }}
+                                    className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                  >
+                                    Request Changes
+                                  </button>
+                                  <a
+                                    href={`/do?prompt=Review%20this%20goal%20for%20${encodeURIComponent(goal.objectiveStatement)}`}
+                                    className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                  >
+                                    Review with Compass
+                                  </a>
+                                </>
+                              )}
+                            {/* Active goals: status update dropdown */}
+                            {["active", "needs_attention", "blocked"].includes(
+                              goal.status,
+                            ) &&
+                              canViewOthers &&
+                              !isViewingSelf && (
+                                <select
+                                  className="rounded-lg border px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-white cursor-pointer"
+                                  defaultValue=""
+                                  onChange={async (e) => {
+                                    const newStatus = e.target.value;
+                                    if (!newStatus) return;
                                     await fetch("/api/grow/goals", {
                                       method: "PATCH",
                                       headers: {
@@ -316,42 +418,24 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                                       },
                                       body: JSON.stringify({
                                         goalId: goal.id,
-                                        action: "approve",
+                                        action: "update_status",
+                                        status: newStatus,
                                       }),
                                     });
                                     fetchGoals();
                                   }}
-                                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
-                                  style={{ backgroundColor: "#22c55e" }}
                                 >
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    await fetch("/api/grow/goals", {
-                                      method: "PATCH",
-                                      headers: {
-                                        "Content-Type": "application/json",
-                                      },
-                                      body: JSON.stringify({
-                                        goalId: goal.id,
-                                        action: "request_changes",
-                                      }),
-                                    });
-                                    fetchGoals();
-                                  }}
-                                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                  Request Changes
-                                </button>
-                                <a
-                                  href={`/do?prompt=Review%20this%20goal%20for%20${encodeURIComponent(goal.title)}`}
-                                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                  Review with Compass
-                                </a>
-                              </div>
-                            )}
+                                  <option value="" disabled>
+                                    Update status…
+                                  </option>
+                                  <option value="needs_attention">
+                                    Needs Attention
+                                  </option>
+                                  <option value="blocked">Blocked</option>
+                                  <option value="completed">Completed</option>
+                                </select>
+                              )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -361,19 +445,30 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                       className="text-xs font-medium"
                       style={{ color: statusColor }}
                     >
-                      {STATUS_LABELS[goal.status] ?? goal.status}
+                      {GOAL_STATUS_LABELS[
+                        goal.status as keyof typeof GOAL_STATUS_LABELS
+                      ] ?? goal.status}
                     </span>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     <span
                       className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap"
                       style={{
-                        backgroundColor: categoryColor.bg,
-                        color: categoryColor.text,
+                        backgroundColor: typeColor.bg,
+                        color: typeColor.text,
                       }}
                     >
-                      {categoryLabel}
+                      {typeLabel}
                     </span>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {totalKRs > 0 ? (
+                      <span className="text-xs text-muted-foreground">
+                        {achievedKRs}/{totalKRs} achieved
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/50">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     <span className="text-xs text-muted-foreground">
@@ -467,7 +562,8 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
               {isViewingSelf ? "My Goals" : `${viewingEmployeeName}'s Goals`}
             </h2>
             <span className="text-xs text-muted-foreground">
-              {pendingGoals.length > 0 && `${pendingGoals.length} pending, `}
+              {pendingGoals.length > 0 &&
+                `${pendingGoals.length} pending, `}
               {activeGoals.length} active
               {completedGoals.length > 0 &&
                 `, ${completedGoals.length} completed`}
@@ -492,6 +588,13 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
           </div>
         </div>
 
+        {/* Development goal balance warning */}
+        {goals.length > 0 && !goals.some((g) => g.goalType === "development") && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 mb-4">
+            Consider adding a development goal for this period.
+          </div>
+        )}
+
         {goals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Target className="size-10 text-muted-foreground/30 mb-3" />
@@ -512,15 +615,30 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
           </div>
         ) : (
           <div className="space-y-5">
+            {draftGoals.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Draft
+                </p>
+                {renderGoalTable(draftGoals)}
+              </div>
+            )}
             {pendingGoals.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Pending Review
+                  Pending Confirmation
                 </p>
                 {renderGoalTable(pendingGoals)}
               </div>
             )}
-            {activeGoals.length > 0 && renderGoalTable(activeGoals)}
+            {activeGoals.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Active
+                </p>
+                {renderGoalTable(activeGoals)}
+              </div>
+            )}
             {completedGoals.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
