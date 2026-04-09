@@ -101,132 +101,254 @@ async function main() {
   );
 
   // ------------------------------------------------------------------
-  // 3. Create 5 Goals
+  // 3. Create 7 Goals
   // ------------------------------------------------------------------
 
   const goalDefs = [
+    // Goal 1 — performance, active (reports[0])
     {
-      title: "Reduce average ticket resolution time by 20%",
-      description:
-        "Improve customer support efficiency by streamlining the triage process and implementing auto-categorization. Target is to bring average resolution time from 4.2 hours to under 3.4 hours by end of quarter.",
-      category: "productivity" as const,
-      measurementType: "numeric_metric" as const,
-      successMetric: "Average resolution time under 3.4 hours for 30 consecutive days",
+      objectiveStatement:
+        "Reduce average customer support ticket resolution time from 4.2 hours to under 3.4 hours by streamlining the triage process and implementing auto-categorization so that customer satisfaction improves and support capacity scales with growth.",
+      goalType: "performance" as const,
+      keyResults: [
+        {
+          description: "Average resolution time consistently below target",
+          metric: "Under 3.4 hours for 30 consecutive days",
+          deadline: daysFromNow(60),
+          status: "in_progress" as const,
+        },
+        {
+          description: "Auto-categorization coverage",
+          metric: "60% of incoming tickets auto-categorized accurately",
+          deadline: daysFromNow(30),
+          status: "achieved" as const,
+        },
+        {
+          description: "Customer satisfaction score improvement",
+          metric: "CSAT score above 4.2 (up from 3.8)",
+          deadline: daysFromNow(60),
+          status: "not_started" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(30), end: daysFromNow(60) },
       checkInCadence: "monthly" as const,
-      alignment: "priority" as const,
-      status: "on_track" as const,
+      supportAgreement:
+        "Access to data team for model accuracy reviews, 2 hours/week protected time for process documentation",
+      status: "active" as const,
+      employeeConfirmed: { confirmed: true, at: daysAgo(28) },
+      managerConfirmed: { confirmed: true, at: daysAgo(28) },
       owner: reports[0]._id,
       manager: manager._id,
-      managerApproved: true,
       locked: true,
     },
+    // Goal 2 — development, pending_confirmation (reports[1])
     {
-      title: "Lead cross-functional sprint retrospectives",
-      description:
-        "Take ownership of facilitating bi-weekly sprint retrospectives for the product and engineering teams. Build facilitation skills, drive actionable takeaways, and improve team collaboration metrics.",
-      category: "collaboration" as const,
-      measurementType: "behavior_change" as const,
-      successMetric:
-        "Facilitate 6 retrospectives with 85%+ team satisfaction rating",
+      objectiveStatement:
+        "Build cross-functional facilitation skills by leading bi-weekly sprint retrospectives for the product and engineering teams so that actionable takeaways are consistently captured and team collaboration metrics measurably improve.",
+      goalType: "development" as const,
+      keyResults: [
+        {
+          description: "Retrospectives facilitated with high satisfaction",
+          metric: "6 retrospectives completed with 85%+ team satisfaction rating",
+          deadline: daysFromNow(75),
+          status: "in_progress" as const,
+        },
+        {
+          description: "Action item follow-through rate",
+          metric: "80% of agreed action items completed by next retro",
+          deadline: daysFromNow(75),
+          status: "not_started" as const,
+        },
+        {
+          description: "Facilitation skill self-assessment",
+          metric: "Complete facilitation training course and apply 3 new techniques",
+          deadline: daysFromNow(45),
+          status: "not_started" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(14), end: daysFromNow(75) },
-      checkInCadence: "monthly" as const,
-      alignment: "value" as const,
-      status: "on_track" as const,
+      checkInCadence: "every_check_in" as const,
+      status: "pending_confirmation" as const,
+      employeeConfirmed: { confirmed: true, at: daysAgo(3) },
+      managerConfirmed: { confirmed: false, at: null },
       owner: reports[1]._id,
       manager: manager._id,
-      managerApproved: true,
-      locked: true,
+      locked: false,
     },
+    // Goal 3 — development, needs_attention (reports[2])
     {
-      title: "Complete AWS Solutions Architect certification",
-      description:
-        "Prepare for and pass the AWS Solutions Architect Associate exam. This supports the team's migration to cloud-native infrastructure and builds critical skills for the upcoming platform re-architecture project.",
-      category: "certification" as const,
-      measurementType: "milestone_completion" as const,
-      successMetric: "Pass AWS Solutions Architect Associate exam",
+      objectiveStatement:
+        "Pass the AWS Solutions Architect Associate exam within the current quarter to build critical cloud infrastructure skills needed for the upcoming platform re-architecture project and strengthen the team's cloud-native capability.",
+      goalType: "development" as const,
+      keyResults: [
+        {
+          description: "Exam passed on first attempt",
+          metric: "Pass AWS Solutions Architect Associate exam with score above 750",
+          deadline: daysFromNow(15),
+          status: "in_progress" as const,
+        },
+        {
+          description: "Practice exam readiness",
+          metric: "Score 80%+ on 3 consecutive practice exams before test date",
+          deadline: daysFromNow(10),
+          status: "in_progress" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(45), end: daysFromNow(15) },
-      checkInCadence: "monthly" as const,
-      alignment: "priority" as const,
+      checkInCadence: "every_check_in" as const,
+      supportAgreement:
+        "2 hours of focused study time blocked daily, exam fee covered by L&D budget",
       status: "needs_attention" as const,
+      employeeConfirmed: { confirmed: true, at: daysAgo(44) },
+      managerConfirmed: { confirmed: true, at: daysAgo(43) },
       owner: reports[2]._id,
       manager: manager._id,
-      managerApproved: true,
       locked: true,
     },
+    // Goal 4 — performance, active (reports[3])
     {
-      title: "Achieve 95% code review turnaround within 4 hours",
-      description:
-        "Improve code review responsiveness to unblock teammates faster. Currently averaging 11-hour turnaround. This goal addresses repeated team feedback about review bottlenecks slowing sprint velocity.",
-      category: "quality" as const,
-      measurementType: "percentage_target" as const,
-      successMetric:
-        "95% of assigned PRs reviewed within 4 hours during business hours",
+      objectiveStatement:
+        "Achieve 95% code review turnaround within 4 business hours by building a responsive review habit so that teammates are unblocked faster and sprint velocity is no longer limited by review bottlenecks.",
+      goalType: "performance" as const,
+      keyResults: [
+        {
+          description: "Review turnaround rate at target",
+          metric: "95% of assigned PRs receive initial response within 4 business hours",
+          deadline: daysFromNow(30),
+          status: "in_progress" as const,
+        },
+        {
+          description: "Reduction in review-blocked PRs",
+          metric: "Zero PRs waiting more than 8 hours for first review in a sprint",
+          deadline: daysFromNow(30),
+          status: "not_started" as const,
+        },
+        {
+          description: "Team velocity improvement",
+          metric: "Sprint velocity increases by at least 10% over baseline",
+          deadline: daysFromNow(30),
+          status: "not_started" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(60), end: daysFromNow(30) },
       checkInCadence: "monthly" as const,
-      alignment: "mission" as const,
-      status: "off_track" as const,
+      status: "active" as const,
+      employeeConfirmed: { confirmed: true, at: daysAgo(58) },
+      managerConfirmed: { confirmed: true, at: daysAgo(57) },
       owner: reports[3]._id,
       manager: manager._id,
-      managerApproved: true,
       locked: true,
     },
+    // Goal 5 — performance, completed (reports[4])
     {
-      title: "Deliver Q4 customer onboarding automation",
-      description:
-        "Design and ship an automated onboarding flow that reduces manual setup steps from 12 to 3. Completed ahead of schedule with positive feedback from the Customer Success team.",
-      category: "efficiency" as const,
-      measurementType: "milestone_completion" as const,
-      successMetric: "Onboarding automation live in production with <2% error rate",
+      objectiveStatement:
+        "Deliver Q4 customer onboarding automation that reduces manual setup steps from 12 to 3 and goes live in production with less than 2% error rate so that the Customer Success team can onboard clients at scale without engineering involvement.",
+      goalType: "performance" as const,
+      keyResults: [
+        {
+          description: "Automation live in production",
+          metric: "Onboarding automation deployed with <2% error rate",
+          deadline: daysAgo(10),
+          status: "achieved" as const,
+        },
+        {
+          description: "Manual setup step reduction",
+          metric: "Setup steps reduced from 12 to 3 or fewer",
+          deadline: daysAgo(10),
+          status: "achieved" as const,
+        },
+        {
+          description: "Customer Success team sign-off",
+          metric: "CS team confirms zero escalations through first 20 automated onboardings",
+          deadline: daysAgo(5),
+          status: "achieved" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(90), end: daysAgo(10) },
       checkInCadence: "quarterly" as const,
-      alignment: "mission" as const,
       status: "completed" as const,
+      employeeConfirmed: { confirmed: true, at: daysAgo(88) },
+      managerConfirmed: { confirmed: true, at: daysAgo(87) },
       owner: reports[4]._id,
       manager: manager._id,
-      managerApproved: true,
       locked: true,
     },
-    // Goal for Sarah Chen (HR persona) — so HR view has goal data
+    // Goal 6 — performance, active — Sarah Chen (HR persona)
     {
-      title: "Implement company-wide performance review cycle",
-      description:
-        "Design and roll out a standardized performance review process across all departments. Includes creating review templates, training managers on feedback delivery, and establishing a Q2 review timeline.",
-      category: "operational_excellence" as const,
-      measurementType: "milestone_completion" as const,
-      successMetric: "100% of departments complete Q2 reviews on schedule with manager training completion rate above 90%",
+      objectiveStatement:
+        "Design and roll out a standardized company-wide performance review process so that all departments complete Q2 reviews on schedule and every manager is equipped to deliver high-quality, consistent feedback.",
+      goalType: "performance" as const,
+      keyResults: [
+        {
+          description: "Review templates finalized and distributed",
+          metric: "Templates approved by leadership and distributed to all managers",
+          deadline: daysFromNow(20),
+          status: "achieved" as const,
+        },
+        {
+          description: "Manager training completion rate",
+          metric: "90%+ of managers complete feedback delivery training",
+          deadline: daysFromNow(40),
+          status: "in_progress" as const,
+        },
+        {
+          description: "On-time review completion",
+          metric: "100% of departments complete Q2 reviews by deadline",
+          deadline: daysFromNow(70),
+          status: "not_started" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(20), end: daysFromNow(70) },
       checkInCadence: "monthly" as const,
-      alignment: "mission" as const,
-      status: "on_track" as const,
+      supportAgreement:
+        "L&D team to co-facilitate manager training sessions, HRIS admin access for completion tracking",
+      status: "active" as const,
+      employeeConfirmed: { confirmed: true, at: daysAgo(18) },
+      managerConfirmed: { confirmed: true, at: daysAgo(18) },
       owner: sarahChen._id,
       manager: sarahChen._id, // self-managed (HR leadership)
-      managerApproved: true,
       locked: true,
     },
-    // Goal for Jason Lee (Manager persona) — so Manager view has own goals
+    // Goal 7 — performance, draft — Jason Lee (Manager persona)
     {
-      title: "Grow engineering team to support platform re-architecture",
-      description:
-        "Hire 3 senior engineers and 1 staff engineer by end of Q3 to support the upcoming platform re-architecture initiative. Includes defining job descriptions, running interview loops, and onboarding new hires.",
-      category: "initiative" as const,
-      measurementType: "numeric_metric" as const,
-      successMetric: "4 new hires onboarded and productive within first 30 days",
+      objectiveStatement:
+        "Hire 3 senior engineers and 1 staff engineer by end of Q3 to staff the upcoming platform re-architecture initiative so that the team has the capacity and expertise to execute on schedule without burning out existing engineers.",
+      goalType: "performance" as const,
+      keyResults: [
+        {
+          description: "Job descriptions published",
+          metric: "All 4 roles posted on job boards with finalized JDs",
+          deadline: daysFromNow(14),
+          status: "not_started" as const,
+        },
+        {
+          description: "Interview loops completed",
+          metric: "At least 8 qualified candidates reach final-round interviews",
+          deadline: daysFromNow(60),
+          status: "not_started" as const,
+        },
+        {
+          description: "New hires onboarded and productive",
+          metric: "4 new hires onboarded and contributing within first 30 days",
+          deadline: daysFromNow(90),
+          status: "not_started" as const,
+        },
+      ],
       timePeriod: { start: daysAgo(10), end: daysFromNow(90) },
       checkInCadence: "monthly" as const,
-      alignment: "priority" as const,
-      status: "on_track" as const,
+      status: "draft" as const,
+      employeeConfirmed: { confirmed: false, at: null },
+      managerConfirmed: { confirmed: false, at: null },
       owner: jasonLee._id,
       manager: jasonLee._id, // self-managed (engineering leadership)
-      managerApproved: true,
-      locked: true,
+      locked: false,
     },
   ];
 
   const goals = await Goal.insertMany(goalDefs);
   console.log(`Created ${goals.length} goals:`);
   goals.forEach((g) => {
-    console.log(`  - [${g.status}] ${g.title}`);
+    console.log(`  - [${g.status}] ${g.objectiveStatement.slice(0, 70)}...`);
   });
   console.log();
 
