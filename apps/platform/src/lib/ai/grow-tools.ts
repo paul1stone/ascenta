@@ -158,23 +158,19 @@ Present the company's mission, vision, and values (from foundation data) plus an
 
 **Step 2 — Department and team focus:**
 Present the employee's department strategy goals (if any). Ask which one this goal aligns to (or none). Then ask goal type as a numbered list:
-1. Performance
-2. Development
-3. Culture
-4. Compliance
-5. Operational
+1. Performance Goal (delivering results in current role)
+2. Development Goal (building capability for the future)
 
 **Step 3 — Goal recommendation:**
-Based on all context (selected pillar, department goal, goal type, employee role/department), generate 4-6 goal recommendations as a numbered list. Include a final option: "Or describe your own goal." User picks a number or writes custom. Draft a goal title and description.
+Based on all context (selected pillar, department goal, goal type, employee role/department), generate 4-6 goal recommendations as a numbered list. Include a final option: "Or describe your own goal." User picks a number or writes custom. Draft an objective statement (one sentence, outcome-focused, min 15 words).
 
-**Step 4 — Metrics and milestones:**
-Suggest 2-3 success metrics based on the goal type and description. Ask user to pick or customize. Discuss target date / time period. Ask about resources needed and potential blockers conversationally (these are NOT persisted). Then call openGoalDocument with all fields.
+**Step 4 — Key results and support:**
+Based on the objective, suggest 2-4 key results. Each key result needs: what will be measured, the measurable target, and a deadline. Ask user to pick or customize. Discuss time period. Ask what support the manager can provide (resources, access, time, coaching). Then call openGoalDocument with all fields.
 
 RULES:
 - Ask ONE question at a time. Wait for the response before moving on.
 - If the user gives rich answers, skip ahead where appropriate.
 - After drafting the goal in step 3, confirm with the user before proceeding.
-- Resources and blockers discussed in step 4 are conversation context only — do not try to save them as fields.
 - When ready, call openGoalDocument with all collected values to open the form.`,
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
@@ -260,16 +256,20 @@ export const openGoalDocumentTool = tool({
   inputSchema: z.object({
     employeeName: z.string(),
     employeeId: z.string(),
-    title: z.string().describe("Goal title from step 3"),
-    description: z.string().describe("Goal description from step 3"),
-    category: z.string().describe("One of: performance, development, culture, compliance, operational"),
-    strategyGoalId: z.string().optional().describe("ObjectId of linked strategy goal, or omit for independent"),
-    strategyGoalTitle: z.string().optional().describe("Display title of linked strategy goal"),
-    measurementType: z.string().describe("numeric_metric, percentage_target, milestone_completion, behavior_change, or learning_completion"),
-    successMetric: z.string().describe("Success criteria from step 4"),
+    objectiveStatement: z.string().describe("Outcome-focused objective, min 15 words"),
+    goalType: z.string().describe("'performance' or 'development'"),
+    keyResults: z.array(z.object({
+      description: z.string().describe("What will be measured"),
+      metric: z.string().describe("The measurable target"),
+      deadline: z.string().describe("ISO date string for deadline"),
+    })).min(2).max(4).describe("2-4 SMART key results"),
+    strategyGoalId: z.string().optional().describe("ObjectId of linked strategy pillar"),
+    strategyGoalTitle: z.string().optional().describe("Display title of linked strategy pillar"),
+    teamGoalId: z.string().optional().describe("ObjectId of linked team goal"),
+    supportAgreement: z.string().optional().describe("Manager's committed resources and support"),
     timePeriod: z.string().describe("Q1, Q2, Q3, Q4, H1, H2, annual, or custom"),
-    checkInCadence: z.string().describe("monthly, quarterly, milestone, or manager_scheduled"),
-    notes: z.string().optional().describe("Additional context or notes"),
+    checkInCadence: z.string().describe("every_check_in, monthly, or quarterly"),
+    notes: z.string().optional(),
   }),
   execute: async (params) => {
     await ensureWorkflowsSynced();
@@ -282,11 +282,11 @@ export const openGoalDocumentTool = tool({
 
     const prefilled: Record<string, unknown> = {};
     for (const key of [
-      "employeeName", "employeeId", "title", "description", "category",
-      "strategyGoalId", "strategyGoalTitle", "measurementType", "successMetric",
-      "timePeriod", "checkInCadence", "notes",
+      "employeeName", "employeeId", "objectiveStatement", "goalType",
+      "keyResults", "strategyGoalId", "strategyGoalTitle", "teamGoalId",
+      "supportAgreement", "timePeriod", "checkInCadence", "notes",
     ] as const) {
-      if (params[key]) prefilled[key] = params[key];
+      if (params[key] !== undefined) prefilled[key] = params[key];
     }
 
     const workingDocPayload = {
@@ -440,7 +440,7 @@ export const startPerformanceNoteTool = tool({
 
 export const updateWorkingDocumentTool = tool({
   description:
-    "Update fields in the open working document form. Use when the user asks to change a value via chat (e.g. 'change the time period to Q3').",
+    "Update fields in the open working document form. Use when the user asks to change a value via chat (e.g. 'change the time period to Q3'). For goal forms, valid field names include: objectiveStatement, goalType, keyResults, supportAgreement, timePeriod, checkInCadence, strategyGoalId, strategyGoalTitle, teamGoalId, notes.",
   inputSchema: z.object({
     runId: z.string().describe("The workflow run ID"),
     updates: z.record(z.string(), z.unknown()).describe("Object with fieldKey: newValue pairs to update"),
