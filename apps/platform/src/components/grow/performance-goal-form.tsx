@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Loader2, Search, User } from "lucide-react";
-import { goalFormSchema } from "@/lib/validations/goal";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X, Loader2, Search, User, Plus, Trash2 } from "lucide-react";
+import { goalFormSchema, getObjectiveWarning, type GoalFormValues } from "@/lib/validations/goal";
+import { GOAL_TYPE_LABELS, CHECKIN_CADENCE_LABELS } from "@ascenta/db/goal-constants";
 
 interface PerformanceGoalFormProps {
   accentColor: string;
@@ -22,21 +25,13 @@ interface EmployeeResult {
   department: string;
 }
 
-const GOAL_TYPE_OPTIONS = [
-  { value: "performance", label: "Performance" },
-  { value: "development", label: "Development" },
-  { value: "culture", label: "Culture" },
-  { value: "compliance", label: "Compliance" },
-  { value: "operational", label: "Operational" },
-] as const;
+const GOAL_TYPE_OPTIONS = Object.entries(GOAL_TYPE_LABELS).map(
+  ([value, label]) => ({ value: value as "performance" | "development", label }),
+);
 
-const MEASUREMENT_TYPE_OPTIONS = [
-  { value: "numeric_metric", label: "Numeric Metric" },
-  { value: "percentage_target", label: "Percentage Target" },
-  { value: "milestone_completion", label: "Milestone Completion" },
-  { value: "behavior_change", label: "Behavior Change" },
-  { value: "learning_completion", label: "Learning Completion" },
-] as const;
+const CHECKIN_CADENCE_OPTIONS = Object.entries(CHECKIN_CADENCE_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const TIME_PERIOD_OPTIONS = [
   { value: "Q1", label: "Q1" },
@@ -49,13 +44,6 @@ const TIME_PERIOD_OPTIONS = [
   { value: "custom", label: "Custom" },
 ] as const;
 
-const CADENCE_OPTIONS = [
-  { value: "monthly", label: "Monthly" },
-  { value: "quarterly", label: "Quarterly" },
-  { value: "milestone", label: "Milestone" },
-  { value: "manager_scheduled", label: "Manager Scheduled" },
-] as const;
-
 export function PerformanceGoalForm({
   accentColor,
   onClose,
@@ -65,31 +53,61 @@ export function PerformanceGoalForm({
   defaultStrategyGoalId,
   defaultStrategyGoalTitle,
 }: PerformanceGoalFormProps) {
-  // Employee picker state
-  const [employeeId, setEmployeeId] = useState(defaultEmployeeId);
-  const [employeeName, setEmployeeName] = useState(defaultEmployeeName);
+  // Employee picker state (managed outside react-hook-form for search UX)
   const [employeeSearch, setEmployeeSearch] = useState(defaultEmployeeName);
   const [employeeResults, setEmployeeResults] = useState<EmployeeResult[]>([]);
   const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
   const [employeeSearchLoading, setEmployeeSearchLoading] = useState(false);
   const employeeContainerRef = useRef<HTMLDivElement>(null);
 
-  // Form fields
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [measurementType, setMeasurementType] = useState("");
-  const [successMetric, setSuccessMetric] = useState("");
-  const [timePeriod, setTimePeriod] = useState("");
-  const [customStartDate, setCustomStartDate] = useState("");
-  const [customEndDate, setCustomEndDate] = useState("");
-  const [checkInCadence, setCheckInCadence] = useState("");
-  const [strategyGoalId] = useState(defaultStrategyGoalId || "");
-  const [strategyGoalTitle] = useState(defaultStrategyGoalTitle || "");
-  const [notes, setNotes] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const form = useForm<GoalFormValues>({
+    resolver: zodResolver(goalFormSchema),
+    defaultValues: {
+      employeeName: defaultEmployeeName,
+      employeeId: defaultEmployeeId,
+      objectiveStatement: "",
+      goalType: undefined,
+      keyResults: [
+        { description: "", metric: "", deadline: "" },
+        { description: "", metric: "", deadline: "" },
+      ],
+      strategyGoalId: defaultStrategyGoalId ?? "",
+      strategyGoalTitle: defaultStrategyGoalTitle ?? "",
+      supportAgreement: "",
+      timePeriod: undefined,
+      customStartDate: "",
+      customEndDate: "",
+      checkInCadence: "every_check_in",
+      notes: "",
+    },
+  });
+
+  const {
+    register,
+    watch,
+    setValue,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form;
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "keyResults",
+  });
+
+  const employeeId = watch("employeeId");
+  const employeeName = watch("employeeName");
+  const timePeriod = watch("timePeriod");
+  const goalType = watch("goalType");
+  const objectiveStatement = watch("objectiveStatement");
+
+  const wordCount = (objectiveStatement || "").trim().split(/\s+/).filter(Boolean).length;
+  const objectiveWarning = getObjectiveWarning(objectiveStatement || "");
+
+  const strategyGoalTitle = watch("strategyGoalTitle");
 
   // Employee search with debounce
   useEffect(() => {
@@ -132,64 +150,44 @@ export function PerformanceGoalForm({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrors({});
-
-    const formData = {
-      employeeName,
-      employeeId,
-      title,
-      description,
-      category: category || undefined,
-      measurementType: measurementType || undefined,
-      successMetric,
-      timePeriod: timePeriod || undefined,
-      customStartDate: timePeriod === "custom" ? customStartDate : undefined,
-      customEndDate: timePeriod === "custom" ? customEndDate : undefined,
-      checkInCadence: checkInCadence || undefined,
-      strategyGoalId: strategyGoalId || undefined,
-      strategyGoalTitle: strategyGoalTitle || undefined,
-      notes: notes || undefined,
-    };
-
-    const parsed = goalFormSchema.safeParse(formData);
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const [key, messages] of Object.entries(
-        parsed.error.flatten().fieldErrors,
-      )) {
-        fieldErrors[key] = (messages as string[])?.[0] ?? "Invalid";
-      }
-      setErrors(fieldErrors);
-      return;
-    }
-
-    setSaving(true);
+  const onSubmit = handleSubmit(async (data) => {
+    setFormError(null);
     try {
+      const payload = {
+        employeeName: data.employeeName,
+        employeeId: data.employeeId,
+        objectiveStatement: data.objectiveStatement,
+        goalType: data.goalType,
+        keyResults: data.keyResults,
+        strategyGoalId: data.strategyGoalId || undefined,
+        strategyGoalTitle: data.strategyGoalTitle || undefined,
+        supportAgreement: data.supportAgreement || undefined,
+        checkInCadence: data.checkInCadence,
+        timePeriod: data.timePeriod,
+        customStartDate: data.timePeriod === "custom" ? data.customStartDate : undefined,
+        customEndDate: data.timePeriod === "custom" ? data.customEndDate : undefined,
+        notes: data.notes || undefined,
+      };
+
       const res = await fetch("/api/grow/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (data.success) {
+      const result = await res.json();
+      if (result.success) {
         onSaved();
         onClose();
       } else {
         const errMsg =
-          typeof data.error === "string"
-            ? data.error
-            : "Failed to create goal";
-        setErrors({ form: errMsg });
+          typeof result.error === "string" ? result.error : "Failed to create goal";
+        setFormError(errMsg);
       }
     } catch {
-      setErrors({ form: "Failed to create goal" });
-    } finally {
-      setSaving(false);
+      setFormError("Failed to create goal");
     }
-  }
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -206,7 +204,7 @@ export function PerformanceGoalForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={onSubmit} className="p-5 space-y-4">
           {/* Employee picker */}
           {employeeId ? (
             <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2.5">
@@ -217,8 +215,8 @@ export function PerformanceGoalForm({
               <button
                 type="button"
                 onClick={() => {
-                  setEmployeeId("");
-                  setEmployeeName("");
+                  setValue("employeeId", "", { shouldValidate: false });
+                  setValue("employeeName", "", { shouldValidate: false });
                   setEmployeeSearch("");
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground"
@@ -241,8 +239,7 @@ export function PerformanceGoalForm({
                     setEmployeeDropdownOpen(true);
                   }}
                   onFocus={() =>
-                    employeeSearch.length >= 2 &&
-                    setEmployeeDropdownOpen(true)
+                    employeeSearch.length >= 2 && setEmployeeDropdownOpen(true)
                   }
                   className="w-full rounded-lg border pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2"
                 />
@@ -263,8 +260,8 @@ export function PerformanceGoalForm({
                           type="button"
                           onClick={() => {
                             const name = `${emp.firstName} ${emp.lastName}`;
-                            setEmployeeId(emp.id);
-                            setEmployeeName(name);
+                            setValue("employeeId", emp.id, { shouldValidate: true });
+                            setValue("employeeName", name, { shouldValidate: true });
                             setEmployeeSearch(name);
                             setEmployeeDropdownOpen(false);
                           }}
@@ -290,42 +287,41 @@ export function PerformanceGoalForm({
                 )}
               {errors.employeeId && (
                 <p className="text-xs text-red-500 mt-1">
-                  {errors.employeeId}
+                  {errors.employeeId.message}
                 </p>
               )}
             </div>
           )}
 
-          {/* Title */}
+          {/* Objective Statement */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Title
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              placeholder="e.g., Improve customer response time by 20%"
-            />
-            {errors.title && (
-              <p className="text-xs text-red-500 mt-1">{errors.title}</p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Description
-            </label>
+            <div className="flex items-baseline justify-between">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Objective Statement
+              </label>
+              <span
+                className={
+                  wordCount >= 15
+                    ? "text-xs text-muted-foreground"
+                    : "text-xs text-amber-500"
+                }
+              >
+                {wordCount} / 15 words min
+              </span>
+            </div>
             <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              {...register("objectiveStatement")}
               rows={3}
               className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-y"
-              placeholder="Describe the goal and expected outcomes..."
+              placeholder="Describe what this person will achieve and why it matters…"
             />
-            {errors.description && (
-              <p className="text-xs text-red-500 mt-1">{errors.description}</p>
+            {errors.objectiveStatement && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.objectiveStatement.message}
+              </p>
+            )}
+            {!errors.objectiveStatement && objectiveWarning && (
+              <p className="text-xs text-amber-600 mt-1">{objectiveWarning}</p>
             )}
           </div>
 
@@ -334,64 +330,122 @@ export function PerformanceGoalForm({
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Goal Type
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-            >
-              <option value="">Select...</option>
+            <div className="mt-1 grid grid-cols-2 gap-2">
               {GOAL_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValue("goalType", opt.value, { shouldValidate: true })}
+                  className={[
+                    "rounded-lg border px-4 py-3 text-sm font-medium text-left transition-colors",
+                    goalType === opt.value
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                  ].join(" ")}
+                >
                   {opt.label}
-                </option>
+                </button>
               ))}
-            </select>
-            {errors.category && (
-              <p className="text-xs text-red-500 mt-1">{errors.category}</p>
+            </div>
+            {errors.goalType && (
+              <p className="text-xs text-red-500 mt-1">{errors.goalType.message}</p>
             )}
           </div>
 
-          {/* Measurement Type */}
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Measurement Type
-            </label>
-            <select
-              value={measurementType}
-              onChange={(e) => setMeasurementType(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-            >
-              <option value="">Select...</option>
-              {MEASUREMENT_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            {errors.measurementType && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.measurementType}
+          {/* Key Results */}
+          <div className="space-y-2">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Key Results
+              </label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Define 2–4 measurable outcomes that indicate goal success.
               </p>
+            </div>
+            {fields.map((field, index) => (
+              <div key={field.id} className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Key Result {index + 1}
+                  </span>
+                  {fields.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="text-muted-foreground hover:text-red-500 transition-colors"
+                      aria-label="Remove key result"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <input
+                    {...register(`keyResults.${index}.description`)}
+                    placeholder="What will be achieved?"
+                    className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                  />
+                  {errors.keyResults?.[index]?.description && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.keyResults[index].description?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      {...register(`keyResults.${index}.metric`)}
+                      placeholder="Measurable target"
+                      className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                    />
+                    {errors.keyResults?.[index]?.metric && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.keyResults[index].metric?.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="date"
+                      {...register(`keyResults.${index}.deadline`)}
+                      className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                    />
+                    {errors.keyResults?.[index]?.deadline && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.keyResults[index].deadline?.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {errors.keyResults && !Array.isArray(errors.keyResults) && (
+              <p className="text-xs text-red-500">{errors.keyResults.message}</p>
+            )}
+            {fields.length < 4 && (
+              <button
+                type="button"
+                onClick={() => append({ description: "", metric: "", deadline: "" })}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+              >
+                <Plus className="size-3.5" />
+                Add Key Result
+              </button>
             )}
           </div>
 
-          {/* Success Metric */}
+          {/* Support Agreement */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Success Metric
+              Support Agreement{" "}
+              <span className="normal-case font-normal">(optional)</span>
             </label>
             <textarea
-              value={successMetric}
-              onChange={(e) => setSuccessMetric(e.target.value)}
+              {...register("supportAgreement")}
               rows={2}
               className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-y"
-              placeholder="How will success be measured?"
+              placeholder="What support, resources, or commitments are needed from the manager?"
             />
-            {errors.successMetric && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.successMetric}
-              </p>
-            )}
           </div>
 
           {/* Time Period + Custom Dates */}
@@ -401,8 +455,14 @@ export function PerformanceGoalForm({
                 Time Period
               </label>
               <select
-                value={timePeriod}
-                onChange={(e) => setTimePeriod(e.target.value)}
+                value={timePeriod ?? ""}
+                onChange={(e) =>
+                  setValue(
+                    "timePeriod",
+                    e.target.value as GoalFormValues["timePeriod"],
+                    { shouldValidate: true },
+                  )
+                }
                 className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
               >
                 <option value="">Select...</option>
@@ -414,7 +474,7 @@ export function PerformanceGoalForm({
               </select>
               {errors.timePeriod && (
                 <p className="text-xs text-red-500 mt-1">
-                  {errors.timePeriod}
+                  {errors.timePeriod.message}
                 </p>
               )}
             </div>
@@ -426,13 +486,12 @@ export function PerformanceGoalForm({
                   </label>
                   <input
                     type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    {...register("customStartDate")}
                     className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
                   />
                   {errors.customStartDate && (
                     <p className="text-xs text-red-500 mt-1">
-                      {errors.customStartDate}
+                      {errors.customStartDate.message}
                     </p>
                   )}
                 </div>
@@ -442,13 +501,12 @@ export function PerformanceGoalForm({
                   </label>
                   <input
                     type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    {...register("customEndDate")}
                     className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
                   />
                   {errors.customEndDate && (
                     <p className="text-xs text-red-500 mt-1">
-                      {errors.customEndDate}
+                      {errors.customEndDate.message}
                     </p>
                   )}
                 </div>
@@ -462,12 +520,18 @@ export function PerformanceGoalForm({
               Check-in Cadence
             </label>
             <select
-              value={checkInCadence}
-              onChange={(e) => setCheckInCadence(e.target.value)}
+              value={watch("checkInCadence") ?? ""}
+              onChange={(e) =>
+                setValue(
+                  "checkInCadence",
+                  e.target.value as GoalFormValues["checkInCadence"],
+                  { shouldValidate: true },
+                )
+              }
               className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
             >
               <option value="">Select...</option>
-              {CADENCE_OPTIONS.map((opt) => (
+              {CHECKIN_CADENCE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -475,7 +539,7 @@ export function PerformanceGoalForm({
             </select>
             {errors.checkInCadence && (
               <p className="text-xs text-red-500 mt-1">
-                {errors.checkInCadence}
+                {errors.checkInCadence.message}
               </p>
             )}
           </div>
@@ -502,16 +566,15 @@ export function PerformanceGoalForm({
               Notes <span className="normal-case font-normal">(optional)</span>
             </label>
             <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              {...register("notes")}
               rows={2}
               className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-y"
               placeholder="Additional context..."
             />
           </div>
 
-          {errors.form && (
-            <p className="text-xs text-red-500">{errors.form}</p>
+          {formError && (
+            <p className="text-xs text-red-500">{formError}</p>
           )}
 
           {/* Actions */}
@@ -525,11 +588,11 @@ export function PerformanceGoalForm({
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={isSubmitting}
               className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-40"
               style={{ backgroundColor: accentColor }}
             >
-              {saving ? (
+              {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 "Submit for Review"
