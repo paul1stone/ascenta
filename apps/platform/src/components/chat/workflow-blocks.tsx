@@ -7,6 +7,8 @@ import {
   FOLLOW_UP_SUFFIX,
   WORKING_DOC_PREFIX,
   WORKING_DOC_SUFFIX,
+  GOAL_RECS_PREFIX,
+  GOAL_RECS_SUFFIX,
 } from "@/lib/ai/workflow-constants";
 
 export interface FieldPromptData {
@@ -36,11 +38,26 @@ export interface WorkingDocData {
   availableGoals?: { id: string; title: string }[];
 }
 
+export interface GoalRecommendation {
+  objectiveStatement: string;
+  goalType: "performance" | "development";
+  keyResults: { description: string; metric: string; deadline: string }[];
+  strategyGoalId?: string;
+  strategyGoalTitle?: string;
+}
+
+export interface GoalRecommendationsData {
+  employeeId: string;
+  employeeName: string;
+  recommendations: GoalRecommendation[];
+}
+
 export interface ParsedContent {
   text: string;
   fieldPrompt: FieldPromptData | null;
   followUp: FollowUpData | null;
   workingDoc: WorkingDocData | null;
+  goalRecommendations: GoalRecommendationsData | null;
 }
 
 export function parseWorkflowBlocks(content: string): ParsedContent {
@@ -48,6 +65,7 @@ export function parseWorkflowBlocks(content: string): ParsedContent {
   let fieldPrompt: FieldPromptData | null = null;
   let followUp: FollowUpData | null = null;
   let workingDoc: WorkingDocData | null = null;
+  let goalRecommendations: GoalRecommendationsData | null = null;
 
   const fieldMatch = content.match(
     new RegExp(
@@ -91,7 +109,21 @@ export function parseWorkflowBlocks(content: string): ParsedContent {
     }
   }
 
-  return { text, fieldPrompt, followUp, workingDoc };
+  const goalRecsMatch = content.match(
+    new RegExp(
+      `${escapeRegex(GOAL_RECS_PREFIX)}([\\s\\S]*?)${escapeRegex(GOAL_RECS_SUFFIX)}`
+    )
+  );
+  if (goalRecsMatch) {
+    try {
+      goalRecommendations = JSON.parse(goalRecsMatch[1].trim()) as GoalRecommendationsData;
+      text = text.replace(goalRecsMatch[0], "").trim();
+    } catch {
+      // Invalid JSON, leave in text
+    }
+  }
+
+  return { text, fieldPrompt, followUp, workingDoc, goalRecommendations };
 }
 
 /** Get the workflow runId from message content (field prompt or follow-up block) so the client can send it as activeWorkflowRunId */
