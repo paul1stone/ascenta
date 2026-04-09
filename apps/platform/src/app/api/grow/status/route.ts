@@ -99,14 +99,25 @@ export async function GET(req: Request) {
       const completedLast30 = empCheckIns30.filter((c) => c.status === "completed").length;
       const totalLast30 = empCheckIns30.length;
 
+      const goalsByStatus = {
+        active: empGoals.filter((g) => g.status === "active").length,
+        needs_attention: empGoals.filter((g) => g.status === "needs_attention").length,
+        blocked: empGoals.filter((g) => g.status === "blocked").length,
+        draft: empGoals.filter((g) => g.status === "draft").length,
+        pending_confirmation: empGoals.filter((g) => g.status === "pending_confirmation").length,
+      };
+
       // Determine overall status from goals
-      const hasOffTrack = empGoals.some((g) => g.status === "off_track");
+      const hasBlocked = empGoals.some((g) => g.status === "blocked");
       const hasNeedsAttention = empGoals.some((g) => g.status === "needs_attention");
-      const overallStatus = hasOffTrack
-        ? "off_track"
+      const overallStatus = hasBlocked
+        ? "blocked"
         : hasNeedsAttention
           ? "needs_attention"
-          : "on_track";
+          : "active";
+
+      const performanceGoals = empGoals.filter((g) => (g as Record<string, unknown>).goalType === "performance").length;
+      const developmentGoals = empGoals.filter((g) => (g as Record<string, unknown>).goalType === "development").length;
 
       return {
         id: empId,
@@ -114,13 +125,11 @@ export async function GET(req: Request) {
         department: emp.department,
         jobTitle: emp.jobTitle,
         goalCount: empGoals.length,
-        goalsByStatus: {
-          on_track: empGoals.filter((g) => g.status === "on_track").length,
-          needs_attention: empGoals.filter((g) => g.status === "needs_attention").length,
-          off_track: empGoals.filter((g) => g.status === "off_track").length,
-          completed: 0,
-        },
+        goalsByStatus,
         overallStatus,
+        goalTypeBalance: { performance: performanceGoals, development: developmentGoals },
+        hasDevelopmentGoal: developmentGoals > 0,
+        pendingConfirmation: goalsByStatus.pending_confirmation,
         checkInCompletion7d: totalLast7 > 0 ? completedLast7 / totalLast7 : null,
         checkInCompletion30d: totalLast30 > 0 ? completedLast30 / totalLast30 : null,
         overdueCheckIns: empOverdue.length,
@@ -134,6 +143,17 @@ export async function GET(req: Request) {
     const totalCompleted30 = checkInsLast30.filter((c) => c.status === "completed").length;
     const totalCheckIns30 = checkInsLast30.length;
 
+    const pendingConfirmationCount = goals.filter(
+      (g) => g.status === "pending_confirmation",
+    ).length;
+    const blockedCount = goals.filter((g) => g.status === "blocked").length;
+    const performanceCount = goals.filter(
+      (g) => (g as Record<string, unknown>).goalType === "performance",
+    ).length;
+    const developmentCount = goals.filter(
+      (g) => (g as Record<string, unknown>).goalType === "development",
+    ).length;
+
     return NextResponse.json({
       manager: { id: String(manager._id), name: managerName },
       aggregates: {
@@ -141,6 +161,9 @@ export async function GET(req: Request) {
         activeGoalsCount: totalGoals,
         checkInCompletion7d: totalCheckIns7 > 0 ? totalCompleted7 / totalCheckIns7 : 0,
         overdueCheckIns: overdueCheckIns.length,
+        pendingConfirmationCount,
+        blockedCount,
+        goalTypeBalance: { performance: performanceCount, development: developmentCount },
       },
       directReports: employeeSummaries.map((e) => ({
         employeeId: e.id,
@@ -148,7 +171,11 @@ export async function GET(req: Request) {
         department: e.department,
         jobTitle: e.jobTitle,
         goalCount: e.goalCount,
-        goalStatus: e.goalsByStatus,
+        goalsByStatus: e.goalsByStatus,
+        overallStatus: e.overallStatus,
+        goalTypeBalance: e.goalTypeBalance,
+        hasDevelopmentGoal: e.hasDevelopmentGoal,
+        pendingConfirmation: e.pendingConfirmation,
         checkInCompletion7d: e.checkInCompletion7d ?? 0,
         checkInCompletion30d: e.checkInCompletion30d ?? 0,
         overdueCheckIns: e.overdueCheckIns,
