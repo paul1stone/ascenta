@@ -13,17 +13,23 @@ import {
   TableRow,
 } from "@ascenta/ui/table";
 import { cn } from "@ascenta/ui";
-import { Users, Target, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Users, Target, AlertTriangle, Clock, BarChart2 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types — mirrors expected API response from /api/grow/status
 // ---------------------------------------------------------------------------
 
-interface GoalStatusBreakdown {
-  on_track: number;
+interface GoalsByStatus {
+  active: number;
   needs_attention: number;
-  off_track: number;
-  completed: number;
+  blocked: number;
+  draft: number;
+  pending_confirmation: number;
+}
+
+interface GoalTypeBalance {
+  performance: number;
+  development: number;
 }
 
 interface DirectReportRow {
@@ -32,7 +38,11 @@ interface DirectReportRow {
   department: string;
   jobTitle: string;
   goalCount: number;
-  goalStatus: GoalStatusBreakdown;
+  goalsByStatus: GoalsByStatus;
+  overallStatus: string;
+  goalTypeBalance: GoalTypeBalance;
+  hasDevelopmentGoal: boolean;
+  pendingConfirmation: number;
   checkInCompletion7d: number;
   checkInCompletion30d: number;
   overdueCheckIns: number;
@@ -43,6 +53,9 @@ interface StatusAggregates {
   activeGoalsCount: number;
   checkInCompletion7d: number;
   overdueCheckIns: number;
+  pendingConfirmationCount: number;
+  blockedCount: number;
+  goalTypeBalance: GoalTypeBalance;
 }
 
 interface StatusResponse {
@@ -54,13 +67,12 @@ interface StatusResponse {
 // Constants
 // ---------------------------------------------------------------------------
 
-// TODO: Replace with actual manager ID from auth context once auth is implemented
-
 const STATUS_COLORS: Record<string, string> = {
-  on_track: "bg-emerald-500",
+  active: "bg-emerald-500",
   needs_attention: "bg-amber-500",
-  off_track: "bg-rose-500",
-  completed: "bg-slate-400",
+  blocked: "bg-rose-500",
+  draft: "bg-slate-400",
+  pending_confirmation: "bg-sky-400",
 };
 
 // ---------------------------------------------------------------------------
@@ -77,11 +89,12 @@ function StatusDot({ status, count }: { status: string; count: number }) {
   );
 }
 
-function GoalStatusDots({ status }: { status: GoalStatusBreakdown }) {
+function GoalStatusDots({ goalsByStatus }: { goalsByStatus: GoalsByStatus }) {
   const entries: [string, number][] = [
-    ["on_track", status.on_track],
-    ["needs_attention", status.needs_attention],
-    ["off_track", status.off_track],
+    ["active", goalsByStatus.active],
+    ["needs_attention", goalsByStatus.needs_attention],
+    ["blocked", goalsByStatus.blocked],
+    ["pending_confirmation", goalsByStatus.pending_confirmation],
   ];
   const hasAny = entries.some(([, count]) => count > 0);
 
@@ -103,11 +116,13 @@ function StatCard({
   value,
   icon: Icon,
   highlight,
+  sub,
 }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
-  highlight?: "red" | "green";
+  highlight?: "red" | "green" | "amber";
+  sub?: string;
 }) {
   return (
     <Card>
@@ -123,10 +138,12 @@ function StatCard({
             "text-2xl font-bold",
             highlight === "red" && "text-rose-600",
             highlight === "green" && "text-emerald-600",
+            highlight === "amber" && "text-amber-600",
           )}
         >
           {value}
         </div>
+        {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
   );
@@ -236,32 +253,34 @@ export function StatusDashboard({ managerId }: StatusDashboardProps) {
   if (!data || data.directReports.length === 0) return <EmptyState />;
 
   const { aggregates, directReports } = data;
+  const { goalTypeBalance } = aggregates;
 
   return (
     <div className="space-y-6">
       {/* Aggregate stat cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Direct Reports"
-          value={aggregates.directReportsCount}
-          icon={Users}
-        />
-        <StatCard
           title="Active Goals"
           value={aggregates.activeGoalsCount}
           icon={Target}
         />
         <StatCard
-          title="Check-in Completion (7d)"
-          value={`${Math.round(aggregates.checkInCompletion7d)}%`}
-          icon={CheckCircle2}
-          highlight={aggregates.checkInCompletion7d >= 80 ? "green" : undefined}
+          title="Pending Confirmation"
+          value={aggregates.pendingConfirmationCount}
+          icon={Clock}
+          highlight={aggregates.pendingConfirmationCount > 0 ? "amber" : undefined}
         />
         <StatCard
-          title="Overdue Check-ins"
-          value={aggregates.overdueCheckIns}
+          title="Goal Type Balance"
+          value={`${goalTypeBalance.performance}P / ${goalTypeBalance.development}D`}
+          icon={BarChart2}
+          sub="Performance / Development"
+        />
+        <StatCard
+          title="Blocked Goals"
+          value={aggregates.blockedCount}
           icon={AlertTriangle}
-          highlight={aggregates.overdueCheckIns > 0 ? "red" : undefined}
+          highlight={aggregates.blockedCount > 0 ? "red" : undefined}
         />
       </div>
 
@@ -274,8 +293,8 @@ export function StatusDashboard({ managerId }: StatusDashboardProps) {
               <TableHead>Department</TableHead>
               <TableHead>Job Title</TableHead>
               <TableHead>Goals</TableHead>
-              <TableHead className="text-center">7d Check-ins</TableHead>
-              <TableHead className="text-center">30d Check-ins</TableHead>
+              <TableHead className="text-center">Pending</TableHead>
+              <TableHead className="text-center">Dev Goal</TableHead>
               <TableHead className="text-center">Overdue</TableHead>
             </TableRow>
           </TableHeader>
@@ -292,27 +311,33 @@ export function StatusDashboard({ managerId }: StatusDashboardProps) {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{report.goalCount}</span>
-                    <GoalStatusDots status={report.goalStatus} />
+                    <GoalStatusDots goalsByStatus={report.goalsByStatus} />
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <span
-                    className={cn(
-                      "text-sm",
-                      report.checkInCompletion7d >= 80
-                        ? "text-emerald-600"
-                        : report.checkInCompletion7d >= 50
-                          ? "text-amber-600"
-                          : "text-muted-foreground",
-                    )}
-                  >
-                    {Math.round(report.checkInCompletion7d)}%
-                  </span>
+                  {report.pendingConfirmation > 0 ? (
+                    <Badge
+                      variant="secondary"
+                      className="bg-sky-100 text-sky-700 text-xs"
+                    >
+                      {report.pendingConfirmation}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-center">
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(report.checkInCompletion30d)}%
-                  </span>
+                  {report.hasDevelopmentGoal ? (
+                    <span className="text-sm text-emerald-600">Yes</span>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-1 text-xs text-amber-600"
+                      title="No development goal set"
+                    >
+                      <AlertTriangle className="size-3" />
+                      None
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="text-center">
                   {report.overdueCheckIns > 0 ? (
