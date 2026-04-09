@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@ascenta/ui/button";
 import { Input } from "@ascenta/ui/input";
@@ -14,26 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ascenta/ui/select";
-import { goalFormSchema, type GoalFormValues } from "@/lib/validations/goal";
-import { GOAL_CATEGORY_LABELS } from "@ascenta/db/goal-constants";
-import { User } from "lucide-react";
+import { cn } from "@ascenta/ui";
+import { goalFormSchema, getObjectiveWarning, type GoalFormValues } from "@/lib/validations/goal";
+import { GOAL_TYPE_LABELS, CHECKIN_CADENCE_LABELS } from "@ascenta/db/goal-constants";
+import { User, Plus, Trash2 } from "lucide-react";
 import { EmployeePicker } from "./employee-picker";
 
 // ---------------------------------------------------------------------------
 // Options
 // ---------------------------------------------------------------------------
 
-const CATEGORY_OPTIONS = Object.entries(GOAL_CATEGORY_LABELS).map(
-  ([value, label]) => ({ value, label }),
+const GOAL_TYPE_OPTIONS = Object.entries(GOAL_TYPE_LABELS).map(
+  ([value, label]) => ({ value: value as "performance" | "development", label }),
 );
 
-const MEASUREMENT_TYPE_OPTIONS = [
-  { value: "numeric_metric", label: "Numeric Metric" },
-  { value: "percentage_target", label: "Percentage Target" },
-  { value: "milestone_completion", label: "Milestone Completion" },
-  { value: "behavior_change", label: "Behavior Change" },
-  { value: "learning_completion", label: "Learning Completion" },
-] as const;
+const CHECKIN_CADENCE_OPTIONS = Object.entries(CHECKIN_CADENCE_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const TIME_PERIOD_OPTIONS = [
   { value: "Q1", label: "Q1" },
@@ -46,13 +43,6 @@ const TIME_PERIOD_OPTIONS = [
   { value: "custom", label: "Custom" },
 ] as const;
 
-const CADENCE_OPTIONS = [
-  { value: "monthly", label: "Monthly" },
-  { value: "quarterly", label: "Quarterly" },
-  { value: "milestone", label: "Milestone" },
-  { value: "manager_scheduled", label: "Manager Scheduled" },
-] as const;
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -62,6 +52,7 @@ interface GoalCreationFormProps {
   onFieldChange: (fieldKey: string, value: unknown) => void;
   onSubmit: () => Promise<void>;
   onCancel: () => void;
+  strategyGoals?: { id: string; title: string; horizon: string }[];
 }
 
 export function GoalCreationForm({
@@ -69,23 +60,27 @@ export function GoalCreationForm({
   onFieldChange,
   onSubmit,
   onCancel,
+  strategyGoals = [],
 }: GoalCreationFormProps) {
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalFormSchema),
     defaultValues: {
       employeeName: "",
       employeeId: "",
-      title: "",
-      description: "",
-      category: undefined,
-      measurementType: undefined,
-      successMetric: "",
+      objectiveStatement: "",
+      goalType: undefined,
+      keyResults: [
+        { description: "", metric: "", deadline: "" },
+        { description: "", metric: "", deadline: "" },
+      ],
+      strategyGoalId: "",
+      strategyGoalTitle: "",
+      teamGoalId: "",
+      supportAgreement: "",
       timePeriod: undefined,
       customStartDate: "",
       customEndDate: "",
-      checkInCadence: undefined,
-      strategyGoalId: "",
-      strategyGoalTitle: "",
+      checkInCadence: "every_check_in",
       notes: "",
       ...initialValues,
     },
@@ -95,10 +90,21 @@ export function GoalCreationForm({
     register,
     watch,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = form;
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "keyResults",
+  });
+
   const timePeriod = watch("timePeriod");
+  const goalType = watch("goalType");
+  const objectiveStatement = watch("objectiveStatement");
+
+  const wordCount = (objectiveStatement || "").trim().split(/\s+/).filter(Boolean).length;
+  const objectiveWarning = getObjectiveWarning(objectiveStatement || "");
 
   // Sync every field change back to the chat context
   useEffect(() => {
@@ -138,104 +144,212 @@ export function GoalCreationForm({
         />
       )}
 
-      {/* Title */}
+      {/* Objective Statement */}
       <div className="space-y-1.5">
-        <Label htmlFor="title">
-          Title <span className="text-destructive">*</span>
-        </Label>
-        <Input id="title" placeholder="Goal title" {...register("title")} />
-        {errors.title && (
-          <p className="text-xs text-destructive">{errors.title.message}</p>
-        )}
-      </div>
-
-      {/* Description */}
-      <div className="space-y-1.5">
-        <Label htmlFor="description">
-          Description <span className="text-destructive">*</span>
-        </Label>
+        <div className="flex items-baseline justify-between">
+          <Label htmlFor="objectiveStatement">
+            Objective Statement <span className="text-destructive">*</span>
+          </Label>
+          <span
+            className={cn(
+              "text-xs",
+              wordCount >= 15 ? "text-muted-foreground" : "text-amber-500",
+            )}
+          >
+            {wordCount} / 15 words min
+          </span>
+        </div>
         <Textarea
-          id="description"
+          id="objectiveStatement"
           rows={3}
-          placeholder="Describe the goal"
-          {...register("description")}
+          placeholder="Describe what this person will achieve and why it matters…"
+          {...register("objectiveStatement")}
         />
-        {errors.description && (
-          <p className="text-xs text-destructive">{errors.description.message}</p>
+        {errors.objectiveStatement && (
+          <p className="text-xs text-destructive">{errors.objectiveStatement.message}</p>
+        )}
+        {!errors.objectiveStatement && objectiveWarning && (
+          <p className="text-xs text-amber-600">{objectiveWarning}</p>
         )}
       </div>
 
-      {/* Category */}
+      {/* Goal Type */}
       <div className="space-y-1.5">
-        <Label htmlFor="category">
-          Category <span className="text-destructive">*</span>
+        <Label>
+          Goal Type <span className="text-destructive">*</span>
         </Label>
-        <Select
-          value={watch("category") ?? ""}
-          onValueChange={(v: string) =>
-            setValue("category", v as GoalFormValues["category"], {
-              shouldValidate: true,
-            })
-          }
-        >
-          <SelectTrigger id="category">
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORY_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.category && (
-          <p className="text-xs text-destructive">{errors.category.message}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {GOAL_TYPE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setValue("goalType", opt.value, { shouldValidate: true });
+                onFieldChange("goalType", opt.value);
+              }}
+              className={cn(
+                "rounded-lg border px-4 py-3 text-sm font-medium text-left transition-colors",
+                goalType === opt.value
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {errors.goalType && (
+          <p className="text-xs text-destructive">{errors.goalType.message}</p>
         )}
       </div>
 
-      {/* Measurement Type */}
-      <div className="space-y-1.5">
-        <Label htmlFor="measurementType">
-          Measurement Type <span className="text-destructive">*</span>
+      {/* Key Results */}
+      <div className="space-y-2">
+        <Label>
+          Key Results <span className="text-destructive">*</span>
         </Label>
-        <Select
-          value={watch("measurementType") ?? ""}
-          onValueChange={(v: string) =>
-            setValue("measurementType", v as GoalFormValues["measurementType"], {
-              shouldValidate: true,
-            })
-          }
-        >
-          <SelectTrigger id="measurementType">
-            <SelectValue placeholder="Select measurement type" />
-          </SelectTrigger>
-          <SelectContent>
-            {MEASUREMENT_TYPE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.measurementType && (
-          <p className="text-xs text-destructive">{errors.measurementType.message}</p>
+        <p className="text-xs text-muted-foreground -mt-1">
+          Define 2–4 measurable outcomes that indicate goal success.
+        </p>
+        {fields.map((field, index) => (
+          <div key={field.id} className="rounded-lg border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">
+                Key Result {index + 1}
+              </span>
+              {fields.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Remove key result"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Input
+                placeholder="What will be achieved?"
+                {...register(`keyResults.${index}.description`)}
+              />
+              {errors.keyResults?.[index]?.description && (
+                <p className="text-xs text-destructive">
+                  {errors.keyResults[index].description?.message}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Input
+                  placeholder="Measurable target"
+                  {...register(`keyResults.${index}.metric`)}
+                />
+                {errors.keyResults?.[index]?.metric && (
+                  <p className="text-xs text-destructive">
+                    {errors.keyResults[index].metric?.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Input
+                  type="date"
+                  {...register(`keyResults.${index}.deadline`)}
+                />
+                {errors.keyResults?.[index]?.deadline && (
+                  <p className="text-xs text-destructive">
+                    {errors.keyResults[index].deadline?.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {errors.keyResults && !Array.isArray(errors.keyResults) && (
+          <p className="text-xs text-destructive">{errors.keyResults.message}</p>
+        )}
+        {fields.length < 4 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full gap-1.5"
+            onClick={() => append({ description: "", metric: "", deadline: "" })}
+          >
+            <Plus className="size-3.5" />
+            Add Key Result
+          </Button>
         )}
       </div>
 
-      {/* Success Metric */}
+      {/* Strategy Pillar (conditional) */}
+      {strategyGoals.length > 0 && (
+        <div className="space-y-1.5">
+          <Label htmlFor="strategyGoalId">Strategy Pillar</Label>
+          <Select
+            value={watch("strategyGoalId") ?? ""}
+            onValueChange={(v: string) => {
+              setValue("strategyGoalId", v, { shouldValidate: true });
+              const found = strategyGoals.find((g) => g.id === v);
+              setValue("strategyGoalTitle", found?.title ?? "");
+              onFieldChange("strategyGoalId", v);
+              onFieldChange("strategyGoalTitle", found?.title ?? "");
+            }}
+          >
+            <SelectTrigger id="strategyGoalId">
+              <SelectValue placeholder="Link to a strategy goal (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {strategyGoals.map((goal) => (
+                <SelectItem key={goal.id} value={goal.id}>
+                  {goal.title}
+                  {goal.horizon && (
+                    <span className="ml-1 text-muted-foreground">({goal.horizon})</span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Support Agreement */}
       <div className="space-y-1.5">
-        <Label htmlFor="successMetric">
-          Success Metric <span className="text-destructive">*</span>
-        </Label>
+        <Label htmlFor="supportAgreement">Support Agreement</Label>
         <Textarea
-          id="successMetric"
+          id="supportAgreement"
           rows={2}
-          placeholder="How will success be measured?"
-          {...register("successMetric")}
+          placeholder="What support, resources, or commitments are needed from the manager?"
+          {...register("supportAgreement")}
         />
-        {errors.successMetric && (
-          <p className="text-xs text-destructive">{errors.successMetric.message}</p>
+      </div>
+
+      {/* Check-in Cadence */}
+      <div className="space-y-1.5">
+        <Label htmlFor="checkInCadence">
+          Check-in Cadence <span className="text-destructive">*</span>
+        </Label>
+        <Select
+          value={watch("checkInCadence") ?? "every_check_in"}
+          onValueChange={(v: string) =>
+            setValue("checkInCadence", v as GoalFormValues["checkInCadence"], {
+              shouldValidate: true,
+            })
+          }
+        >
+          <SelectTrigger id="checkInCadence">
+            <SelectValue placeholder="Select cadence" />
+          </SelectTrigger>
+          <SelectContent>
+            {CHECKIN_CADENCE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.checkInCadence && (
+          <p className="text-xs text-destructive">{errors.checkInCadence.message}</p>
         )}
       </div>
 
@@ -303,35 +417,6 @@ export function GoalCreationForm({
           </div>
         </div>
       )}
-
-      {/* Check-in Cadence */}
-      <div className="space-y-1.5">
-        <Label htmlFor="checkInCadence">
-          Check-in Cadence <span className="text-destructive">*</span>
-        </Label>
-        <Select
-          value={watch("checkInCadence") ?? ""}
-          onValueChange={(v: string) =>
-            setValue("checkInCadence", v as GoalFormValues["checkInCadence"], {
-              shouldValidate: true,
-            })
-          }
-        >
-          <SelectTrigger id="checkInCadence">
-            <SelectValue placeholder="Select cadence" />
-          </SelectTrigger>
-          <SelectContent>
-            {CADENCE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.checkInCadence && (
-          <p className="text-xs text-destructive">{errors.checkInCadence.message}</p>
-        )}
-      </div>
 
       {/* Notes (optional) */}
       <div className="space-y-1.5">
