@@ -18,6 +18,7 @@ export const strategyGoalFormSchema = z
     scope: z.enum(STRATEGY_SCOPES, { message: "Scope is required" }),
     department: z.string().optional().default(""),
     successMetrics: z.string().optional().default(""),
+    rationale: z.string().optional().default(""),
     status: z.enum(STRATEGY_GOAL_STATUSES).optional().default("draft"),
   })
   .refine(
