@@ -40,6 +40,7 @@ export function StrategyGoalForm({
   const [scope, setScope] = useState<"company" | "department">("company");
   const [department, setDepartment] = useState("");
   const [successMetrics, setSuccessMetrics] = useState("");
+  const [rationale, setRationale] = useState("");
   const [status, setStatus] = useState<string>("draft");
   const [departments, setDepartments] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -79,6 +80,7 @@ export function StrategyGoalForm({
       setScope(editGoal.scope as "company" | "department");
       setDepartment(editGoal.department ?? "");
       setSuccessMetrics(editGoal.successMetrics);
+      setRationale(editGoal.rationale ?? "");
       setStatus(editGoal.status);
     }
   }, [editGoal]);
@@ -118,6 +120,7 @@ export function StrategyGoalForm({
           scope,
           department: scope === "department" ? department : "",
           successMetrics,
+          rationale,
           status,
         }),
       });
@@ -176,6 +179,20 @@ export function StrategyGoalForm({
               placeholder="Describe the strategic objective..."
             />
             {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
+          </div>
+
+          {/* Rationale */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Rationale
+            </label>
+            <textarea
+              value={rationale}
+              onChange={(e) => setRationale(e.target.value)}
+              rows={2}
+              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-y"
+              placeholder="Why is this a priority? What's the business case?"
+            />
           </div>
 
           {/* Horizon + Dates */}
