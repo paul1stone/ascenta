@@ -233,6 +233,16 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
                               </p>
                             </div>
                           )}
+                          {goal.rationale && (
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Rationale
+                              </p>
+                              <p className="text-sm font-normal text-foreground leading-relaxed">
+                                {goal.rationale}
+                              </p>
+                            </div>
+                          )}
                           {goal.successMetrics && (
                             <div>
                               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
@@ -420,6 +430,20 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
             )}
           </div>
         </div>
+
+        {/* Priority count warning */}
+        {viewMode === "company" && (() => {
+          const companyCount = goals.filter((g) => g.scope === "company").length;
+          if (companyCount > 0 && (companyCount < 3 || companyCount > 5)) {
+            return (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 mb-4">
+                Strategy Studio recommends 3–5 enterprise priorities per planning cycle.
+                You currently have {companyCount}.
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {visibleGoals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
