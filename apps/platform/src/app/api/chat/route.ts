@@ -229,7 +229,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // Return the streaming response with conversation ID
     return result.toTextStreamResponse({
       headers: {
         "X-Conversation-Id": conversation.id,

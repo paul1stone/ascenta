@@ -173,13 +173,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         throw new Error(`Workflow type "${workflowType}" is read-only and cannot be submitted`);
       }
 
+      // Prefer form-level employeeId/employeeName (set by EmployeePicker) over
+      // the working-document-level values, which may be empty for direct-open.
+      const effectiveEmployeeId =
+        (fields.employeeId as string) || employeeId;
+      const effectiveEmployeeName =
+        (fields.employeeName as string) || employeeName;
+
       const res = await fetch(route, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...fields,
-          employeeId,
-          employeeName,
+          employeeId: effectiveEmployeeId,
+          employeeName: effectiveEmployeeName,
           ...(runId ? { runId } : {}),
         }),
       });

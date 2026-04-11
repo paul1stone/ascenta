@@ -9,6 +9,8 @@ import {
   WORKING_DOC_SUFFIX,
   GOAL_RECS_PREFIX,
   GOAL_RECS_SUFFIX,
+  OPTIONS_PREFIX,
+  OPTIONS_SUFFIX,
 } from "@/lib/ai/workflow-constants";
 
 export interface FieldPromptData {
@@ -52,12 +54,19 @@ export interface GoalRecommendationsData {
   recommendations: GoalRecommendation[];
 }
 
+export interface OptionsData {
+  question: string;
+  options: string[];
+  allowSkip?: boolean;
+}
+
 export interface ParsedContent {
   text: string;
   fieldPrompt: FieldPromptData | null;
   followUp: FollowUpData | null;
   workingDoc: WorkingDocData | null;
   goalRecommendations: GoalRecommendationsData | null;
+  options: OptionsData | null;
 }
 
 export function parseWorkflowBlocks(content: string): ParsedContent {
@@ -66,6 +75,7 @@ export function parseWorkflowBlocks(content: string): ParsedContent {
   let followUp: FollowUpData | null = null;
   let workingDoc: WorkingDocData | null = null;
   let goalRecommendations: GoalRecommendationsData | null = null;
+  let options: OptionsData | null = null;
 
   const fieldMatch = content.match(
     new RegExp(
@@ -123,7 +133,21 @@ export function parseWorkflowBlocks(content: string): ParsedContent {
     }
   }
 
-  return { text, fieldPrompt, followUp, workingDoc, goalRecommendations };
+  const optionsMatch = text.match(
+    new RegExp(
+      `${escapeRegex(OPTIONS_PREFIX)}([\\s\\S]*?)${escapeRegex(OPTIONS_SUFFIX)}`
+    )
+  );
+  if (optionsMatch) {
+    try {
+      options = JSON.parse(optionsMatch[1].trim()) as OptionsData;
+      text = text.replace(optionsMatch[0], "").trim();
+    } catch {
+      // Invalid JSON, leave in text
+    }
+  }
+
+  return { text, fieldPrompt, followUp, workingDoc, goalRecommendations, options };
 }
 
 /** Get the workflow runId from message content (field prompt or follow-up block) so the client can send it as activeWorkflowRunId */

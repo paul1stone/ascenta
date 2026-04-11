@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { Goal } from "@ascenta/db/goal-schema";
 import { CheckIn } from "@ascenta/db/checkin-schema";
-import { Employee } from "@ascenta/db/employee-schema";
-import { getEmployeeByEmployeeId } from "@ascenta/db/employees";
+import { getEmployeeByEmployeeId, getEmployeeById } from "@ascenta/db/employees";
 import { WorkflowRun } from "@ascenta/db/workflow-schema";
 import { logAuditEvent } from "@/lib/workflows";
 import { parseTimePeriod } from "@/lib/ai/grow-tools";
@@ -75,7 +74,12 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { runId, createdByRole, ...formData } = body;
-    const effectiveRunId = runId || crypto.randomUUID();
+    // Generate a valid 24-char hex ObjectId when no runId (direct form creation)
+    const effectiveRunId =
+      runId ||
+      Array.from(crypto.getRandomValues(new Uint8Array(12)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 
     const parsed = goalFormSchema.safeParse(formData);
     if (!parsed.success) {
@@ -88,15 +92,11 @@ export async function POST(req: NextRequest) {
     const data = parsed.data;
 
     // Support both MongoDB ObjectId and EMP-style employee IDs
-    let employee = await getEmployeeByEmployeeId(data.employeeId);
-    if (!employee && data.employeeId.match(/^[0-9a-fA-F]{24}$/)) {
-      const doc = await Employee.findById(data.employeeId);
-      if (doc) {
-        employee = {
-          id: String(doc._id),
-          employeeId: doc.employeeId,
-        } as unknown as typeof employee;
-      }
+    let employee = data.employeeId.match(/^[0-9a-fA-F]{24}$/)
+      ? await getEmployeeById(data.employeeId)
+      : null;
+    if (!employee) {
+      employee = await getEmployeeByEmployeeId(data.employeeId);
     }
     if (!employee) {
       return NextResponse.json(

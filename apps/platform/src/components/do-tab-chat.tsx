@@ -10,6 +10,7 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { SuggestPromptPills } from "@/components/chat/suggest-prompt-pills";
 import { WorkingDocument } from "@/components/grow/working-document";
 import { parseWorkflowBlocks } from "@/components/chat/workflow-blocks";
+import { OptionSelectorBlock } from "@/components/chat/option-selector-block";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
 import type { WorkflowType } from "@/lib/chat/chat-context";
 import { useRole } from "@/lib/role/role-context";
@@ -190,10 +191,26 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     [pageKey, sendMessage],
   );
 
+  const onOptionSelect = useCallback(
+    (value: string) => {
+      sendMessage(pageKey, value);
+    },
+    [pageKey, sendMessage],
+  );
+
   // Resolve active tool metadata for the streaming badge
   const activeToolMeta = activeToolForStream && pageConfig.tools
     ? pageConfig.tools.find((t) => t.key === activeToolForStream) ?? null
     : null;
+
+  // Detect options in the last assistant message (for input-bar selector)
+  const lastAssistantMsg = !isLoading
+    ? [...messages].reverse().find((m) => m.role === "assistant")
+    : null;
+  const lastParsed = lastAssistantMsg
+    ? parseWorkflowBlocks(lastAssistantMsg.content)
+    : null;
+  const pendingOptions = lastParsed?.options ?? null;
 
   // ── Empty state ──────────────────────────────────────────────────────
   if (!hasMessages && !workingDocument.isOpen) {
@@ -297,16 +314,24 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
         {/* Pinned input */}
         <div className="shrink-0 px-4 pb-4 pt-2">
           <div className={cn("mx-auto", docOpen ? "max-w-xl" : "max-w-2xl")}>
-            <ChatInput
-              value={input}
-              onChange={(v) => setPageInput(pageKey, v)}
-              onSubmit={handleSend}
-              onStop={handleStop}
-              isLoading={isLoading}
-              placeholder="What can Ascenta do for you?"
-              model={model}
-              onModelChange={setModel}
+            {pendingOptions ? (
+              <OptionSelectorBlock
+                data={pendingOptions}
+                onSelect={onOptionSelect}
+                accentColor={accentColor}
               />
+            ) : (
+              <ChatInput
+                value={input}
+                onChange={(v) => setPageInput(pageKey, v)}
+                onSubmit={handleSend}
+                onStop={handleStop}
+                isLoading={isLoading}
+                placeholder={hasMessages ? "Reply..." : "What can Ascenta do for you?"}
+                model={model}
+                onModelChange={setModel}
+              />
+            )}
           </div>
         </div>
       </div>

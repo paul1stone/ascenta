@@ -201,13 +201,13 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                     setExpandedId(isExpanded ? null : goal.id)
                   }
                 >
-                  <TableCell className="pl-4 font-display text-sm font-semibold text-deep-blue">
+                  <TableCell className="pl-4 font-display text-sm font-semibold text-deep-blue max-w-[400px]">
                     <div className="flex items-center gap-2.5">
                       <span
                         className="size-2 shrink-0 rounded-full"
                         style={{ backgroundColor: statusColor }}
                       />
-                      <span className="truncate">{goal.objectiveStatement}</span>
+                      <span className={cn("truncate", isExpanded && "whitespace-normal line-clamp-none")}>{goal.objectiveStatement}</span>
                       {/* Dual confirmation indicators */}
                       <div className="flex items-center gap-1 ml-1 shrink-0">
                         <span

@@ -171,7 +171,11 @@ RULES:
 - Ask ONE question at a time. Wait for the response before moving on.
 - If the user gives rich answers, skip ahead where appropriate.
 - After drafting the goal in step 3, confirm with the user before proceeding.
-- When ready, call openGoalDocument with all collected values to open the form.`,
+- When ready, call openGoalDocument with all collected values to open the form.
+
+**OPTION SELECTOR UI:** Whenever you present a numbered list of choices to the user (e.g., strategic goals, goal type, goal recommendations, key results), wrap them in an [ASCENTA_OPTIONS] block so the frontend renders clickable cards. Format:
+[ASCENTA_OPTIONS]{"question":"Your question here","options":["Option 1 text","Option 2 text","Option 3 text"],"allowSkip":false}[/ASCENTA_OPTIONS]
+Set allowSkip:true when the user can skip (e.g., strategic alignment is optional). The last option can be "Or describe your own" for open-ended steps. Do NOT include the options as a numbered list in your text — the block replaces the list. You can include context/explanation text before the block.`,
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),

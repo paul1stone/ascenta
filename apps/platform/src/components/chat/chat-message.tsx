@@ -39,7 +39,14 @@ export function ChatMessage({
   const [otherInputValue, setOtherInputValue] = useState<Record<string, string>>({});
 
   const parsed = !isUser && content ? parseWorkflowBlocks(content) : null;
-  const displayContent = parsed?.text ?? content;
+  // Strip any ASCENTA blocks that survived parsing (malformed JSON, streaming artifacts)
+  let displayContent = parsed?.text ?? content;
+  if (!isUser) {
+    displayContent = displayContent
+      .replace(/\[ASCENTA_\w+\][\s\S]*?\[\/ASCENTA_\w+\]/g, "") // strip complete blocks
+      .replace(/\[ASCENTA_\w+\][\s\S]*$/s, "") // strip from any unclosed block tag to end
+      .trim();
+  }
 
   return (
     <div className="px-4 md:px-6 py-2">
@@ -122,6 +129,7 @@ export function ChatMessage({
                       onOther={onFollowUpOther}
                     />
                   )}
+
                 </>
               )}
             </div>
