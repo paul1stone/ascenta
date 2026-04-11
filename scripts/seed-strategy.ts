@@ -87,6 +87,38 @@ async function main() {
       "A world where every employee has a clear path to growth, every manager has the tools to lead effectively, and every organization can build a thriving, high-performance culture — powered by AI that amplifies human judgment rather than replacing it.",
     values:
       "People First — Every feature we build starts with the question: does this make someone's work life better?\n\nTransparency by Default — We believe in open communication, clear expectations, and honest feedback at every level.\n\nContinuous Growth — We invest in learning, embrace feedback, and measure progress — for our customers and ourselves.\n\nAccountable Autonomy — We trust our people to own their work, make decisions, and deliver results with integrity.\n\nPragmatic Innovation — We use technology to solve real problems, not to chase trends. AI should make work simpler, not more complex.",
+    nonNegotiableBehaviors: [
+      {
+        name: "Transparency in Decision-Making",
+        description: "Every significant decision must be explainable to anyone affected by it. No black-box choices, no hidden agendas.",
+      },
+      {
+        name: "Psychological Safety in Feedback",
+        description: "Feedback flows in all directions without fear of retaliation. Dissent is welcomed when respectful and constructive.",
+      },
+      {
+        name: "Data Before Opinion",
+        description: "When data is available, it leads the conversation. Gut feel is a starting point, not a conclusion.",
+      },
+      {
+        name: "Follow Through on Commitments",
+        description: "If you commit to something, deliver it or renegotiate early. Ghosting on commitments erodes trust faster than anything else.",
+      },
+    ],
+    livedPrinciples: [
+      {
+        name: "Default to Action Over Consensus",
+        description: "When a decision is reversible and low-risk, move forward. Don't wait for perfect alignment when progress is possible.",
+      },
+      {
+        name: "Own the Outcome, Not Just the Task",
+        description: "Completing your assignment isn't enough. If the outcome isn't right, keep pushing until it is or escalate clearly.",
+      },
+      {
+        name: "Teach What You Learn",
+        description: "Knowledge shared is knowledge multiplied. Document, demo, and debrief so the team levels up together.",
+      },
+    ],
     status: "published",
     publishedAt: daysAgo(30),
   });
@@ -113,6 +145,7 @@ async function main() {
       successMetrics:
         "• 50+ paying customers in mid-market segment\n• Net Revenue Retention > 120%\n• NPS > 60 among target segment",
       status: "on_track" as const,
+      rationale: "Mid-market HR is underserved by both enterprise incumbents (too complex, too expensive) and SMB tools (too simple). Our AI-first approach can deliver enterprise-quality workflows at mid-market pricing.",
     },
     {
       title: "Build self-serve onboarding that converts trial to paid in under 14 days",
@@ -125,6 +158,7 @@ async function main() {
       successMetrics:
         "• Trial-to-paid conversion > 15%\n• Median time-to-value < 3 days\n• Self-serve accounts represent 40% of new revenue",
       status: "on_track" as const,
+      rationale: "Sales-assisted onboarding doesn't scale past 100 customers. Product-led growth reduces CAC by 60% and lets HR teams self-discover value without a demo call.",
     },
     {
       title: "Launch Grow performance module to general availability",
@@ -137,6 +171,7 @@ async function main() {
       successMetrics:
         "• All 4 Grow workflows in production\n• 90%+ uptime during launch week\n• 10+ beta customers actively using Grow features",
       status: "needs_attention" as const,
+      rationale: "Performance management is the #1 requested feature from beta customers and the primary differentiator against competitors who only do corrective actions.",
     },
 
     // ── Engineering department goals ────────────────────────────────
@@ -151,6 +186,7 @@ async function main() {
       successMetrics:
         "• P95 response time < 500ms on all /api/chat, /api/grow/*, and /api/dashboard/* routes\n• Zero timeout errors in production monitoring",
       status: "on_track" as const,
+      rationale: "Beta customers report that slow AI responses during check-ins and goal creation reduce adoption. Sub-500ms is the threshold where the tool feels instant.",
     },
     {
       title: "Establish CI/CD pipeline with automated quality gates",
@@ -163,6 +199,7 @@ async function main() {
       successMetrics:
         "• All PRs gated by lint + tsc + test pipeline\n• Staging environment auto-deploys from main\n• Production deploys require one-click approval",
       status: "draft" as const,
+      rationale: "Manual deploys have caused two production incidents in the last month. Automated quality gates are non-negotiable before scaling the team.",
     },
 
     // ── HR department goals ─────────────────────────────────────────
@@ -177,6 +214,7 @@ async function main() {
       successMetrics:
         "• Review templates adopted by 100% of departments\n• Manager training completion rate > 90%\n• Employee satisfaction with review process > 4.0/5.0",
       status: "on_track" as const,
+      rationale: "Three departments currently use different review formats. Standardization is required before Ascenta can generate meaningful cross-org analytics.",
     },
 
     // ── Product department goal ─────────────────────────────────────
@@ -191,6 +229,7 @@ async function main() {
       successMetrics:
         "• Competitive matrix covering top 5 competitors\n• Updated positioning document approved by leadership\n• Sales enablement deck with competitive battle cards",
       status: "on_track" as const,
+      rationale: "The sales team lacks battle cards and positioning against Lattice, 15Five, and Culture Amp. Win rates drop 30% in competitive deals without clear differentiation.",
     },
   ];
 
@@ -212,6 +251,8 @@ async function main() {
 
   console.log("=== Seed Summary ===");
   console.log(`  Foundation:       1 document (${foundation.status})`);
+  console.log(`    Behaviors:      ${foundation.nonNegotiableBehaviors.length}`);
+  console.log(`    Principles:     ${foundation.livedPrinciples.length}`);
   console.log(`  Strategy Goals:   ${strategyGoals.length} total`);
   console.log(`    Company-wide:   ${companyGoals.length}`);
   console.log(`    Department:     ${deptGoals.length} across ${departments.length} departments (${departments.join(", ")})`);
