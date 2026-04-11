@@ -44,6 +44,7 @@ const strategyGoalSchema = new Schema(
     },
     department: { type: String, default: null, index: true },
     successMetrics: { type: String, default: "" },
+    rationale: { type: String, default: "" },
     status: {
       type: String,
       required: true,

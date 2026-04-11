@@ -16,6 +16,7 @@ export interface StrategyGoalData {
   scope: string;
   department: string | null;
   successMetrics: string;
+  rationale: string;
   status: string;
   createdAt: string;
 }
