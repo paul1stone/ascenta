@@ -29,6 +29,7 @@ export async function PATCH(
     if (data.scope !== undefined) update.scope = data.scope;
     if (data.department !== undefined) update.department = data.scope === "department" ? data.department : null;
     if (data.successMetrics !== undefined) update.successMetrics = data.successMetrics;
+    if (data.rationale !== undefined) update.rationale = data.rationale;
     if (data.status !== undefined) update.status = data.status;
     if (data.startDate && data.endDate) {
       update.timePeriod = { start: new Date(data.startDate), end: new Date(data.endDate) };

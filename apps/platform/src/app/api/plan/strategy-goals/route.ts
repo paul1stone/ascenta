@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       scope: data.scope,
       department: data.scope === "department" ? data.department : null,
       successMetrics: data.successMetrics,
+      rationale: data.rationale || "",
       status: data.status,
     });
 
