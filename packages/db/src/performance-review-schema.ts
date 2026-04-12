@@ -133,6 +133,12 @@ const performanceReviewSchema = new Schema(
     ],
     goalHandoffCompleted: { type: Boolean, default: false },
 
+    alignmentLevel: {
+      type: String,
+      enum: ["strong", "acceptable", "poor", null],
+      default: null,
+    },
+
     workflowRunId: { type: String, default: null },
   },
   {
