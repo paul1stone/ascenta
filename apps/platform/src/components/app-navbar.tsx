@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { cn } from "@ascenta/ui";
 import { LayoutDashboard } from "lucide-react";
+import { UserPicker } from "@/components/auth/user-picker";
 
 interface AppNavbarProps {
   onDashboardClick?: () => void;
@@ -17,19 +18,22 @@ export function AppNavbar({ onDashboardClick, isDashboardActive }: AppNavbarProp
       : "text-muted-foreground hover:text-deep-blue hover:bg-slate-100"
   );
 
-  if (onDashboardClick) {
-    return (
-      <button onClick={onDashboardClick} className={className}>
-        <LayoutDashboard className="size-3.5" />
-        Dashboard
-      </button>
-    );
-  }
-
-  return (
+  const dashboardButton = onDashboardClick ? (
+    <button onClick={onDashboardClick} className={className}>
+      <LayoutDashboard className="size-3.5" />
+      Dashboard
+    </button>
+  ) : (
     <Link href="/home" className={className}>
       <LayoutDashboard className="size-3.5" />
       Dashboard
     </Link>
+  );
+
+  return (
+    <div className="flex items-center gap-2">
+      {dashboardButton}
+      <UserPicker />
+    </div>
   );
 }
