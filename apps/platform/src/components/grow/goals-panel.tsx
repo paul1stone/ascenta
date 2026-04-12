@@ -46,6 +46,13 @@ interface GoalData {
   managerConfirmed: boolean;
 }
 
+interface SuggestedOutcome {
+  text: string;
+  strategyGoalId: string;
+  strategyGoalTitle: string;
+  roleContribution: string;
+}
+
 interface GoalsPanelProps {
   accentColor: string;
 }
@@ -94,6 +101,8 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] =
     useState<EmployeeOption | null>(null);
+  const [suggestedOutcomes, setSuggestedOutcomes] = useState<SuggestedOutcome[]>([]);
+  const [showAllOutcomes, setShowAllOutcomes] = useState(false);
 
   // The employee whose goals we're viewing
   const viewingEmployeeId = selectedEmployee?.id ?? persona?.id;
@@ -132,9 +141,26 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
     }
   }, [viewingEmployeeId, roleLoading]);
 
+  const fetchOutcomes = useCallback(async () => {
+    if (!viewingEmployeeId) return;
+    try {
+      const res = await fetch(
+        `/api/grow/suggested-outcomes?employeeId=${viewingEmployeeId}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestedOutcomes(data.outcomes ?? []);
+      }
+    } catch {
+      // silent — section just won't render
+    }
+  }, [viewingEmployeeId]);
+
   useEffect(() => {
     fetchGoals();
-  }, [fetchGoals]);
+    fetchOutcomes();
+    setShowAllOutcomes(false);
+  }, [fetchGoals, fetchOutcomes]);
 
   if (loading) {
     return (
@@ -154,6 +180,19 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
         <p className="text-sm text-muted-foreground max-w-sm">{error}</p>
       </div>
     );
+  }
+
+  function buildOutcomeLink(outcome: SuggestedOutcome): string {
+    const prompt = `Create a goal based on this outcome: "${outcome.text}"`;
+    const params = new URLSearchParams({
+      prompt,
+      tool: "startGoalWorkflow",
+      outcomeText: outcome.text,
+      strategyGoalId: outcome.strategyGoalId,
+      strategyGoalTitle: outcome.strategyGoalTitle,
+      contributionRef: outcome.roleContribution,
+    });
+    return `/do?${params.toString()}`;
   }
 
   const draftGoals = goals.filter((g) => g.status === "draft");
@@ -495,6 +534,50 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
     );
   }
 
+  const suggestedOutcomesSection = suggestedOutcomes.length > 0 ? (
+    <div className="mt-6">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+        Suggested Outcomes
+      </p>
+      <div className="space-y-2">
+        {(showAllOutcomes
+          ? suggestedOutcomes
+          : suggestedOutcomes.slice(0, 3)
+        ).map((outcome, i) => (
+          <div
+            key={`${outcome.strategyGoalId}-${i}`}
+            className="flex items-center justify-between rounded-lg border px-3 py-2.5"
+          >
+            <div className="flex-1 min-w-0 mr-3">
+              <p className="text-sm text-foreground truncate">
+                {outcome.text}
+              </p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {outcome.strategyGoalTitle}
+              </p>
+            </div>
+            <Link
+              href={buildOutcomeLink(outcome)}
+              className="flex items-center gap-1 shrink-0 text-xs font-medium transition-colors"
+              style={{ color: "#ff6b35" }}
+            >
+              <Compass className="size-3" />
+              Create with Compass
+            </Link>
+          </div>
+        ))}
+        {!showAllOutcomes && suggestedOutcomes.length > 3 && (
+          <button
+            onClick={() => setShowAllOutcomes(true)}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Show {suggestedOutcomes.length - 3} more
+          </button>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-4xl mx-auto">
@@ -596,58 +679,64 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
         )}
 
         {goals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Target className="size-10 text-muted-foreground/30 mb-3" />
-            <h3 className="font-display text-lg font-bold text-foreground mb-1">
-              No Goals Yet
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mb-4">
-              Get started by creating your first goal with Compass.
-            </p>
-            <Link
-              href="/do?prompt=Help%20me%20create%20a%20performance%20goal&tool=startGoalWorkflow"
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
-              style={{ backgroundColor: "#ff6b35" }}
-            >
-              <Compass className="size-4" />
-              Create with Compass
-            </Link>
-          </div>
+          <>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Target className="size-10 text-muted-foreground/30 mb-3" />
+              <h3 className="font-display text-lg font-bold text-foreground mb-1">
+                No Goals Yet
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-4">
+                Get started by creating your first goal with Compass.
+              </p>
+              <Link
+                href="/do?prompt=Help%20me%20create%20a%20performance%20goal&tool=startGoalWorkflow"
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: "#ff6b35" }}
+              >
+                <Compass className="size-4" />
+                Create with Compass
+              </Link>
+            </div>
+            {suggestedOutcomesSection}
+          </>
         ) : (
-          <div className="space-y-5">
-            {draftGoals.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Draft
-                </p>
-                {renderGoalTable(draftGoals)}
-              </div>
-            )}
-            {pendingGoals.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Pending Confirmation
-                </p>
-                {renderGoalTable(pendingGoals)}
-              </div>
-            )}
-            {activeGoals.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Active
-                </p>
-                {renderGoalTable(activeGoals)}
-              </div>
-            )}
-            {completedGoals.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Completed
-                </p>
-                {renderGoalTable(completedGoals)}
-              </div>
-            )}
-          </div>
+          <>
+            <div className="space-y-5">
+              {draftGoals.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Draft
+                  </p>
+                  {renderGoalTable(draftGoals)}
+                </div>
+              )}
+              {pendingGoals.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Pending Confirmation
+                  </p>
+                  {renderGoalTable(pendingGoals)}
+                </div>
+              )}
+              {activeGoals.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Active
+                  </p>
+                  {renderGoalTable(activeGoals)}
+                </div>
+              )}
+              {completedGoals.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Completed
+                  </p>
+                  {renderGoalTable(completedGoals)}
+                </div>
+              )}
+            </div>
+            {suggestedOutcomesSection}
+          </>
         )}
       </div>
 

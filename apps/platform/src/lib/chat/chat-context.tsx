@@ -45,7 +45,7 @@ export interface ChatContextValue {
   model: string;
   setModel: (model: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  sendMessage: (pageKey: string, content: string, requiredTool?: string, currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string }) => Promise<void>;
+  sendMessage: (pageKey: string, content: string, requiredTool?: string, currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string }, outcomeContext?: { outcomeText: string; strategyGoalId: string; strategyGoalTitle: string; contributionRef: string }) => Promise<void>;
   setPageInput: (pageKey: string, value: string) => void;
   resetConversation: (pageKey: string) => void;
   stopGeneration: (pageKey: string) => void;
@@ -297,7 +297,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendMessage = useCallback(
-    async (pageKey: string, content: string, requiredTool?: string, currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string }) => {
+    async (pageKey: string, content: string, requiredTool?: string, currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string }, outcomeContext?: { outcomeText: string; strategyGoalId: string; strategyGoalTitle: string; contributionRef: string }) => {
       const trimmed = content.trim();
       const pageState = pageConversations.get(pageKey) ?? {
         ...DEFAULT_PAGE_STATE,
@@ -352,6 +352,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             ...(activeWorkflowRunId ? { activeWorkflowRunId } : {}),
             ...(requiredTool ? { requiredTool } : {}),
             ...(currentEmployee ? { currentEmployee } : {}),
+            ...(outcomeContext ? { outcomeContext } : {}),
           }),
           signal: abortController.signal,
         });

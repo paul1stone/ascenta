@@ -169,6 +169,8 @@ If roleContributions are available in the tool response, use them as the PRIMARY
 **Step 4 — Key results and support:**
 Based on the objective, suggest 1-3 key results (more are allowed if needed). Each key result needs: what will be measured, the measurable target, and a deadline. Ask user to pick or customize. Discuss time period. Ask what support the manager can provide (resources, access, time, coaching). Then call openGoalDocument with all fields.
 
+**Fast-path:** If the system prompt contains [OUTCOME_CONTEXT], skip Steps 1-3 entirely. The strategic pillar and objective are already determined. Default goalType to "performance". Use the outcome text to draft the objective statement and proceed directly to Step 4 (key results, time period, support agreement). Ensure strategyGoalId, strategyGoalTitle, and contributionRef from the context are passed through to openGoalDocument.
+
 RULES:
 - Ask ONE question at a time. Wait for the response before moving on.
 - If the user gives rich answers, skip ahead where appropriate.

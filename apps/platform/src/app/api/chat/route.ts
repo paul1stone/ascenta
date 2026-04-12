@@ -57,6 +57,8 @@ interface ChatRequest {
   requiredTool?: string;
   /** Current logged-in employee context — skips need for getEmployeeInfo */
   currentEmployee?: { id: string; employeeId?: string; firstName: string; lastName: string; department: string; title: string };
+  /** Pre-selected outcome context from role translation — triggers fast-path goal creation */
+  outcomeContext?: { outcomeText: string; strategyGoalId: string; strategyGoalTitle: string; contributionRef: string };
 }
 
 export async function POST(req: Request) {
@@ -75,6 +77,7 @@ export async function POST(req: Request) {
       activeWorkflowRunId,
       requiredTool,
       currentEmployee,
+      outcomeContext,
     } = body;
 
     const isWorkflowAction = !!(workflowFieldSelection || workflowFollowUp);
@@ -176,6 +179,10 @@ export async function POST(req: Request) {
     // Inject required tool hint when user has pre-selected a tool
     if (requiredTool) {
       effectiveSystemPrompt += `\n\n[REQUIRED_TOOL] You MUST use the ${requiredTool} tool in your response. The user has explicitly requested this tool be used.${currentEmployee ? " Use the current user info from [CURRENT_USER] above — do NOT call getEmployeeInfo." : " Look up the employee first with getEmployeeInfo if needed, then"} Call ${requiredTool} as soon as you have enough information. Ask minimal clarifying questions only if truly necessary. [/REQUIRED_TOOL]`;
+    }
+
+    if (outcomeContext) {
+      effectiveSystemPrompt += `\n\n[OUTCOME_CONTEXT] The user has pre-selected an outcome from their role translation:\n- Outcome: "${outcomeContext.outcomeText}"\n- Strategy Goal: "${outcomeContext.strategyGoalTitle}" (ID: ${outcomeContext.strategyGoalId})\n- Role Contribution: "${outcomeContext.contributionRef}"\nSkip Steps 1-3. Default goalType to "performance". Use this outcome as the basis for the objective statement. Go directly to Step 4: suggest 1-3 key results for this outcome, discuss time period and support, then call openGoalDocument with strategyGoalId, strategyGoalTitle, and contributionRef pre-filled. [/OUTCOME_CONTEXT]`;
     }
 
     // Get the model instance
