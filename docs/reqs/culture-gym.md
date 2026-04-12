@@ -142,20 +142,20 @@ Team Metrics (Direct Reports only):
 
 #### Analytics: Insights (HR/People Ops Only)
 
-- [ ] **Skill Heatmap** — category strength by lane (Employee, Manager, HR) and optionally by department or team
-- [ ] **Risk Indicators** — flags low mastery areas in critical categories (documentation, conflict management, expectation setting)
-- [ ] **Manager Capability Signals** — identifies managers with leadership skill gaps, low coaching scores, or high conflict escalation patterns
-- [ ] **Trend Analytics** — participation over time (7-day and 30-day views); skill engagement trends
-- [ ] **Culture Drift Alerts** — AI-powered signals when behavior patterns indicate risk
+- [ ] **Skill Heatmap** — category strength by lane (Employee, Manager, HR) and optionally by department or team — **NOT IMPLEMENTED (#30)**
+- [ ] **Risk Indicators** — flags low mastery areas in critical categories (documentation, conflict management, expectation setting) — **NOT IMPLEMENTED (#30)**
+- [ ] **Manager Capability Signals** — identifies managers with leadership skill gaps, low coaching scores, or high conflict escalation patterns — **NOT IMPLEMENTED (#30)**
+- [ ] **Trend Analytics** — participation over time (7-day and 30-day views); skill engagement trends — **NOT IMPLEMENTED (#30)**
+- [ ] **Culture Drift Alerts** — AI-powered signals when behavior patterns indicate risk — **NOT IMPLEMENTED (#30)**
 
 ---
 
 ## Scoring Model (MVP)
 
-- [ ] **Quiz score** — percent correct (3-5 questions per workout)
-- [ ] **Mastery score** — weighted rolling average of quiz scores plus completion consistency
-- [ ] **Category strength** — average mastery for skills within that category
-- [ ] **Momentum score** (team and org level) — blend of participation rate plus average mastery
+- [ ] **Quiz score** — percent correct (3-5 questions per workout) — **NOT IMPLEMENTED (#30)**
+- [ ] **Mastery score** — weighted rolling average of quiz scores plus completion consistency — **NOT IMPLEMENTED (#30)**
+- [ ] **Category strength** — average mastery for skills within that category — **NOT IMPLEMENTED (#30)**
+- [ ] **Momentum score** (team and org level) — blend of participation rate plus average mastery — **NOT IMPLEMENTED (#30)**
 
 ---
 
@@ -163,39 +163,39 @@ Team Metrics (Direct Reports only):
 
 ### Streak System
 
-- [ ] **Daily streak** — consecutive days completed
-- [ ] **Best streak** — longest streak achieved
-- [ ] **Team streak** (visible to managers) — average streak of direct reports
+- [ ] **Daily streak** — consecutive days completed — **NOT IMPLEMENTED (#30)**
+- [ ] **Best streak** — longest streak achieved — **NOT IMPLEMENTED (#30)**
+- [ ] **Team streak** (visible to managers) — average streak of direct reports — **NOT IMPLEMENTED (#30)**
 
 ### Level System
 
-- [ ] Level 1, Explorer: 0-20 workouts
-- [ ] Level 2, Practitioner: 21-60 workouts
-- [ ] Level 3, Builder: 61-120 workouts
-- [ ] Level 4, Leader: 121-250 workouts
-- [ ] Level 5, Mentor: 250+ workouts
+- [ ] Level 1, Explorer: 0-20 workouts — **NOT IMPLEMENTED (#30)**
+- [ ] Level 2, Practitioner: 21-60 workouts — **NOT IMPLEMENTED (#30)**
+- [ ] Level 3, Builder: 61-120 workouts — **NOT IMPLEMENTED (#30)**
+- [ ] Level 4, Leader: 121-250 workouts — **NOT IMPLEMENTED (#30)**
+- [ ] Level 5, Mentor: 250+ workouts — **NOT IMPLEMENTED (#30)**
 
 ### Skill Badges
 
-- [ ] Badges unlock after completing a cluster of related skills
-- [ ] Examples: Communication Builder, Conflict Navigator, Accountability Champion, Team Builder, Problem Solver
+- [ ] Badges unlock after completing a cluster of related skills — **NOT IMPLEMENTED (#30)**
+- [ ] Examples: Communication Builder, Conflict Navigator, Accountability Champion, Team Builder, Problem Solver — **NOT IMPLEMENTED (#30)**
 
 ### Weekly Reflection
 
-- [ ] What skill did you use most this week?
-- [ ] What situation challenged you?
-- [ ] What skill do you want to improve next week?
+- [ ] What skill did you use most this week? — **NOT IMPLEMENTED (#30)**
+- [ ] What situation challenged you? — **NOT IMPLEMENTED (#30)**
+- [ ] What skill do you want to improve next week? — **NOT IMPLEMENTED (#30)**
 
 ---
 
 ## Data Model (MVP)
 
-- [ ] **Skill** — id, title, lane, category, principle/source, lesson text, example text, application prompt
-- [ ] **DailyWorkout** — date, skill_id, lane
-- [ ] **WorkoutAssignment** — workout_id, user_id, assigned_by, assigned_at, status
-- [ ] **WorkoutCompletion** — user_id, workout_id, completed_at, quiz_score, reflection_text
-- [ ] **QuizQuestion** — skill_id, question, options, correct_answer
-- [ ] **UserSkillProgress** — user_id, lane, category_strength, mastery_score, streak_current, streak_best, total_completed
+- [ ] **Skill** — id, title, lane, category, principle/source, lesson text, example text, application prompt — **NOT IMPLEMENTED (#30)**
+- [ ] **DailyWorkout** — date, skill_id, lane — **NOT IMPLEMENTED (#30)**
+- [ ] **WorkoutAssignment** — workout_id, user_id, assigned_by, assigned_at, status — **NOT IMPLEMENTED (#30)**
+- [ ] **WorkoutCompletion** — user_id, workout_id, completed_at, quiz_score, reflection_text — **NOT IMPLEMENTED (#30)**
+- [ ] **QuizQuestion** — skill_id, question, options, correct_answer — **NOT IMPLEMENTED (#30)**
+- [ ] **UserSkillProgress** — user_id, lane, category_strength, mastery_score, streak_current, streak_best, total_completed — **NOT IMPLEMENTED (#30)**
 
 ---
 
@@ -203,55 +203,55 @@ Team Metrics (Direct Reports only):
 
 ### Employee
 
-- [ ] Access only their own workouts, history, scores, and streaks
-- [ ] Can complete workout and browse skill library within workout flow
-- [ ] Analytics: Status only
+- [ ] Access only their own workouts, history, scores, and streaks — **NOT IMPLEMENTED (#30)**
+- [ ] Can complete workout and browse skill library within workout flow — **NOT IMPLEMENTED (#30)**
+- [ ] Analytics: Status only — **NOT IMPLEMENTED (#30)**
 
 ### Manager
 
-- [ ] Access own workout plus team reinforcement actions for direct reports
-- [ ] Can assign workouts and submit recognition notes
-- [ ] Analytics: Status (self plus team)
+- [ ] Access own workout plus team reinforcement actions for direct reports — **NOT IMPLEMENTED (#30)**
+- [ ] Can assign workouts and submit recognition notes — **NOT IMPLEMENTED (#30)**
+- [ ] Analytics: Status (self plus team) — **NOT IMPLEMENTED (#30)**
 
 ### HR / People Ops
 
-- [ ] Access org-wide dashboards, program operations, and campaign management
-- [ ] Can assign campaigns and tracks
-- [ ] Analytics: Status plus Insights
+- [ ] Access org-wide dashboards, program operations, and campaign management — **NOT IMPLEMENTED (#30)**
+- [ ] Can assign campaigns and tracks — **NOT IMPLEMENTED (#30)**
+- [ ] Analytics: Status plus Insights — **NOT IMPLEMENTED (#30)**
 
 ---
 
 ## Navigation and UI
 
-- [ ] Culture Gym is a standalone feature, separate from Grow
-- [ ] All roles land on Daily Workout as default view
-- [ ] Analytics (Status, and Insights for HR) is the secondary view
-- [ ] No Do, Learn, Status, or Insights tabs in primary navigation — experience is simply: Daily Workout (landing) and Analytics (secondary)
+- [x] Culture Gym is a standalone feature, separate from Grow
+- [ ] All roles land on Daily Workout as default view — **NOT IMPLEMENTED (#30)**
+- [ ] Analytics (Status, and Insights for HR) is the secondary view — **NOT IMPLEMENTED (#30)**
+- [ ] No Do, Learn, Status, or Insights tabs in primary navigation — experience is simply: Daily Workout (landing) and Analytics (secondary) — **NOT IMPLEMENTED (#30)**
 
 ---
 
 ## Audit and Compliance
 
-- [ ] Log workout completion timestamps, score changes, and assignment actions
+- [ ] Log workout completion timestamps, score changes, and assignment actions — **NOT IMPLEMENTED (#30)**
 
 ---
 
 ## Reporting and Export
 
-- [ ] HR/People Ops can export aggregated results (CSV) for participation by lane and category mastery summary (post-MVP if not included in initial build)
+- [ ] HR/People Ops can export aggregated results (CSV) for participation by lane and category mastery summary (post-MVP if not included in initial build) — **NOT IMPLEMENTED (#30)**
 
 ---
 
 ## Definition of Done
 
-- [ ] Role-based permissions enforced on backend and frontend
-- [ ] Daily workout flow works end-to-end for each role with embedded learning content
-- [ ] Analytics: Status populates with real usage data for all roles
-- [ ] Analytics: Insights renders with real data for HR/People Ops only
-- [ ] HR can launch a campaign and users see it tagged within the workout
-- [ ] Insights indicators are explainable (show what metric triggered each flag)
-- [ ] Audit logs exist for assignments and completions
-- [ ] QA pass: mobile responsive plus cross-browser
+- [ ] Role-based permissions enforced on backend and frontend — **NOT IMPLEMENTED (#30)**
+- [ ] Daily workout flow works end-to-end for each role with embedded learning content — **NOT IMPLEMENTED (#30)**
+- [ ] Analytics: Status populates with real usage data for all roles — **NOT IMPLEMENTED (#30)**
+- [ ] Analytics: Insights renders with real data for HR/People Ops only — **NOT IMPLEMENTED (#30)**
+- [ ] HR can launch a campaign and users see it tagged within the workout — **NOT IMPLEMENTED (#30)**
+- [ ] Insights indicators are explainable (show what metric triggered each flag) — **NOT IMPLEMENTED (#30)**
+- [ ] Audit logs exist for assignments and completions — **NOT IMPLEMENTED (#30)**
+- [ ] QA pass: mobile responsive plus cross-browser — **NOT IMPLEMENTED (#30)**
 
 ---
 
@@ -261,33 +261,33 @@ Each lane has 365 scenario-based questions distributed across its skill categori
 
 ### Employee Lane (365 questions across 7 categories)
 
-- [ ] Self Leadership — 52 questions (Q1-Q52)
-- [ ] Professional Communication — 52 questions (Q53-Q104)
-- [ ] Collaboration — 52 questions (Q105-Q156)
-- [ ] Execution and Productivity — 52 questions (Q157-Q208)
-- [ ] Ethical Practice — 52 questions (Q209-Q260)
-- [ ] Cultural Intelligence — 52 questions (Q261-Q312)
-- [ ] Critical Thinking and Problem Solving — 53 questions (Q313-Q365)
+- [ ] Self Leadership — 52 questions (Q1-Q52) — **NOT IMPLEMENTED (#30)**
+- [ ] Professional Communication — 52 questions (Q53-Q104) — **NOT IMPLEMENTED (#30)**
+- [ ] Collaboration — 52 questions (Q105-Q156) — **NOT IMPLEMENTED (#30)**
+- [ ] Execution and Productivity — 52 questions (Q157-Q208) — **NOT IMPLEMENTED (#30)**
+- [ ] Ethical Practice — 52 questions (Q209-Q260) — **NOT IMPLEMENTED (#30)**
+- [ ] Cultural Intelligence — 52 questions (Q261-Q312) — **NOT IMPLEMENTED (#30)**
+- [ ] Critical Thinking and Problem Solving — 53 questions (Q313-Q365) — **NOT IMPLEMENTED (#30)**
 
 ### Manager Lane (365 questions across 7 categories)
 
-- [ ] Expectation Setting — 52 questions (Q1-Q52)
-- [ ] Coaching and Development — 52 questions (Q53-Q104)
-- [ ] Conflict and Performance Management — 52 questions (Q105-Q156)
-- [ ] Team Leadership — 52 questions (Q157-Q208)
-- [ ] Ethical Leadership — 52 questions (Q209-Q260)
-- [ ] Cultural Intelligence — 52 questions (Q261-Q312)
-- [ ] Change Leadership — 53 questions (Q313-Q365)
+- [ ] Expectation Setting — 52 questions (Q1-Q52) — **NOT IMPLEMENTED (#30)**
+- [ ] Coaching and Development — 52 questions (Q53-Q104) — **NOT IMPLEMENTED (#30)**
+- [ ] Conflict and Performance Management — 52 questions (Q105-Q156) — **NOT IMPLEMENTED (#30)**
+- [ ] Team Leadership — 52 questions (Q157-Q208) — **NOT IMPLEMENTED (#30)**
+- [ ] Ethical Leadership — 52 questions (Q209-Q260) — **NOT IMPLEMENTED (#30)**
+- [ ] Cultural Intelligence — 52 questions (Q261-Q312) — **NOT IMPLEMENTED (#30)**
+- [ ] Change Leadership — 53 questions (Q313-Q365) — **NOT IMPLEMENTED (#30)**
 
 ### HR / People Ops Lane (365 questions across 8 categories)
 
-- [ ] Documentation and Compliance — 46 questions (Q1-Q46)
-- [ ] Workplace Investigations — 46 questions (Q47-Q92)
-- [ ] Workplace Risk Management — 45 questions (Q93-Q137)
-- [ ] Leadership Enablement — 46 questions (Q138-Q183)
-- [ ] Ethical Practice — 46 questions (Q184-Q229)
-- [ ] Cultural Intelligence — 45 questions (Q230-Q274)
-- [ ] Consultation and Strategic Advisory — 46 questions (Q275-Q320)
-- [ ] Analytical Aptitude — 45 questions (Q321-Q365)
+- [ ] Documentation and Compliance — 46 questions (Q1-Q46) — **NOT IMPLEMENTED (#30)**
+- [ ] Workplace Investigations — 46 questions (Q47-Q92) — **NOT IMPLEMENTED (#30)**
+- [ ] Workplace Risk Management — 45 questions (Q93-Q137) — **NOT IMPLEMENTED (#30)**
+- [ ] Leadership Enablement — 46 questions (Q138-Q183) — **NOT IMPLEMENTED (#30)**
+- [ ] Ethical Practice — 46 questions (Q184-Q229) — **NOT IMPLEMENTED (#30)**
+- [ ] Cultural Intelligence — 45 questions (Q230-Q274) — **NOT IMPLEMENTED (#30)**
+- [ ] Consultation and Strategic Advisory — 46 questions (Q275-Q320) — **NOT IMPLEMENTED (#30)**
+- [ ] Analytical Aptitude — 45 questions (Q321-Q365) — **NOT IMPLEMENTED (#30)**
 
 > Note: Full question text for all 1,095 questions is available in the source document. Each question is a scenario-based prompt designed for use as a micro-quiz item within the daily workout.

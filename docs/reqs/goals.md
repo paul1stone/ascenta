@@ -52,48 +52,48 @@ Ascenta builds goals on a three-layer cascade connecting organizational strategy
 ### Phase 1: Employee Preparation (48-72 hours before conversation)
 
 - [ ] **EP-1: Strategy Orientation** — review organization strategy pillars and outcomes from Strategy Studio; reflect on which pillar connects most to daily work and which feels furthest from current role; same data the manager sees — **NOT IMPLEMENTED (#28)**
-- [ ] **EP-2: Goal Recommendations Review** — review 3-5 AI-generated goal suggestions based on job description, company strategy, and lifecycle stage; note which resonate and which feel off; bring reactions to conversation
-- [ ] **EP-3: Personal Aspiration Reflection** — free text: "Where do you want to be 6-12 months from now in your role, skills, or career?"; distilled preview shared with manager before conversation
-- [ ] **EP-4: Current Constraints Reflection** — free text: "What might make it hard to achieve your goals this period?"; previewed for manager to enable proactive support
+- [ ] **EP-2: Goal Recommendations Review** — review 3-5 AI-generated goal suggestions based on job description, company strategy, and lifecycle stage; note which resonate and which feel off; bring reactions to conversation — **NOT IMPLEMENTED (#28)**
+- [ ] **EP-3: Personal Aspiration Reflection** — free text: "Where do you want to be 6-12 months from now in your role, skills, or career?"; distilled preview shared with manager before conversation — **NOT IMPLEMENTED (#28)**
+- [ ] **EP-4: Current Constraints Reflection** — free text: "What might make it hard to achieve your goals this period?"; previewed for manager to enable proactive support — **NOT IMPLEMENTED (#28)**
 
 ### Phase 2: Goal Conversation (Employee Role)
 
-- [ ] **Move 1: Share Your Vision First** — manager invites employee to share what would make this period meaningful before any suggested goals are presented
-- [ ] **Move 2: Listen for Strategy Connection** — after sharing vision, manager connects to strategy pillar; if connection is unclear, employee can ask for clarification
-- [ ] **Move 3: React to AI Suggestions** — share honest reactions to Ascenta suggestions; reaction flags visible to manager
-- [ ] **Move 4: Name Constraints Openly** — bring EP-4 reflection into conversation; ask directly for support
-- [ ] **Move 5: Read Back and Confirm** — read each agreed goal back in own words before confirming; resolve any differences in the moment; goals not finalized until marked as agreed
+- [ ] **Move 1: Share Your Vision First** — manager invites employee to share what would make this period meaningful before any suggested goals are presented — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 2: Listen for Strategy Connection** — after sharing vision, manager connects to strategy pillar; if connection is unclear, employee can ask for clarification — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 3: React to AI Suggestions** — share honest reactions to Ascenta suggestions; reaction flags visible to manager — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 4: Name Constraints Openly** — bring EP-4 reflection into conversation; ask directly for support — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 5: Read Back and Confirm** — read each agreed goal back in own words before confirming; resolve any differences in the moment; goals not finalized until marked as agreed — **NOT IMPLEMENTED (#28)**
 
 ### Phase 3: Goal Construction (Employee Responsibilities)
 
-- [ ] **Field 1: Objective Statement** — write one sentence naming outcome and its meaning; read aloud test; rewrite if it sounds like a task; minimum 15 words
-- [ ] **Field 2: Strategy Pillar Link** — select the strategy pillar this goal supports; ask manager before saving if connection is unclear
-- [ ] **Field 3: Key Results** — write 2-4 key results answering: what will be measured, how, and by when; each validated against SMART criteria
-- [ ] **Field 4: Goal Type** — select performance or development; aim for balance reflecting current career stage
-- [ ] **Field 5: Support Agreement (Review)** — review manager support commitment; hold manager accountable in check-ins
-- [ ] **Field 6: Check-in Frequency** — agree on cadence with manager; can request changes through Goals dashboard at any time
+- [x] **Field 1: Objective Statement** — write one sentence naming outcome and its meaning; read aloud test; rewrite if it sounds like a task; minimum 15 words
+- [!] **Field 2: Strategy Pillar Link** — select the strategy pillar this goal supports; ask manager before saving if connection is unclear — **PARTIAL: schema supports pillar link but form shows static "Independent goal" instead of a dropdown (#28)**
+- [!] **Field 3: Key Results** — write 2-4 key results answering: what will be measured, how, and by when; each validated against SMART criteria — **PARTIAL: 2-4 key results enforced with fields present, but no hard SMART validation (#28)**
+- [x] **Field 4: Goal Type** — select performance or development; aim for balance reflecting current career stage
+- [x] **Field 5: Support Agreement (Review)** — review manager support commitment; hold manager accountable in check-ins
+- [x] **Field 6: Check-in Frequency** — agree on cadence with manager; can request changes through Goals dashboard at any time
 
 ### Phase 4: Goal Activation (Employee Steps)
 
-- [ ] **A-1: Goals Dashboard** — confirmed goals appear in Performance System Goals dashboard with status indicators; organizational goals from Strategy Studio appear at top as strategic anchor
-- [ ] **A-2: Check-in Integration** — pre-check-in reflection references specific goals by name and asks for progress notes on each
-- [ ] **A-4: Confirmation Step** — review each goal carefully after entry; confirmation logged with timestamp and becomes part of performance record
+- [x] **A-1: Goals Dashboard** — confirmed goals appear in Performance System Goals dashboard with status indicators; organizational goals from Strategy Studio appear at top as strategic anchor
+- [x] **A-2: Check-in Integration** — pre-check-in reflection references specific goals by name and asks for progress notes on each
+- [x] **A-4: Confirmation Step** — review each goal carefully after entry; confirmation logged with timestamp and becomes part of performance record
 
 ### Phase 5: Ongoing Management (Employee Responsibilities)
 
-- [ ] **EG-1: Status Updates** — update goal status on significant changes (key result completed, blocker encountered, milestone reached); four options: On Track, Needs Attention, Blocked, Complete; manager notified for Blocked or Needs Attention
-- [ ] **EG-2: Goal-Linked Self-Reflection** — pre-check-in reflection references each active goal by name; respond to: progress made, most proud of, feeling stuck or uncertain
-- [ ] **EG-3: Goal Completion Reflection** — when goal marked complete, four reflection questions: What did you achieve? What did you learn? What would you do differently? What does this make possible next?
-- [ ] **Shared: End of Period Goal Close** — confirm Ascenta-generated goal close summary before it locks into performance record; includes goals agreed, completed, recalibrated, still in progress, key results achieved vs missed
+- [!] **EG-1: Status Updates** — update goal status on significant changes (key result completed, blocker encountered, milestone reached); four options: On Track, Needs Attention, Blocked, Complete; manager notified for Blocked or Needs Attention — **PARTIAL: status dropdown exists with 4 options but no manager notification for Blocked/Needs Attention (#28)**
+- [ ] **EG-2: Goal-Linked Self-Reflection** — pre-check-in reflection references each active goal by name; respond to: progress made, most proud of, feeling stuck or uncertain — **NOT IMPLEMENTED (#28)**
+- [ ] **EG-3: Goal Completion Reflection** — when goal marked complete, four reflection questions: What did you achieve? What did you learn? What would you do differently? What does this make possible next? — **NOT IMPLEMENTED (#28)**
+- [ ] **Shared: End of Period Goal Close** — confirm Ascenta-generated goal close summary before it locks into performance record; includes goals agreed, completed, recalibrated, still in progress, key results achieved vs missed — **NOT IMPLEMENTED (#28)**
 
 ### Employee View Functional Requirements
 
-- [ ] Show the same strategy pillars and outcomes the manager sees so alignment is transparent
-- [ ] Frame recommended goals around the employee's role, growth stage, and development path
-- [ ] Allow the employee to react to suggested goals before the conversation
-- [ ] Require clear read-back and confirmation before activation
-- [ ] Let the employee update goal status using simple states (On Track, Needs Attention, Blocked, Complete)
-- [ ] Trigger completion reflection when a goal is marked complete so learning carries into the next cycle
+- [!] Show the same strategy pillars and outcomes the manager sees so alignment is transparent — **PARTIAL: strategy pillar visibility exists in schema/AI flow but not exposed as dropdown in direct form (#28)**
+- [x] Frame recommended goals around the employee's role, growth stage, and development path
+- [!] Allow the employee to react to suggested goals before the conversation — **PARTIAL: AI recommendations exist but no structured pre-conversation reaction flow (#28)**
+- [x] Require clear read-back and confirmation before activation
+- [!] Let the employee update goal status using simple states (On Track, Needs Attention, Blocked, Complete) — **PARTIAL: status dropdown exists but no manager notification on Blocked/Needs Attention (#28)**
+- [ ] Trigger completion reflection when a goal is marked complete so learning carries into the next cycle — **NOT IMPLEMENTED (#28)**
 
 ---
 
@@ -103,51 +103,51 @@ Ascenta builds goals on a three-layer cascade connecting organizational strategy
 
 ### Phase 1: Manager Preparation (48-72 hours before conversation)
 
-- [ ] **MP-1: Strategy Context Brief** — review 2-3 strategy pillars most relevant to employee's role; auto-populated from Strategy Studio; read-only reference
-- [ ] **MP-2: AI Goal Recommendations Review** — review 3-5 goal ideas from Leadership Library recommendation engine using Strategy Studio inputs, mission, vision, values, job description, and lifecycle stage; accept, edit, or dismiss each; decide which 2-3 to propose
-- [ ] **MP-3: Employee Aspiration Preview** — review employee's self-stated aspirations from EP-3 response; distilled preview, not raw text
-- [ ] **MP-4: Prior Goal Status** — review progress on existing goals: complete, stalled, carry forward, or retire; auto-populated from Goals dashboard; hidden if no prior goals
-- [ ] **MP-5: Conversation Intent** — single reflection prompt: "What is the one thing you most want this employee to leave the conversation feeling? Clarity, excitement, or ownership." Shapes suggested opening
+- [ ] **MP-1: Strategy Context Brief** — review 2-3 strategy pillars most relevant to employee's role; auto-populated from Strategy Studio; read-only reference — **NOT IMPLEMENTED (#28)**
+- [ ] **MP-2: AI Goal Recommendations Review** — review 3-5 goal ideas from Leadership Library recommendation engine using Strategy Studio inputs, mission, vision, values, job description, and lifecycle stage; accept, edit, or dismiss each; decide which 2-3 to propose — **NOT IMPLEMENTED (#28)**
+- [ ] **MP-3: Employee Aspiration Preview** — review employee's self-stated aspirations from EP-3 response; distilled preview, not raw text — **NOT IMPLEMENTED (#28)**
+- [ ] **MP-4: Prior Goal Status** — review progress on existing goals: complete, stalled, carry forward, or retire; auto-populated from Goals dashboard; hidden if no prior goals — **NOT IMPLEMENTED (#28)**
+- [ ] **MP-5: Conversation Intent** — single reflection prompt: "What is the one thing you most want this employee to leave the conversation feeling? Clarity, excitement, or ownership." Shapes suggested opening — **NOT IMPLEMENTED (#28)**
 
 ### Phase 2: Goal Conversation (Manager Role)
 
-- [ ] **Move 1: Open with Aspiration** — invite employee to share vision first before any suggested goals; suggested opening provided
-- [ ] **Move 2: Connect Aspiration to Strategy** — bridge employee vision to organizational direction; name specific strategy pillar or outcome
-- [ ] **Move 3: Review AI Suggestions Together** — share Ascenta suggestions; invite employee reaction first; alignment highlighted, divergence flagged; no suggestion becomes a goal without mutual agreement
-- [ ] **Move 4: Address Constraints Openly** — reference employee EP-4 constraint reflection; agree on specific support
-- [ ] **Move 5: Agree and Enter Together** — enter agreed goals into shared workspace before conversation ends; employee reads back each goal; not finalized until both parties mark as agreed
+- [ ] **Move 1: Open with Aspiration** — invite employee to share vision first before any suggested goals; suggested opening provided — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 2: Connect Aspiration to Strategy** — bridge employee vision to organizational direction; name specific strategy pillar or outcome — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 3: Review AI Suggestions Together** — share Ascenta suggestions; invite employee reaction first; alignment highlighted, divergence flagged; no suggestion becomes a goal without mutual agreement — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 4: Address Constraints Openly** — reference employee EP-4 constraint reflection; agree on specific support — **NOT IMPLEMENTED (#28)**
+- [ ] **Move 5: Agree and Enter Together** — enter agreed goals into shared workspace before conversation ends; employee reads back each goal; not finalized until both parties mark as agreed — **NOT IMPLEMENTED (#28)**
 
 ### Phase 3: Goal Construction (Manager Responsibilities)
 
-- [ ] **Field 1: Objective Statement** — guide employee to write outcome-focused objectives; Ascenta flags activity language
-- [ ] **Field 2: Strategy Pillar Link** — confirm pillar link; explain connection if employee cannot see it
-- [ ] **Field 3: Key Results** — review for SMART compliance; challenge vague metrics; ensure specific deadlines
-- [ ] **Field 4: Goal Type** — ensure balance between performance and development; team with only performance goals is at higher disengagement risk
-- [ ] **Field 5: Support Agreement** — name specific commitments (resources, access, introductions, protected time); appears in pre-check-in prompt as standing reminder
-- [ ] **Field 6: Check-in Frequency** — set review cadence; default every check-in; adjust for longer timelines
+- [x] **Field 1: Objective Statement** — guide employee to write outcome-focused objectives; Ascenta flags activity language
+- [!] **Field 2: Strategy Pillar Link** — confirm pillar link; explain connection if employee cannot see it — **PARTIAL: schema supports pillar link but form shows static "Independent goal" instead of a dropdown (#28)**
+- [!] **Field 3: Key Results** — review for SMART compliance; challenge vague metrics; ensure specific deadlines — **PARTIAL: key results fields present but no hard SMART validation (#28)**
+- [x] **Field 4: Goal Type** — ensure balance between performance and development; team with only performance goals is at higher disengagement risk
+- [x] **Field 5: Support Agreement** — name specific commitments (resources, access, introductions, protected time); appears in pre-check-in prompt as standing reminder
+- [x] **Field 6: Check-in Frequency** — set review cadence; default every check-in; adjust for longer timelines
 
 ### Phase 4: Goal Activation (Manager Steps)
 
-- [ ] **A-1: Dashboard Embedding** — agreed goals appear in Goals dashboard immediately; manager sees all team goals in single view filtered by pillar, status, and employee; organizational goals at top
-- [ ] **A-2: Check-in Cycle Integration** — each goal appears in manager pre-check-in context brief with current status and last employee update; approaching deadlines flagged one cycle before
-- [ ] **A-3: Canopy and Vantage Signal** — three signals per employee: goal alignment rate (% linked to pillar), goal balance ratio (performance vs development), goal health score; Vantage aggregates by team, manager, and pillar
-- [ ] **A-4: Goal Agreement Confirmation** — both parties confirm before goals go live; unrecognized goal signals conversation failure; confirmation logged with timestamp
+- [x] **A-1: Dashboard Embedding** — agreed goals appear in Goals dashboard immediately; manager sees all team goals in single view filtered by pillar, status, and employee; organizational goals at top
+- [!] **A-2: Check-in Cycle Integration** — each goal appears in manager pre-check-in context brief with current status and last employee update; approaching deadlines flagged one cycle before — **PARTIAL: goals loaded in check-in tool but no deadline flagging (#28)**
+- [ ] **A-3: Canopy and Vantage Signal** — three signals per employee: goal alignment rate (% linked to pillar), goal balance ratio (performance vs development), goal health score; Vantage aggregates by team, manager, and pillar — **NOT IMPLEMENTED (#28)**
+- [x] **A-4: Goal Agreement Confirmation** — both parties confirm before goals go live; unrecognized goal signals conversation failure; confirmation logged with timestamp
 
 ### Phase 5: Ongoing Management (Manager Responsibilities)
 
-- [ ] **MG-1: Check-in Goal Discussion** — goal progress as standing agenda item; Ascenta surfaces right goal at right time with current status pre-loaded and deadline proximity flagged
-- [ ] **MG-2: Goal Recalibration Trigger** — either party can flag for recalibration; triggers lightweight conversation with four required fields: what changed, revised goal, revised key results, support now needed; original version stays intact
-- [ ] **MG-3: Mid-Period Goal Review** — auto-triggered at midpoint; generates review guide with all goals and current status; complete goals archived; at-risk goals flagged for Canopy
-- [ ] **Shared: End of Period Goal Close** — both parties formally close each goal; Ascenta generates summary (agreed, completed, recalibrated, in progress, key results achieved vs missed); summary becomes primary input for Performance Review
+- [!] **MG-1: Check-in Goal Discussion** — goal progress as standing agenda item; Ascenta surfaces right goal at right time with current status pre-loaded and deadline proximity flagged — **PARTIAL: goals loaded in check-in but no standing agenda enforcement (#28)**
+- [!] **MG-2: Goal Recalibration Trigger** — either party can flag for recalibration; triggers lightweight conversation with four required fields: what changed, revised goal, revised key results, support now needed; original version stays intact — **PARTIAL: recalibration API exists but no UI trigger (#28)**
+- [ ] **MG-3: Mid-Period Goal Review** — auto-triggered at midpoint; generates review guide with all goals and current status; complete goals archived; at-risk goals flagged for Canopy — **NOT IMPLEMENTED (#28)**
+- [ ] **Shared: End of Period Goal Close** — both parties formally close each goal; Ascenta generates summary (agreed, completed, recalibrated, in progress, key results achieved vs missed); summary becomes primary input for Performance Review — **NOT IMPLEMENTED (#28)**
 
 ### Manager View Functional Requirements
 
-- [ ] Show 3-5 AI-recommended goals filtered through strategy, mission, values, job description, and lifecycle stage
-- [ ] Allow manager to accept, edit, or dismiss suggested goals before employee conversation
-- [ ] Display team and organizational goals above the individual goal workspace
-- [ ] Surface employee aspiration preview and constraint preview before conversation begins
-- [ ] Embed support agreements into future pre-check-in prompts so manager commitments don't disappear
-- [ ] Provide recalibration workflow with required fields: what changed, revised goal, revised key results, revised support needed
+- [!] Show 3-5 AI-recommended goals filtered through strategy, mission, values, job description, and lifecycle stage — **PARTIAL: AI recommendations exist in conversation flow but not as structured pre-conversation list (#28)**
+- [ ] Allow manager to accept, edit, or dismiss suggested goals before employee conversation — **NOT IMPLEMENTED (#28)**
+- [ ] Display team and organizational goals above the individual goal workspace — **NOT IMPLEMENTED (#28)**
+- [ ] Surface employee aspiration preview and constraint preview before conversation begins — **NOT IMPLEMENTED (#28)**
+- [!] Embed support agreements into future pre-check-in prompts so manager commitments don't disappear — **PARTIAL: support agreements stored but not surfaced in pre-check-in prompts (#28)**
+- [!] Provide recalibration workflow with required fields: what changed, revised goal, revised key results, revised support needed — **PARTIAL: recalibration API with snapshots exists but no UI workflow (#28)**
 
 ---
 
@@ -157,61 +157,61 @@ Ascenta builds goals on a three-layer cascade connecting organizational strategy
 
 ### Strategy Studio Configuration
 
-- [ ] **SS-1: Strategy Pillars** — confirm 3-5 thematic pillars the organization competes on (not values/vision — arenas where the org commits to winning)
-- [ ] **SS-2: Outcomes** — each pillar has at least one defined outcome written as an end state, not an activity; flag and coach if written as activities
-- [ ] **SS-3: Initiatives** — each initiative has a named owner, start point, and link to at least one outcome; Ascenta blocks unowned or unlinked initiatives
-- [ ] **SS-4: Measures** — outcome measures (did we achieve the end state?) and initiative measures (are we executing the work?) are defined and current
-- [ ] **SS-5: Roadmap** — validate three-horizon roadmap: short-range (current quarter and next), medium-range (6-18 months), long-range (18 months to 3 years); ensure short-range connects to long-range
+- [x] **SS-1: Strategy Pillars** — confirm 3-5 thematic pillars the organization competes on (not values/vision — arenas where the org commits to winning)
+- [x] **SS-2: Outcomes** — each pillar has at least one defined outcome written as an end state, not an activity; flag and coach if written as activities
+- [ ] **SS-3: Initiatives** — each initiative has a named owner, start point, and link to at least one outcome; Ascenta blocks unowned or unlinked initiatives — **NOT IMPLEMENTED (#28)**
+- [ ] **SS-4: Measures** — outcome measures (did we achieve the end state?) and initiative measures (are we executing the work?) are defined and current — **NOT IMPLEMENTED (#28)**
+- [ ] **SS-5: Roadmap** — validate three-horizon roadmap: short-range (current quarter and next), medium-range (6-18 months), long-range (18 months to 3 years); ensure short-range connects to long-range — **NOT IMPLEMENTED (#28)**
 
 ### Goal Cycle Administration
 
-- [ ] **GC-1: Cycle Launch** — configure goal setting cycle dates: preparation window open, conversation deadline, confirmation deadline; communicate timeline to all
-- [ ] **GC-2: Team Goal Oversight** — review manager-created team goals for quality and alignment to org outcomes; flag disconnected team goals
-- [ ] **GC-3: Cascade Integrity** — monitor full cascade: org goals → team goals → individual goals; identify gaps where teams or individuals have no goals linked to org priorities
-- [ ] **GC-4: Completion Tracking** — track goal setting completion rates by team, department, and manager; follow up on missed deadlines
-- [ ] **GC-5: Quality Assurance** — review sample of individual goals for SMART compliance, strategy alignment, and appropriate difficulty; coach managers whose teams produce low-quality goals
+- [ ] **GC-1: Cycle Launch** — configure goal setting cycle dates: preparation window open, conversation deadline, confirmation deadline; communicate timeline to all — **NOT IMPLEMENTED (#28)**
+- [ ] **GC-2: Team Goal Oversight** — review manager-created team goals for quality and alignment to org outcomes; flag disconnected team goals — **NOT IMPLEMENTED (#28)**
+- [ ] **GC-3: Cascade Integrity** — monitor full cascade: org goals → team goals → individual goals; identify gaps where teams or individuals have no goals linked to org priorities — **NOT IMPLEMENTED (#28)**
+- [ ] **GC-4: Completion Tracking** — track goal setting completion rates by team, department, and manager; follow up on missed deadlines — **NOT IMPLEMENTED (#28)**
+- [ ] **GC-5: Quality Assurance** — review sample of individual goals for SMART compliance, strategy alignment, and appropriate difficulty; coach managers whose teams produce low-quality goals — **NOT IMPLEMENTED (#28)**
 
 ### Canopy and Vantage Analytics
 
-- [ ] **AN-1: Goal Alignment Rate** — % of individual goals linked to a strategy pillar; target 100%; identify low-alignment teams for coaching
-- [ ] **AN-2: Goal Balance Ratio** — ratio of performance to development goals across org; at least one development goal per employee; flag teams with zero
-- [ ] **AN-3: Goal Health Score** — aggregated indicator: goal status, recalibration frequency, check-in engagement; available by team, manager, department, and pillar
-- [ ] **AN-4: Completion and Confirmation Rates** — % goals confirmed by both parties; unconfirmed = conversation quality issues; track by manager for patterns
-- [ ] **AN-5: Recalibration Trends** — monitor frequency; high = poor initial goal setting; low in changing conditions = goals being ignored
-- [ ] **AN-6: End of Period Summary Review** — review goal close summaries org-wide before performance reviews; identify patterns in achieved vs missed key results; surface systemic barriers
+- [ ] **AN-1: Goal Alignment Rate** — % of individual goals linked to a strategy pillar; target 100%; identify low-alignment teams for coaching — **NOT IMPLEMENTED (#28)**
+- [ ] **AN-2: Goal Balance Ratio** — ratio of performance to development goals across org; at least one development goal per employee; flag teams with zero — **NOT IMPLEMENTED (#28)**
+- [ ] **AN-3: Goal Health Score** — aggregated indicator: goal status, recalibration frequency, check-in engagement; available by team, manager, department, and pillar — **NOT IMPLEMENTED (#28)**
+- [ ] **AN-4: Completion and Confirmation Rates** — % goals confirmed by both parties; unconfirmed = conversation quality issues; track by manager for patterns — **NOT IMPLEMENTED (#28)**
+- [ ] **AN-5: Recalibration Trends** — monitor frequency; high = poor initial goal setting; low in changing conditions = goals being ignored — **NOT IMPLEMENTED (#28)**
+- [ ] **AN-6: End of Period Summary Review** — review goal close summaries org-wide before performance reviews; identify patterns in achieved vs missed key results; surface systemic barriers — **NOT IMPLEMENTED (#28)**
 
 ### Leadership Library Oversight
 
-- [ ] **LL-1: Recommendation Engine Inputs** — ensure job descriptions, lifecycle stage data, and Strategy Studio inputs are current; outdated inputs produce irrelevant suggestions that erode trust
-- [ ] **LL-2: Suggestion Quality Review** — periodically review AI-generated goal suggestions for relevance, appropriateness, and alignment; log dismissed suggestions to improve recommendations
-- [ ] **LL-3: Manager Coaching** — train managers on using AI suggestions as conversation starters, not finished goals; reinforce mutual agreement requirement
+- [ ] **LL-1: Recommendation Engine Inputs** — ensure job descriptions, lifecycle stage data, and Strategy Studio inputs are current; outdated inputs produce irrelevant suggestions that erode trust — **NOT IMPLEMENTED (#28)**
+- [ ] **LL-2: Suggestion Quality Review** — periodically review AI-generated goal suggestions for relevance, appropriateness, and alignment; log dismissed suggestions to improve recommendations — **NOT IMPLEMENTED (#28)**
+- [ ] **LL-3: Manager Coaching** — train managers on using AI suggestions as conversation starters, not finished goals; reinforce mutual agreement requirement — **NOT IMPLEMENTED (#28)**
 
 ### Compliance and Record Keeping
 
-- [ ] **CR-1: Confirmation Audit Trail** — both manager and employee confirmations logged with timestamps; records are immutable; serve as official performance record
-- [ ] **CR-2: Recalibration Documentation** — every recalibrated goal retains original alongside revised; four required fields: what changed, revised goal, revised key results, revised support agreement
-- [ ] **CR-3: Goal Close Archive** — end-of-period summaries locked into performance record after both-party confirmation; becomes primary input for Performance Reviews
-- [ ] **CR-4: Data Retention** — define and enforce retention policies for goal data, recalibration logs, and close summaries per organizational policy and applicable regulations
+- [!] **CR-1: Confirmation Audit Trail** — both manager and employee confirmations logged with timestamps; records are immutable; serve as official performance record — **PARTIAL: confirmations logged with timestamps but not explicitly immutable (#28)**
+- [x] **CR-2: Recalibration Documentation** — every recalibrated goal retains original alongside revised; four required fields: what changed, revised goal, revised key results, revised support agreement
+- [ ] **CR-3: Goal Close Archive** — end-of-period summaries locked into performance record after both-party confirmation; becomes primary input for Performance Reviews — **NOT IMPLEMENTED (#28)**
+- [ ] **CR-4: Data Retention** — define and enforce retention policies for goal data, recalibration logs, and close summaries per organizational policy and applicable regulations — **NOT IMPLEMENTED (#28)**
 
 ### HR/People Ops Functional Requirements
 
-- [ ] Provide status and analytics for employees, managers, and HR, with deeper insights reserved for HR/People Ops
-- [ ] Aggregate reporting by team, manager, and organizational pillar — show where strategy translates well and where it breaks down
-- [ ] Show which managers struggle to create aligned goals or sustain midpoint reviews and check-ins
-- [ ] Flag employees with no development goals, stale goals, blocked goals, or missing confirmations
-- [ ] Carry goal data into performance reviews, coaching, corrective action, and development planning
-- [ ] Support auditability with timestamps, original-vs-recalibrated records, and close summaries
+- [ ] Provide status and analytics for employees, managers, and HR, with deeper insights reserved for HR/People Ops — **NOT IMPLEMENTED (#28)**
+- [ ] Aggregate reporting by team, manager, and organizational pillar — show where strategy translates well and where it breaks down — **NOT IMPLEMENTED (#28)**
+- [ ] Show which managers struggle to create aligned goals or sustain midpoint reviews and check-ins — **NOT IMPLEMENTED (#28)**
+- [!] Flag employees with no development goals, stale goals, blocked goals, or missing confirmations — **PARTIAL: development goal imbalance banner exists but no stale/blocked/missing confirmation flagging (#28)**
+- [!] Carry goal data into performance reviews, coaching, corrective action, and development planning — **PARTIAL: goal data flows into check-ins and review schema has checkInSummaries but not fully into coaching/corrective action (#28)**
+- [!] Support auditability with timestamps, original-vs-recalibrated records, and close summaries — **PARTIAL: timestamps and recalibration snapshots exist but no close summaries (#28)**
 
 ---
 
 ## Build Rules
 
-- [ ] Do not allow a goal to go live without both employee and manager confirmation
-- [ ] Do not allow a goal to be marked agreed without the four required fields completed
-- [ ] Prompt but do not force support agreements and cadence selection
-- [ ] Preserve the original goal when recalibration occurs; never overwrite history
-- [ ] Make organizational and team context visible in the goal workspace
-- [ ] Ensure goals flow into check-ins, reflections, reviews, analytics, coaching, and development
+- [x] Do not allow a goal to go live without both employee and manager confirmation
+- [x] Do not allow a goal to be marked agreed without the four required fields completed
+- [x] Prompt but do not force support agreements and cadence selection
+- [x] Preserve the original goal when recalibration occurs; never overwrite history
+- [!] Make organizational and team context visible in the goal workspace — **PARTIAL: strategy pillar link exists in schema but not exposed as dropdown in direct form; team goals not displayed above individual workspace (#28)**
+- [!] Ensure goals flow into check-ins, reflections, reviews, analytics, coaching, and development — **PARTIAL: goals flow into check-ins and review schema but not into reflections, analytics, coaching, or development planning (#28)**
 
 ## SMART Goal Reference
 
