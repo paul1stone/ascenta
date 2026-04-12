@@ -285,6 +285,7 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
     tabs: [
       { key: "foundation", label: "Foundation", icon: Compass },
       { key: "strategy", label: "Strategy", icon: Target },
+      { key: "translations", label: "Translations", icon: MessageSquareText },
     ],
   },
   "culture-gym": {

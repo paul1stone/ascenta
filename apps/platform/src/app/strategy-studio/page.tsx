@@ -5,6 +5,7 @@ import { FunctionTabs } from "@/components/function-tabs";
 import { DoTabChat } from "@/components/do-tab-chat";
 import { FoundationPanel } from "@/components/plan/foundation-panel";
 import { StrategyPanel } from "@/components/plan/strategy-panel";
+import { TranslationsPanel } from "@/components/plan/translations-panel";
 import { PAGE_CONFIG, DEFAULT_PAGE_CONFIG } from "@/lib/constants/dashboard-nav";
 
 const ACCENT_COLOR = "#6688bb";
@@ -27,6 +28,8 @@ export default function StrategyStudioPage() {
         <FoundationPanel accentColor={ACCENT_COLOR} />
       ) : activeTab === "strategy" ? (
         <StrategyPanel accentColor={ACCENT_COLOR} />
+      ) : activeTab === "translations" ? (
+        <TranslationsPanel accentColor={ACCENT_COLOR} />
       ) : (
         <DoTabChat
           pageKey="strategy-studio"
