@@ -24,6 +24,8 @@ import {
 } from "@/lib/workflows";
 import type { IntakeFieldDefinition, WorkflowInputs } from "@/lib/workflows/types";
 
+import { getTranslationForEmployee } from "./translation-lookup";
+
 import {
   FIELD_PROMPT_PREFIX,
   FIELD_PROMPT_SUFFIX,
@@ -228,6 +230,24 @@ Set allowSkip:true when the user can skip (e.g., strategic alignment is optional
       // silent
     }
 
+    // Load translation for role-based goal recommendations
+    let roleContributions: { strategyGoalTitle: string; roleContribution: string; outcomes: string[] }[] | null = null;
+    try {
+      const translation = await getTranslationForEmployee(
+        params.department ?? "",
+        params.jobTitle ?? "",
+      );
+      if (translation) {
+        roleContributions = translation.contributions.map((c) => ({
+          strategyGoalTitle: c.strategyGoalTitle,
+          roleContribution: c.roleContribution,
+          outcomes: c.outcomes,
+        }));
+      }
+    } catch {
+      // silent — fall back to raw strategy goals
+    }
+
     const hasFoundation = foundation.mission || foundation.vision || foundation.values;
     const hasCompanyGoals = companyGoals.length > 0;
 
@@ -241,6 +261,7 @@ Set allowSkip:true when the user can skip (e.g., strategic alignment is optional
       foundation,
       companyGoals,
       departmentGoals,
+      roleContributions,
       employeeName: params.employeeName,
       employeeId: params.employeeId,
       department: params.department ?? "",
