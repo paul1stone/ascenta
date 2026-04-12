@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { StrategyTranslation } from "@ascenta/db/strategy-translation-schema";
+import { regenerateRoleSection, type TranslationSection } from "@/lib/ai/translation-engine";
 
 export async function GET(
   _req: NextRequest,
@@ -80,6 +81,27 @@ export async function PATCH(
       });
     }
 
+    if (action === "regenerateSection") {
+      const { roleIndex, section } = body as {
+        roleIndex: number;
+        section: TranslationSection;
+      };
+
+      if (typeof roleIndex !== "number" || !["contributions", "behaviors", "decisionRights"].includes(section)) {
+        return NextResponse.json(
+          { success: false, error: "roleIndex (number) and section ('contributions' | 'behaviors' | 'decisionRights') are required" },
+          { status: 400 },
+        );
+      }
+
+      await regenerateRoleSection(id, roleIndex, section);
+
+      return NextResponse.json({
+        success: true,
+        message: `Regenerated ${section} for role at index ${roleIndex}.`,
+      });
+    }
+
     if (body.roles) {
       doc.roles = body.roles;
       await doc.save();
@@ -91,7 +113,7 @@ export async function PATCH(
     }
 
     return NextResponse.json(
-      { success: false, error: "Invalid action. Use 'publish', 'archive', or provide 'roles'." },
+      { success: false, error: "Invalid action. Use 'publish', 'archive', 'regenerateSection', or provide 'roles'." },
       { status: 400 },
     );
   } catch (error) {

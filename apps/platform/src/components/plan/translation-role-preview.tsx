@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@ascenta/ui";
 import { ROLE_LEVEL_LABELS } from "@ascenta/db/strategy-translation-constants";
 
@@ -31,6 +32,8 @@ interface TranslationRolePreviewProps {
   accentColor: string;
   editing?: boolean;
   onFieldChange?: (field: string, value: unknown) => void;
+  onRegenerateSection?: (section: "contributions" | "behaviors" | "decisionRights") => void;
+  regeneratingSection?: string | null;
 }
 
 export const TranslationRolePreview = memo(function TranslationRolePreview({
@@ -42,6 +45,8 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
   accentColor,
   editing,
   onFieldChange,
+  onRegenerateSection,
+  regeneratingSection,
 }: TranslationRolePreviewProps) {
   const levelLabel = ROLE_LEVEL_LABELS[level as keyof typeof ROLE_LEVEL_LABELS] ?? level;
 
@@ -67,6 +72,25 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
       </div>
 
       {/* Contributions per priority */}
+      {onRegenerateSection && !editing && (
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Role Contributions
+          </p>
+          <button
+            onClick={() => onRegenerateSection("contributions")}
+            disabled={!!regeneratingSection}
+            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+          >
+            {regeneratingSection === "contributions" ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3" />
+            )}
+            Regenerate
+          </button>
+        </div>
+      )}
       {contributions.map((c, i) => (
         <div key={i} className="space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -172,9 +196,25 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
       {/* Behaviors */}
       {(behaviors.length > 0 || editing) && (
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-            Behavioral Expectations
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Behavioral Expectations
+            </p>
+            {onRegenerateSection && !editing && (
+              <button
+                onClick={() => onRegenerateSection("behaviors")}
+                disabled={!!regeneratingSection}
+                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+              >
+                {regeneratingSection === "behaviors" ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-3" />
+                )}
+                Regenerate
+              </button>
+            )}
+          </div>
           <div className="space-y-2">
             {behaviors.map((b, i) => (
               <div key={i}>
@@ -233,9 +273,25 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
 
       {/* Decision Rights */}
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-          Decision Rights
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Decision Rights
+          </p>
+          {onRegenerateSection && !editing && (
+            <button
+              onClick={() => onRegenerateSection("decisionRights")}
+              disabled={!!regeneratingSection}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+            >
+              {regeneratingSection === "decisionRights" ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <RefreshCw className="size-3" />
+              )}
+              Regenerate
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-3 gap-3">
           {(["canDecide", "canRecommend", "mustEscalate"] as const).map((key) => {
             const label = key === "canDecide" ? "Can Decide" : key === "canRecommend" ? "Can Recommend" : "Must Escalate";

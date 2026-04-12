@@ -51,6 +51,11 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRoles, setEditRoles] = useState<Role[]>([]);
   const [saving, setSaving] = useState(false);
+  const [regeneratingSection, setRegeneratingSection] = useState<{
+    translationId: string;
+    roleIndex: number;
+    section: string;
+  } | null>(null);
 
   const fetchTranslations = useCallback(async () => {
     try {
@@ -177,6 +182,30 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
       target[parts[parts.length - 1]] = value;
       return updated;
     });
+  }
+
+  async function handleRegenerateSection(
+    translationId: string,
+    roleIndex: number,
+    section: "contributions" | "behaviors" | "decisionRights",
+  ) {
+    setRegeneratingSection({ translationId, roleIndex, section });
+    try {
+      const res = await fetch(`/api/plan/strategy-translations/${translationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "regenerateSection", roleIndex, section }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.error ?? "Regeneration failed");
+      }
+      await fetchTranslations();
+    } catch {
+      setError("Section regeneration failed");
+    } finally {
+      setRegeneratingSection(null);
+    }
   }
 
   if (loading) {
@@ -376,6 +405,16 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                             accentColor={accentColor}
                             editing={editingId === translation.id}
                             onFieldChange={(field, value) => handleFieldChange(i, field, value)}
+                            onRegenerateSection={editingId !== translation.id
+                              ? (section) => handleRegenerateSection(translation.id, i, section)
+                              : undefined
+                            }
+                            regeneratingSection={
+                              regeneratingSection?.translationId === translation.id &&
+                              regeneratingSection?.roleIndex === i
+                                ? regeneratingSection.section
+                                : null
+                            }
                           />
                         ))}
                       </div>

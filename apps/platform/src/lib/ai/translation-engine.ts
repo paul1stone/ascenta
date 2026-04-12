@@ -11,7 +11,13 @@ import { CompanyFoundation } from "@ascenta/db/foundation-schema";
 import { StrategyGoal } from "@ascenta/db/strategy-goal-schema";
 import { Employee } from "@ascenta/db/employee-schema";
 import { StrategyTranslation } from "@ascenta/db/strategy-translation-schema";
-import { roleTranslationOutputSchema } from "@/lib/validations/strategy-translation";
+import { z } from "zod";
+import {
+  roleTranslationOutputSchema,
+  contributionOutputSchema,
+  behaviorOutputSchema,
+  decisionRightsOutputSchema,
+} from "@/lib/validations/strategy-translation";
 
 // ---------------------------------------------------------------------------
 // Role level inference from job title
@@ -85,6 +91,97 @@ export async function checkTranslationStaleness(
   }
 
   return { isStale: reasons.length > 0, reasons };
+}
+
+// ---------------------------------------------------------------------------
+// Per-section regeneration
+// ---------------------------------------------------------------------------
+
+export type TranslationSection = "contributions" | "behaviors" | "decisionRights";
+
+export async function regenerateRoleSection(
+  translationId: string,
+  roleIndex: number,
+  section: TranslationSection,
+): Promise<void> {
+  await connectDB();
+
+  const translationDoc = await StrategyTranslation.findById(translationId);
+  if (!translationDoc) throw new Error("Translation not found");
+
+  const role = translationDoc.roles[roleIndex];
+  if (!role) throw new Error(`Role at index ${roleIndex} not found`);
+
+  const foundationDoc = await CompanyFoundation.findOne({ status: "published" }).lean();
+  if (!foundationDoc) throw new Error("No published foundation found.");
+  const foundation = foundationDoc as Record<string, unknown>;
+
+  const department = translationDoc.department as string;
+  const strategyGoals = await StrategyGoal.find({
+    $or: [
+      { scope: "company", status: { $ne: "archived" } },
+      { scope: "department", department, status: { $ne: "archived" } },
+    ],
+  }).lean();
+
+  const mission = (foundation.mission as string) || "";
+  const vision = (foundation.vision as string) || "";
+  const values = (foundation.values as string) || "";
+
+  const goalsContext = strategyGoals.map((g) => {
+    const goal = g as Record<string, unknown>;
+    return {
+      id: String(goal._id),
+      title: goal.title as string,
+      description: goal.description as string,
+      horizon: goal.horizon as string,
+      scope: goal.scope as string,
+      rationale: (goal.rationale as string) || "",
+    };
+  });
+
+  const jobTitle = role.jobTitle as string;
+  const level = role.level as string;
+
+  const availability = checkProviderConfig();
+  let modelId: string;
+  if (availability.openai) {
+    modelId = AI_CONFIG.defaultModels.openai;
+  } else if (availability.anthropic) {
+    modelId = AI_CONFIG.defaultModels.anthropic;
+  } else {
+    throw new Error("No AI provider configured.");
+  }
+
+  const baseContext = `MISSION: ${mission}\nVISION: ${vision}\nCORE VALUES: ${values}\n\nSTRATEGIC PRIORITIES:\n${goalsContext.map((g) => `- [${g.horizon}] [${g.scope}] "${g.title}": ${g.description}`).join("\n")}\n\nRole: ${jobTitle} (${level}) in ${department}`;
+
+  if (section === "contributions") {
+    const result = await generateObject({
+      model: getModel(modelId),
+      schema: z.object({ contributions: z.array(contributionOutputSchema) }),
+      system: `You are regenerating ONLY the contribution statements for a specific role. Keep the same quality standards: mission-anchored contributions, measurable outcomes, concrete alignment descriptors.\n\n${baseContext}`,
+      prompt: `Regenerate contribution statements for ${jobTitle} (${level}) for EACH of these goals:\n${goalsContext.map((g) => `- ID: ${g.id}, Title: "${g.title}" (${g.horizon}, ${g.scope})`).join("\n")}`,
+    });
+    translationDoc.roles[roleIndex].contributions = result.object.contributions;
+  } else if (section === "behaviors") {
+    const result = await generateObject({
+      model: getModel(modelId),
+      schema: z.object({ behaviors: z.array(behaviorOutputSchema) }),
+      system: `You are regenerating ONLY the behavioral expectations for a specific role. Each behavior must derive from a core value and be observable.\n\n${baseContext}`,
+      prompt: `Regenerate behavioral expectations for ${jobTitle} (${level}). Create one behavior per core value.`,
+    });
+    translationDoc.roles[roleIndex].behaviors = result.object.behaviors;
+  } else if (section === "decisionRights") {
+    const result = await generateObject({
+      model: getModel(modelId),
+      schema: z.object({ decisionRights: decisionRightsOutputSchema }),
+      system: `You are regenerating ONLY the decision rights for a specific role. Calibrate to role level: executives decide broadly, managers within teams, ICs within their scope.\n\n${baseContext}`,
+      prompt: `Regenerate decision rights for ${jobTitle} (${level}). Produce canDecide, canRecommend, and mustEscalate lists.`,
+    });
+    translationDoc.roles[roleIndex].decisionRights = result.object.decisionRights;
+  }
+
+  await translationDoc.save();
 }
 
 // ---------------------------------------------------------------------------
