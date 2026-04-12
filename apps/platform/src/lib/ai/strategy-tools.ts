@@ -15,6 +15,7 @@ import {
   WORKING_DOC_PREFIX,
   WORKING_DOC_SUFFIX,
 } from "./workflow-constants";
+import { getTranslationForEmployee } from "./translation-lookup";
 
 // ---------------------------------------------------------------------------
 // getStrategyBreakdown — fetch all strategy context for the AI
@@ -22,7 +23,7 @@ import {
 
 export const getStrategyBreakdownTool = tool({
   description:
-    "Fetch company and department strategy goals, foundation (mission/vision/values), and user context to enable a conversational strategy breakdown. Call this first when the user wants to understand company or department strategy.",
+    "Fetch company and department strategy goals, foundation (mission/vision/values), and user context to enable a conversational strategy breakdown. Call this first when the user wants to understand company or department strategy.\n\nWhen translatedContributions, translatedBehaviors, and translatedDecisionRights are available in the response, use them as the authoritative source for role-based language rather than synthesizing from raw strategy goals. Present the translated contribution for each priority, the behavioral expectations, and the decision rights. If no translation exists, fall back to the current behavior of presenting raw strategy data and synthesizing relevance.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee to contextualize the breakdown for"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
@@ -81,6 +82,26 @@ export const getStrategyBreakdownTool = tool({
         .lean();
     }
 
+    // Load translation for role-based language
+    let translatedContributions: { strategyGoalTitle: string; roleContribution: string; outcomes: string[] }[] | null = null;
+    let translatedBehaviors: { valueName: string; expectation: string }[] | null = null;
+    let translatedDecisionRights: { canDecide: string[]; canRecommend: string[]; mustEscalate: string[] } | null = null;
+
+    try {
+      const translation = await getTranslationForEmployee(department, jobTitle);
+      if (translation) {
+        translatedContributions = translation.contributions.map((c) => ({
+          strategyGoalTitle: c.strategyGoalTitle,
+          roleContribution: c.roleContribution,
+          outcomes: c.outcomes,
+        }));
+        translatedBehaviors = translation.behaviors;
+        translatedDecisionRights = translation.decisionRights;
+      }
+    } catch {
+      // silent — fall back to raw data
+    }
+
     return {
       success: true,
       employee: {
@@ -123,6 +144,9 @@ export const getStrategyBreakdownTool = tool({
         status: g.status,
         alignment: g.alignment,
       })),
+      translatedContributions,
+      translatedBehaviors,
+      translatedDecisionRights,
       message: `Retrieved strategy context for ${params.employeeName} (${department}). ${companyGoals.length} company goals, ${departmentGoals.length} department goals.`,
     };
   },
@@ -134,7 +158,7 @@ export const getStrategyBreakdownTool = tool({
 
 export const generateStrategyBriefTool = tool({
   description:
-    "Generate a strategy brief document and open it in the working document panel. Call this when the user wants a downloadable summary of the strategy breakdown. You must synthesize the content — do not just repeat raw goal data.",
+    "Generate a strategy brief document and open it in the working document panel. Call this when the user wants a downloadable summary of the strategy breakdown. When translatedContributions are available from getStrategyBreakdown, use them as the authoritative source for role-specific language rather than synthesizing from raw goal data. You must synthesize the content — do not just repeat raw data.",
   inputSchema: z.object({
     employeeName: z.string().describe("Employee name for the document header"),
     department: z.string().describe("Department name for the document header"),
@@ -166,6 +190,16 @@ export const generateStrategyBriefTool = tool({
       .describe(
         "AI-written 'What This Means For You' narrative — 3-5 sentences contextualizing strategy to this person's role and department",
       ),
+    translatedContributions: z
+      .array(
+        z.object({
+          strategyGoalTitle: z.string(),
+          roleContribution: z.string(),
+          outcomes: z.array(z.string()),
+        }),
+      )
+      .optional()
+      .describe("Translated role contributions from published strategy translations — use as authoritative source when available"),
   }),
   execute: async (params) => {
     const sections = {
@@ -173,6 +207,7 @@ export const generateStrategyBriefTool = tool({
       companyGoals: params.companyGoals,
       departmentGoals: params.departmentGoals,
       relevance: params.relevance,
+      translatedContributions: params.translatedContributions ?? null,
     };
 
     const workingDocPayload = {
