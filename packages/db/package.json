@@ -22,6 +22,8 @@
     "./foundation-schema": "./src/foundation-schema.ts",
     "./strategy-goal-constants": "./src/strategy-goal-constants.ts",
     "./strategy-goal-schema": "./src/strategy-goal-schema.ts",
+    "./strategy-translation-constants": "./src/strategy-translation-constants.ts",
+    "./strategy-translation-schema": "./src/strategy-translation-schema.ts",
     "./performance-review-constants": "./src/performance-review-constants.ts",
     "./performance-review-schema": "./src/performance-review-schema.ts"
   },
