@@ -4,8 +4,9 @@
  */
 
 import { generateObject } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { connectDB } from "@ascenta/db";
+import { getModel, checkProviderConfig } from "@/lib/ai/providers";
+import { AI_CONFIG } from "@/lib/ai/config";
 import { CompanyFoundation } from "@ascenta/db/foundation-schema";
 import { StrategyGoal } from "@ascenta/db/strategy-goal-schema";
 import { Employee } from "@ascenta/db/employee-schema";
@@ -183,15 +184,27 @@ export async function generateTranslationForDepartment(
     };
   });
 
-  const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  // Resolve the best available model for structured output
+  const availability = checkProviderConfig();
+  let modelId: string;
+  if (availability.openai) {
+    modelId = AI_CONFIG.defaultModels.openai;
+  } else if (availability.anthropic) {
+    modelId = AI_CONFIG.defaultModels.anthropic;
+  } else {
+    throw new Error(
+      "No AI provider configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY.",
+    );
+  }
 
-  // 7. Generate translation for each role
-  const roles = [];
+  // 7. Generate translation for each role (with rollback on failure)
+  try {
+    const roles = [];
 
-  for (const jobTitle of jobTitles) {
-    const level = inferRoleLevel(jobTitle);
+    for (const jobTitle of jobTitles) {
+      const level = inferRoleLevel(jobTitle);
 
-    const systemPrompt = `You are a strategic translation engine for Ascenta, an AI-powered HR platform. Your job is to convert organizational strategy into specific, actionable, role-based language.
+      const systemPrompt = `You are a strategic translation engine for Ascenta, an AI-powered HR platform. Your job is to convert organizational strategy into specific, actionable, role-based language.
 
 You are generating translation output for a specific role. Every output you produce must be governed by the organization's foundation and strategic priorities as follows:
 
@@ -226,7 +239,7 @@ RULES FOR GENERATION:
 7. For long-term priorities, produce more developmental and capability-building language.
 8. Every piece of language should feel like it was written for THIS specific role, not copy-pasted across roles.`;
 
-    const userPrompt = `Generate the strategic translation for this role:
+      const userPrompt = `Generate the strategic translation for this role:
 
 Department: ${department}
 Job Title: ${jobTitle}
@@ -237,32 +250,37 @@ ${goalsContext.map((g) => `- ID: ${g.id}, Title: "${g.title}" (${g.horizon}, ${g
 
 Also generate behavioral expectations derived from the core values, and decision rights calibrated to the ${level} level.`;
 
-    const { object } = await generateObject({
-      model: openai("gpt-4o"),
-      schema: roleTranslationOutputSchema,
-      system: systemPrompt,
-      prompt: userPrompt,
+      const { object } = await generateObject({
+        model: getModel(modelId),
+        schema: roleTranslationOutputSchema,
+        system: systemPrompt,
+        prompt: userPrompt,
+      });
+
+      roles.push({
+        jobTitle,
+        level,
+        contributions: object.contributions.map((c) => ({
+          strategyGoalId: c.strategyGoalId,
+          strategyGoalTitle: c.strategyGoalTitle,
+          roleContribution: c.roleContribution,
+          outcomes: c.outcomes,
+          alignmentDescriptors: c.alignmentDescriptors,
+        })),
+        behaviors: object.behaviors,
+        decisionRights: object.decisionRights,
+      });
+    }
+
+    // 8. Update document with generated roles and set status to draft
+    await StrategyTranslation.findByIdAndUpdate(translationId, {
+      $set: { roles, status: "draft" },
     });
 
-    roles.push({
-      jobTitle,
-      level,
-      contributions: object.contributions.map((c) => ({
-        strategyGoalId: c.strategyGoalId,
-        strategyGoalTitle: c.strategyGoalTitle,
-        roleContribution: c.roleContribution,
-        outcomes: c.outcomes,
-        alignmentDescriptors: c.alignmentDescriptors,
-      })),
-      behaviors: object.behaviors,
-      decisionRights: object.decisionRights,
-    });
+    return translationId;
+  } catch (err) {
+    // Roll back the orphaned "generating" record so it doesn't linger in the UI
+    await StrategyTranslation.findByIdAndDelete(translationId);
+    throw err;
   }
-
-  // 8. Update document with generated roles and set status to draft
-  await StrategyTranslation.findByIdAndUpdate(translationId, {
-    $set: { roles, status: "draft" },
-  });
-
-  return translationId;
 }
