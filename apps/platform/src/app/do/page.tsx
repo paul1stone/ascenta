@@ -22,6 +22,10 @@ function DoPageInner() {
     if (hasSeededRef.current) return;
     const prompt = searchParams.get("prompt");
     const toolKey = searchParams.get("tool");
+    const outcomeText = searchParams.get("outcomeText");
+    const strategyGoalId = searchParams.get("strategyGoalId");
+    const strategyGoalTitle = searchParams.get("strategyGoalTitle");
+    const contributionRef = searchParams.get("contributionRef");
 
     if (prompt) {
       hasSeededRef.current = true;
@@ -38,7 +42,11 @@ function DoPageInner() {
               title: persona.title,
             }
           : undefined;
-        sendMessage("do", prompt, toolKey ?? undefined, employeeInfo);
+        const outcomeCtx =
+          outcomeText && strategyGoalId && strategyGoalTitle && contributionRef
+            ? { outcomeText, strategyGoalId, strategyGoalTitle, contributionRef }
+            : undefined;
+        sendMessage("do", prompt, toolKey ?? undefined, employeeInfo, outcomeCtx);
       }, 100);
     }
   }, [searchParams, setPageInput, sendMessage, persona]);
