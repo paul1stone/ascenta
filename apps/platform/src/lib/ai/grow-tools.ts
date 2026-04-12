@@ -164,7 +164,7 @@ Present the employee's department strategy goals (if any). Ask which one this go
 2. Development Goal (building capability for the future)
 
 **Step 3 — Goal recommendation:**
-Based on all context (selected pillar, department goal, goal type, employee role/department), generate 4-6 goal recommendations as a numbered list. Include a final option: "Or describe your own goal." User picks a number or writes custom. Draft an objective statement (one sentence, outcome-focused, min 15 words).
+If roleContributions are available in the tool response, use them as the PRIMARY source for goal recommendations. Generate 4-6 goal recommendations, each tracing back to a specific role contribution statement. Present the contribution language and suggest how it maps to a concrete goal. If no roleContributions are available, fall back to generating recommendations from raw strategy goal titles as before. Include a final option: "Or describe your own goal." User picks a number or writes custom. Draft an objective statement (one sentence, outcome-focused, min 15 words).
 
 **Step 4 — Key results and support:**
 Based on the objective, suggest 2-4 key results. Each key result needs: what will be measured, the measurable target, and a deadline. Ask user to pick or customize. Discuss time period. Ask what support the manager can provide (resources, access, time, coaching). Then call openGoalDocument with all fields.
@@ -295,6 +295,7 @@ export const openGoalDocumentTool = tool({
     timePeriod: z.string().describe("Q1, Q2, Q3, Q4, H1, H2, annual, or custom"),
     checkInCadence: z.string().describe("every_check_in, monthly, or quarterly"),
     notes: z.string().optional(),
+    contributionRef: z.string().optional().describe("The role contribution statement this goal traces back to, for strategy traceability"),
   }),
   execute: async (params) => {
     await ensureWorkflowsSynced();
@@ -310,6 +311,7 @@ export const openGoalDocumentTool = tool({
       "employeeName", "employeeId", "objectiveStatement", "goalType",
       "keyResults", "strategyGoalId", "strategyGoalTitle", "teamGoalId",
       "supportAgreement", "timePeriod", "checkInCadence", "notes",
+      "contributionRef",
     ] as const) {
       if (params[key] !== undefined) prefilled[key] = params[key];
     }
