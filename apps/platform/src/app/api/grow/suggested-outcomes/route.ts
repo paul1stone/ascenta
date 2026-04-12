@@ -17,7 +17,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const employee = await getEmployeeById(employeeId);
+    let employee;
+    try {
+      employee = await getEmployeeById(employeeId);
+    } catch {
+      // Invalid ObjectId format
+      return NextResponse.json({ outcomes: [] });
+    }
     if (!employee) {
       return NextResponse.json({ outcomes: [] });
     }
