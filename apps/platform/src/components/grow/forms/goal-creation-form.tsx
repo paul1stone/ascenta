@@ -209,7 +209,7 @@ export function GoalCreationForm({
           Key Results <span className="text-destructive">*</span>
         </Label>
         <p className="text-xs text-muted-foreground -mt-1">
-          Define 2–4 measurable outcomes that indicate goal success.
+          Define measurable outcomes that indicate goal success. We recommend 1–3 key results.
         </p>
         {fields.map((field, index) => (
           <div key={field.id} className="rounded-lg border bg-muted/30 p-3 space-y-2">
@@ -217,7 +217,7 @@ export function GoalCreationForm({
               <span className="text-xs font-medium text-muted-foreground">
                 Key Result {index + 1}
               </span>
-              {fields.length > 2 && (
+              {fields.length > 1 && (
                 <button
                   type="button"
                   onClick={() => remove(index)}
@@ -268,18 +268,16 @@ export function GoalCreationForm({
         {errors.keyResults && !Array.isArray(errors.keyResults) && (
           <p className="text-xs text-destructive">{errors.keyResults.message}</p>
         )}
-        {fields.length < 4 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full gap-1.5"
-            onClick={() => append({ description: "", metric: "", deadline: "" })}
-          >
-            <Plus className="size-3.5" />
-            Add Key Result
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full gap-1.5"
+          onClick={() => append({ description: "", metric: "", deadline: "" })}
+        >
+          <Plus className="size-3.5" />
+          Add Key Result
+        </Button>
       </div>
 
       {/* Strategy Pillar (conditional) */}

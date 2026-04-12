@@ -167,7 +167,7 @@ Present the employee's department strategy goals (if any). Ask which one this go
 If roleContributions are available in the tool response, use them as the PRIMARY source for goal recommendations. Generate 4-6 goal recommendations, each tracing back to a specific role contribution statement. Present the contribution language and suggest how it maps to a concrete goal. If no roleContributions are available, fall back to generating recommendations from raw strategy goal titles as before. Include a final option: "Or describe your own goal." User picks a number or writes custom. Draft an objective statement (one sentence, outcome-focused, min 15 words).
 
 **Step 4 — Key results and support:**
-Based on the objective, suggest 2-4 key results. Each key result needs: what will be measured, the measurable target, and a deadline. Ask user to pick or customize. Discuss time period. Ask what support the manager can provide (resources, access, time, coaching). Then call openGoalDocument with all fields.
+Based on the objective, suggest 1-3 key results (more are allowed if needed). Each key result needs: what will be measured, the measurable target, and a deadline. Ask user to pick or customize. Discuss time period. Ask what support the manager can provide (resources, access, time, coaching). Then call openGoalDocument with all fields.
 
 RULES:
 - Ask ONE question at a time. Wait for the response before moving on.
@@ -287,7 +287,7 @@ export const openGoalDocumentTool = tool({
       description: z.string().describe("What will be measured"),
       metric: z.string().describe("The measurable target"),
       deadline: z.string().describe("ISO date string for deadline"),
-    })).min(2).max(4).describe("2-4 SMART key results"),
+    })).min(1).describe("SMART key results (recommend 1-3)"),
     strategyGoalId: z.string().optional().describe("ObjectId of linked strategy pillar"),
     strategyGoalTitle: z.string().optional().describe("Display title of linked strategy pillar"),
     teamGoalId: z.string().optional().describe("ObjectId of linked team goal"),
@@ -976,7 +976,7 @@ export const recommendNextGoalsTool = tool({
     }).lean();
 
     const finalDoc = review.finalDocument;
-    const prompt = `Based on this performance review, recommend 2-4 goals for the next period. Each goal should address gaps identified in the review or align with evolving company strategy.
+    const prompt = `Based on this performance review, recommend 1-3 goals for the next period (more are allowed if warranted). Each goal should address gaps identified in the review or align with evolving company strategy.
 
 ## Review Summary
 ${finalDoc?.summary || "N/A"}
@@ -998,7 +998,7 @@ ${currentStrategyGoals.map((sg) => `- ${sg.title} (${sg.horizon}): ${sg.descript
 ${(review.alignedGoals || []).map((g: { title: string; status: string }) => `- ${g.title} (${g.status})`).join("\n") || "None"}
 
 ## Instructions
-Generate 2-4 goal recommendations. Each goal should:
+Generate 1-3 goal recommendations (more are allowed if warranted). Each goal should:
 - Have a clear, specific title
 - Include a brief description (1-2 sentences)
 - Map to a goal category (one of: productivity, quality, accuracy, efficiency, operational_excellence, customer_impact, communication, collaboration, conflict_resolution, decision_making, initiative, skill_development, certification, training_completion, leadership_growth, career_advancement)

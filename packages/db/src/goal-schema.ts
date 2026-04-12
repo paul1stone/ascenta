@@ -87,8 +87,8 @@ const goalSchema = new Schema(
       type: [keyResultSchema],
       required: true,
       validate: {
-        validator: (v: unknown[]) => v.length >= 2 && v.length <= 4,
-        message: "Goals must have between 2 and 4 key results.",
+        validator: (v: unknown[]) => v.length >= 1,
+        message: "Goals must have at least 1 key result.",
       },
     },
     strategyGoalId: {

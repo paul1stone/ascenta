@@ -359,7 +359,7 @@ export function PerformanceGoalForm({
                 Key Results
               </label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Define 2–4 measurable outcomes that indicate goal success.
+                Define measurable outcomes that indicate goal success. We recommend 1–3 key results.
               </p>
             </div>
             {fields.map((field, index) => (
@@ -368,7 +368,7 @@ export function PerformanceGoalForm({
                   <span className="text-xs font-medium text-muted-foreground">
                     Key Result {index + 1}
                   </span>
-                  {fields.length > 2 && (
+                  {fields.length > 1 && (
                     <button
                       type="button"
                       onClick={() => remove(index)}
@@ -422,16 +422,14 @@ export function PerformanceGoalForm({
             {errors.keyResults && !Array.isArray(errors.keyResults) && (
               <p className="text-xs text-red-500">{errors.keyResults.message}</p>
             )}
-            {fields.length < 4 && (
-              <button
-                type="button"
-                onClick={() => append({ description: "", metric: "", deadline: "" })}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-              >
-                <Plus className="size-3.5" />
-                Add Key Result
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => append({ description: "", metric: "", deadline: "" })}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+            >
+              <Plus className="size-3.5" />
+              Add Key Result
+            </button>
           </div>
 
           {/* Support Agreement */}
