@@ -65,6 +65,7 @@ export const DASHBOARD_NAV: NavCategory[] = [
     subPages: [
       { key: "plan/org-design", label: "Organizational Design", icon: Building2 },
       { key: "plan/operations", label: "Operations", icon: Settings },
+      { key: "my-strategy", label: "My Strategy", icon: Compass },
     ],
   },
   {
@@ -274,6 +275,12 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
   "protect/policy-governance": {
     title: "Policy Governance",
     description: "Create, manage, and enforce organizational policies and compliance frameworks.",
+  },
+  "my-strategy": {
+    title: "My Strategy",
+    description: "See how company strategy translates to your role.",
+    tabs: [],
+    tools: [],
   },
   "do": {
     title: "Compass",
