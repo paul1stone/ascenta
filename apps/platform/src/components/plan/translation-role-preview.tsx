@@ -31,8 +31,10 @@ interface TranslationRolePreviewProps {
   decisionRights: DecisionRights;
   accentColor: string;
   editing?: boolean;
-  onFieldChange?: (field: string, value: unknown) => void;
-  onRegenerateSection?: (section: "contributions" | "behaviors" | "decisionRights") => void;
+  roleIndex?: number;
+  translationId?: string;
+  onFieldChange?: (roleIndex: number, field: string, value: unknown) => void;
+  onRegenerateSection?: (translationId: string, roleIndex: number, section: "contributions" | "behaviors" | "decisionRights") => void;
   regeneratingSection?: string | null;
 }
 
@@ -44,6 +46,8 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
   decisionRights,
   accentColor,
   editing,
+  roleIndex = 0,
+  translationId = "",
   onFieldChange,
   onRegenerateSection,
   regeneratingSection,
@@ -78,7 +82,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
             Role Contributions
           </p>
           <button
-            onClick={() => onRegenerateSection("contributions")}
+            onClick={() => onRegenerateSection(translationId, roleIndex,"contributions")}
             disabled={!!regeneratingSection}
             className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
           >
@@ -100,7 +104,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
           {editing ? (
             <textarea
               value={c.roleContribution}
-              onChange={(e) => onFieldChange?.(`contributions.${i}.roleContribution`, e.target.value)}
+              onChange={(e) => onFieldChange?.(roleIndex,`contributions.${i}.roleContribution`, e.target.value)}
               rows={3}
               className={inputCls}
               style={inputStyle}
@@ -125,7 +129,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                       onChange={(e) => {
                         const updated = [...c.outcomes];
                         updated[j] = e.target.value;
-                        onFieldChange?.(`contributions.${i}.outcomes`, updated);
+                        onFieldChange?.(roleIndex,`contributions.${i}.outcomes`, updated);
                       }}
                       className="flex-1 rounded-lg border px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[--accent]"
                       style={inputStyle}
@@ -135,7 +139,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                         type="button"
                         onClick={() => {
                           const updated = c.outcomes.filter((_, k) => k !== j);
-                          onFieldChange?.(`contributions.${i}.outcomes`, updated);
+                          onFieldChange?.(roleIndex,`contributions.${i}.outcomes`, updated);
                         }}
                         className="shrink-0 text-muted-foreground hover:text-destructive transition-colors px-1"
                       >
@@ -148,7 +152,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                   type="button"
                   onClick={() => {
                     const updated = [...c.outcomes, ""];
-                    onFieldChange?.(`contributions.${i}.outcomes`, updated);
+                    onFieldChange?.(roleIndex,`contributions.${i}.outcomes`, updated);
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -180,7 +184,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                 {editing ? (
                   <textarea
                     value={c.alignmentDescriptors[lvl]}
-                    onChange={(e) => onFieldChange?.(`contributions.${i}.alignmentDescriptors.${lvl}`, e.target.value)}
+                    onChange={(e) => onFieldChange?.(roleIndex,`contributions.${i}.alignmentDescriptors.${lvl}`, e.target.value)}
                     rows={3}
                     className="w-full rounded border px-2 py-1 text-xs leading-relaxed resize-y bg-white/50 focus:outline-none"
                   />
@@ -202,7 +206,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
             </p>
             {onRegenerateSection && !editing && (
               <button
-                onClick={() => onRegenerateSection("behaviors")}
+                onClick={() => onRegenerateSection(translationId, roleIndex,"behaviors")}
                 disabled={!!regeneratingSection}
                 className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
               >
@@ -222,14 +226,14 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                   <div className="flex gap-2">
                     <input
                       value={b.valueName}
-                      onChange={(e) => onFieldChange?.(`behaviors.${i}.valueName`, e.target.value)}
+                      onChange={(e) => onFieldChange?.(roleIndex,`behaviors.${i}.valueName`, e.target.value)}
                       className="w-40 shrink-0 rounded-lg border px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[--accent]"
                       style={inputStyle}
                       placeholder="Value name"
                     />
                     <input
                       value={b.expectation}
-                      onChange={(e) => onFieldChange?.(`behaviors.${i}.expectation`, e.target.value)}
+                      onChange={(e) => onFieldChange?.(roleIndex,`behaviors.${i}.expectation`, e.target.value)}
                       className="flex-1 rounded-lg border px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[--accent]"
                       style={inputStyle}
                       placeholder="Behavioral expectation"
@@ -239,7 +243,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                         type="button"
                         onClick={() => {
                           const updated = behaviors.filter((_, k) => k !== i);
-                          onFieldChange?.("behaviors", updated);
+                          onFieldChange?.(roleIndex,"behaviors", updated);
                         }}
                         className="shrink-0 text-muted-foreground hover:text-destructive transition-colors px-1"
                       >
@@ -260,7 +264,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                 type="button"
                 onClick={() => {
                   const updated = [...behaviors, { valueName: "", expectation: "" }];
-                  onFieldChange?.("behaviors", updated);
+                  onFieldChange?.(roleIndex,"behaviors", updated);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -279,7 +283,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
           </p>
           {onRegenerateSection && !editing && (
             <button
-              onClick={() => onRegenerateSection("decisionRights")}
+              onClick={() => onRegenerateSection(translationId, roleIndex,"decisionRights")}
               disabled={!!regeneratingSection}
               className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
             >
@@ -310,7 +314,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                           onChange={(e) => {
                             const updated = [...items];
                             updated[i] = e.target.value;
-                            onFieldChange?.(`decisionRights.${key}`, updated);
+                            onFieldChange?.(roleIndex,`decisionRights.${key}`, updated);
                           }}
                           className="flex-1 rounded border px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[--accent]"
                           style={inputStyle}
@@ -320,7 +324,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                             type="button"
                             onClick={() => {
                               const updated = items.filter((_, k) => k !== i);
-                              onFieldChange?.(`decisionRights.${key}`, updated);
+                              onFieldChange?.(roleIndex,`decisionRights.${key}`, updated);
                             }}
                             className="text-muted-foreground hover:text-destructive text-[10px]"
                           >
@@ -333,7 +337,7 @@ export const TranslationRolePreview = memo(function TranslationRolePreview({
                       type="button"
                       onClick={() => {
                         const updated = [...items, ""];
-                        onFieldChange?.(`decisionRights.${key}`, updated);
+                        onFieldChange?.(roleIndex,`decisionRights.${key}`, updated);
                       }}
                       className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
                     >

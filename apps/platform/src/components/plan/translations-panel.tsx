@@ -290,7 +290,13 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
               return (
                 <div key={dept} className="rounded-xl border bg-white shadow-sm overflow-hidden">
                   <button
-                    onClick={() => setExpandedDept(isExpanded ? null : dept)}
+                    onClick={() => {
+                      if (isExpanded && editingId === translation.id) {
+                        if (!confirm("You have unsaved edits. Discard changes?")) return;
+                        handleCancelEdit();
+                      }
+                      setExpandedDept(isExpanded ? null : dept);
+                    }}
                     className="flex w-full items-center gap-3 px-5 py-4 text-left"
                   >
                     <span className="flex-1 font-display text-sm font-semibold text-deep-blue">
@@ -404,11 +410,10 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                             decisionRights={role.decisionRights}
                             accentColor={accentColor}
                             editing={editingId === translation.id}
-                            onFieldChange={(field, value) => handleFieldChange(i, field, value)}
-                            onRegenerateSection={editingId !== translation.id
-                              ? (section) => handleRegenerateSection(translation.id, i, section)
-                              : undefined
-                            }
+                            roleIndex={i}
+                            translationId={translation.id}
+                            onFieldChange={editingId === translation.id ? handleFieldChange : undefined}
+                            onRegenerateSection={editingId !== translation.id ? handleRegenerateSection : undefined}
                             regeneratingSection={
                               regeneratingSection?.translationId === translation.id &&
                               regeneratingSection?.roleIndex === i
