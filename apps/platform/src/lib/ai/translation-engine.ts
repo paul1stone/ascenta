@@ -185,6 +185,97 @@ export async function regenerateRoleSection(
 }
 
 // ---------------------------------------------------------------------------
+// Batch staleness detection (avoids N+1 queries)
+// ---------------------------------------------------------------------------
+
+export async function checkTranslationStalenessBatch(
+  translations: Record<string, unknown>[],
+): Promise<Map<string, { isStale: boolean; reasons: string[] }>> {
+  const result = new Map<string, { isStale: boolean; reasons: string[] }>();
+
+  // Single foundation query shared across all translations
+  const foundation = await CompanyFoundation.findOne().lean();
+  const foundationUpdated = foundation
+    ? new Date((foundation as Record<string, unknown>).updatedAt as string)
+    : null;
+
+  // Collect all unique departments
+  const departments = [...new Set(translations.map((t) => t.department as string))];
+
+  // Single query for all strategy goals across all departments
+  const allGoals = await StrategyGoal.find({
+    $or: [
+      { scope: "company", status: { $ne: "archived" } },
+      ...departments.map((dept) => ({
+        scope: "department" as const,
+        department: dept,
+        status: { $ne: "archived" },
+      })),
+    ],
+  }).lean();
+
+  // Index goals by department for fast lookup
+  const companyGoalIds = new Set(
+    allGoals
+      .filter((g) => (g as Record<string, unknown>).scope === "company")
+      .map((g) => String(g._id)),
+  );
+  const deptGoalIds = new Map<string, Set<string>>();
+  for (const g of allGoals) {
+    const goal = g as Record<string, unknown>;
+    if (goal.scope === "department") {
+      const dept = goal.department as string;
+      if (!deptGoalIds.has(dept)) deptGoalIds.set(dept, new Set());
+      deptGoalIds.get(dept)!.add(String(g._id));
+    }
+  }
+
+  for (const t of translations) {
+    const id = String(t._id);
+    const reasons: string[] = [];
+    const generatedFrom = t.generatedFrom as {
+      foundationUpdatedAt?: Date;
+      strategyGoalIds?: string[];
+      generatedAt?: Date;
+    };
+
+    if (!generatedFrom?.generatedAt) {
+      result.set(id, { isStale: true, reasons: ["No generation timestamp found"] });
+      continue;
+    }
+
+    const genDate = new Date(generatedFrom.generatedAt);
+
+    // Foundation freshness
+    if (foundationUpdated && foundationUpdated > genDate) {
+      reasons.push("Foundation has been updated since this translation was generated");
+    }
+
+    // Strategy goals freshness
+    const dept = t.department as string;
+    const currentIds = new Set([
+      ...companyGoalIds,
+      ...(deptGoalIds.get(dept) ?? []),
+    ]);
+    const storedIds = new Set((generatedFrom.strategyGoalIds ?? []).map(String));
+
+    const addedGoals = [...currentIds].filter((gid) => !storedIds.has(gid));
+    const removedGoals = [...storedIds].filter((gid) => !currentIds.has(gid));
+
+    if (addedGoals.length > 0) {
+      reasons.push(`${addedGoals.length} new strategy goal(s) added since generation`);
+    }
+    if (removedGoals.length > 0) {
+      reasons.push(`${removedGoals.length} strategy goal(s) removed or archived since generation`);
+    }
+
+    result.set(id, { isStale: reasons.length > 0, reasons });
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // Core generation
 // ---------------------------------------------------------------------------
 
