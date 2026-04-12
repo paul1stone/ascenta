@@ -164,12 +164,6 @@ export async function generateTranslationForDepartment(
   const mission = (foundation.mission as string) || "";
   const vision = (foundation.vision as string) || "";
   const values = (foundation.values as string) || "";
-  const nonNegotiableBehaviors = (
-    foundation.nonNegotiableBehaviors as { name: string; description: string }[] ?? []
-  );
-  const livedPrinciples = (
-    foundation.livedPrinciples as { name: string; description: string }[] ?? []
-  );
 
   const goalsContext = strategyGoals.map((g) => {
     const goal = g as Record<string, unknown>;
@@ -214,14 +208,8 @@ ${mission}
 VISION (shapes forward-looking outcomes — outcomes should move toward this vision):
 ${vision}
 
-CORE VALUES (each value must produce a behavioral expectation for this role):
+CORE VALUES (each value must produce a behavioral expectation for this role — values also set the floor for "poor" alignment descriptors):
 ${values}
-
-NON-NEGOTIABLE BEHAVIORS (these set the floor for "poor" alignment descriptors — failure to demonstrate these defines poor alignment regardless of other performance):
-${nonNegotiableBehaviors.map((b) => `- ${b.name}: ${b.description}`).join("\n") || "None defined"}
-
-LIVED PRINCIPLES (woven into how contribution and decision rights are described):
-${livedPrinciples.map((p) => `- ${p.name}: ${p.description}`).join("\n") || "None defined"}
 
 STRATEGIC PRIORITIES:
 ${goalsContext.map((g) => `- [${g.horizon}] [${g.scope}] "${g.title}": ${g.description}${g.rationale ? ` (Rationale: ${g.rationale})` : ""}`).join("\n")}
@@ -234,7 +222,7 @@ RULES FOR GENERATION:
 5. Alignment descriptors must be concrete:
    - "Strong" describes what excellent looks like with specific behaviors
    - "Acceptable" describes meeting expectations adequately
-   - "Poor" MUST reference non-negotiable behavior failures when relevant
+   - "Poor" MUST reference value violations when relevant
 6. For short-term priorities, produce more tactical, immediate language.
 7. For long-term priorities, produce more developmental and capability-building language.
 8. Every piece of language should feel like it was written for THIS specific role, not copy-pasted across roles.`;

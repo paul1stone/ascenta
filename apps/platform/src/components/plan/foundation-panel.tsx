@@ -6,18 +6,11 @@ import Link from "next/link";
 import { useRole } from "@/lib/role/role-context";
 import { MarkdownRenderer } from "@/components/chat/markdown-renderer";
 
-interface NamedItem {
-  name: string;
-  description: string;
-}
-
 interface FoundationData {
   id: string;
   mission: string;
   vision: string;
   values: string;
-  nonNegotiableBehaviors: NamedItem[];
-  livedPrinciples: NamedItem[];
   status: "draft" | "published";
   publishedAt: string | null;
   updatedAt: string;
@@ -43,94 +36,6 @@ const SECTIONS: { key: SectionKey; label: string; description: string }[] = [
   },
 ];
 
-function NamedItemListEditor({
-  items,
-  onChange,
-  onSave,
-  label,
-  description,
-  accentColor,
-  namePlaceholder,
-  descriptionPlaceholder,
-}: {
-  items: NamedItem[];
-  onChange: (items: NamedItem[]) => void;
-  onSave: () => void;
-  label: string;
-  description: string;
-  accentColor: string;
-  namePlaceholder: string;
-  descriptionPlaceholder: string;
-}) {
-  function updateItem(index: number, field: "name" | "description", value: string) {
-    const updated = [...items];
-    updated[index] = { ...updated[index], [field]: value };
-    onChange(updated);
-  }
-
-  function addItem() {
-    onChange([...items, { name: "", description: "" }]);
-  }
-
-  function removeItem(index: number) {
-    const updated = items.filter((_, i) => i !== index);
-    onChange(updated);
-    setTimeout(onSave, 0);
-  }
-
-  return (
-    <div className="rounded-xl border bg-white p-5 shadow-sm">
-      <div className="mb-3">
-        <h3 className="font-display text-base font-bold" style={{ color: accentColor }}>
-          {label}
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-      </div>
-      <div className="space-y-3">
-        {items.map((item, i) => (
-          <div key={i} className="flex gap-2">
-            <div className="flex-1 space-y-1.5">
-              <input
-                value={item.name}
-                onChange={(e) => updateItem(i, "name", e.target.value)}
-                onBlur={onSave}
-                placeholder={namePlaceholder}
-                className="w-full rounded-lg border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[--accent]"
-                style={{ "--accent": accentColor } as React.CSSProperties}
-              />
-              <textarea
-                value={item.description}
-                onChange={(e) => updateItem(i, "description", e.target.value)}
-                onBlur={onSave}
-                placeholder={descriptionPlaceholder}
-                rows={2}
-                className="w-full rounded-lg border px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[--accent] resize-y"
-                style={{ "--accent": accentColor } as React.CSSProperties}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => removeItem(i)}
-              className="shrink-0 self-start mt-2 text-muted-foreground hover:text-destructive transition-colors"
-              title="Remove"
-            >
-              <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addItem}
-          className="flex items-center gap-1.5 rounded-lg border border-dashed px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors w-full justify-center"
-        >
-          <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
-          Add {label.replace(/s$/, "")}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 interface FoundationPanelProps {
   accentColor: string;
 }
@@ -147,8 +52,6 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
     mission: "",
     vision: "",
     values: "",
-    nonNegotiableBehaviors: [] as NamedItem[],
-    livedPrinciples: [] as NamedItem[],
   });
 
   const fetchFoundation = useCallback(async () => {
@@ -163,8 +66,6 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
             mission: data.foundation.mission,
             vision: data.foundation.vision,
             values: data.foundation.values,
-            nonNegotiableBehaviors: data.foundation.nonNegotiableBehaviors ?? [],
-            livedPrinciples: data.foundation.livedPrinciples ?? [],
           });
           setEditMode(data.foundation.status === "draft");
         } else {
@@ -361,39 +262,6 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
                 </div>
               ))}
 
-              {/* Non-Negotiable Behaviors */}
-              {foundation.nonNegotiableBehaviors && foundation.nonNegotiableBehaviors.length > 0 && (
-                <div className="px-8 py-6 border-t border-border/50">
-                  <h4 className="font-display text-sm font-bold text-deep-blue mb-2.5">
-                    Non-Negotiable Behaviors
-                  </h4>
-                  <div className="space-y-3">
-                    {foundation.nonNegotiableBehaviors.map((item: NamedItem, i: number) => (
-                      <div key={i}>
-                        <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Lived Principles */}
-              {foundation.livedPrinciples && foundation.livedPrinciples.length > 0 && (
-                <div className="px-8 py-6 border-t border-border/50">
-                  <h4 className="font-display text-sm font-bold text-deep-blue mb-2.5">
-                    Lived Principles
-                  </h4>
-                  <div className="space-y-3">
-                    {foundation.livedPrinciples.map((item: NamedItem, i: number) => (
-                      <div key={i}>
-                        <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -485,29 +353,6 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
               />
             </div>
           ))}
-        </div>
-
-        <div className="space-y-5 mt-5">
-          <NamedItemListEditor
-            items={form.nonNegotiableBehaviors}
-            onChange={(items) => setForm((prev) => ({ ...prev, nonNegotiableBehaviors: items }))}
-            onSave={handleSave}
-            label="Non-Negotiable Behaviors"
-            description="What behaviors are absolutely required regardless of role or department?"
-            accentColor={accentColor}
-            namePlaceholder="Behavior name (e.g., Transparency in decision-making)"
-            descriptionPlaceholder="Describe what this looks like in practice..."
-          />
-          <NamedItemListEditor
-            items={form.livedPrinciples}
-            onChange={(items) => setForm((prev) => ({ ...prev, livedPrinciples: items }))}
-            onSave={handleSave}
-            label="Lived Principles"
-            description="What principles guide how work gets done day-to-day?"
-            accentColor={accentColor}
-            namePlaceholder="Principle name (e.g., Default to action over consensus)"
-            descriptionPlaceholder="Describe how this principle shows up in daily work..."
-          />
         </div>
 
         <div className="flex items-center justify-between mt-6 pt-4 border-t">

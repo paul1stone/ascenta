@@ -53,20 +53,6 @@ After enough answers, synthesize into a vision statement using markdown formatti
 
 After enough answers, synthesize into 3-6 core values using markdown formatting — use **bold** for each value name followed by a dash and description (e.g., "**Empowerment** — We believe..."). Separate values with blank lines. Call updateWorkingDocument with { values: "..." }.
 
-**Non-Negotiable Behaviors questions (ask one at a time, AFTER values are done):**
-16. What behaviors are absolutely non-negotiable in your organization, regardless of role or department?
-17. What would you consider a fireable offense related to conduct or culture?
-18. What behaviors must every employee demonstrate, even under pressure?
-
-After enough answers, synthesize into 3-5 non-negotiable behaviors. Each should have a clear **name** and description. Call updateWorkingDocument with { nonNegotiableBehaviors: [{ name: "...", description: "..." }, ...] }.
-
-**Lived Principles questions (ask one at a time, AFTER behaviors):**
-19. What principles guide how decisions are made day-to-day?
-20. When two good options conflict, what tiebreaker principles does your team use?
-21. What would a new hire need to internalize to fit in culturally?
-
-After enough answers, synthesize into 3-5 lived principles with **name** and description. Call updateWorkingDocument with { livedPrinciples: [{ name: "...", description: "..." }, ...] }.
-
 RULES:
 - Ask ONE question at a time. Wait for the user's response before asking the next.
 - You don't need to ask ALL questions — if the user gives rich answers, you can skip ahead.
@@ -81,7 +67,7 @@ RULES:
   }),
   execute: async (params) => {
     // Load existing foundation data if available
-    let existing = { mission: "", vision: "", values: "", nonNegotiableBehaviors: [] as { name: string; description: string }[], livedPrinciples: [] as { name: string; description: string }[] };
+    let existing = { mission: "", vision: "", values: "" };
     try {
       await connectDB();
       const doc = await CompanyFoundation.findOne();
@@ -90,8 +76,6 @@ RULES:
           mission: doc.mission || "",
           vision: doc.vision || "",
           values: doc.values || "",
-          nonNegotiableBehaviors: doc.nonNegotiableBehaviors ?? [],
-          livedPrinciples: doc.livedPrinciples ?? [],
         };
       }
     } catch {
@@ -102,8 +86,6 @@ RULES:
       mission: params.existingMission ?? existing.mission,
       vision: params.existingVision ?? existing.vision,
       values: params.existingValues ?? existing.values,
-      nonNegotiableBehaviors: existing.nonNegotiableBehaviors,
-      livedPrinciples: existing.livedPrinciples,
     };
 
     const hasExisting = existing.mission || existing.vision || existing.values;

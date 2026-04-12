@@ -8,7 +8,7 @@ import { z } from "zod";
 export const alignmentDescriptorsSchema = z.object({
   strong: z.string().describe("What strong alignment looks like for this role relative to this priority"),
   acceptable: z.string().describe("What acceptable alignment looks like"),
-  poor: z.string().describe("What poor alignment looks like — anchored to non-negotiable behaviors"),
+  poor: z.string().describe("What poor alignment looks like — anchored to core value violations"),
 });
 
 export const contributionOutputSchema = z.object({
