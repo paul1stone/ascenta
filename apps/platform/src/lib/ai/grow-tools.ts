@@ -340,7 +340,7 @@ export const openGoalDocumentTool = tool({
 
 export const startCheckInTool = tool({
   description:
-    "Open the check-in working document for an employee. Call after getEmployeeInfo and any clarifying questions. You MUST provide a value for EVERY field you can infer from context. The user should only need to review the form, not fill it out.",
+    "Open the check-in working document for an employee. Call after getEmployeeInfo and any clarifying questions. You MUST provide a value for EVERY field you can infer from context. The user should only need to review the form, not fill it out.\n\nWhen roleContributions are available in the response, reference the employee's strategic contribution expectations when drafting manager observations. When supportAgreements are present, remind the manager of their committed support for each active goal.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
@@ -370,6 +370,42 @@ export const startCheckInTool = tool({
       availableGoals = activeGoals.map((g) => ({
         id: String(g._id),
         title: (g as Record<string, unknown>).title as string,
+      }));
+    }
+
+    // Load translation for strategy context
+    let roleContributions: { strategyGoalTitle: string; roleContribution: string }[] | null = null;
+    if (employee) {
+      try {
+        const translation = await getTranslationForEmployee(
+          (employee as unknown as Record<string, unknown>).department as string,
+          (employee as unknown as Record<string, unknown>).jobTitle as string,
+        );
+        if (translation) {
+          roleContributions = translation.contributions.map((c) => ({
+            strategyGoalTitle: c.strategyGoalTitle,
+            roleContribution: c.roleContribution,
+          }));
+        }
+      } catch {
+        // silent
+      }
+    }
+
+    // Load active goals with support agreements
+    let supportAgreements: { goal: string; support: string }[] = [];
+    if (employee) {
+      const goalsWithSupport = await Goal.find({
+        owner: (employee as unknown as Record<string, unknown>)._id,
+        status: "active",
+        supportAgreement: { $ne: "" },
+      })
+        .select("objectiveStatement supportAgreement")
+        .lean();
+
+      supportAgreements = goalsWithSupport.map((g) => ({
+        goal: (g as Record<string, unknown>).objectiveStatement as string,
+        support: (g as Record<string, unknown>).supportAgreement as string,
       }));
     }
 
@@ -406,6 +442,8 @@ export const startCheckInTool = tool({
       runId: run.id,
       message: `I've opened the check-in form for ${params.employeeName}${availableGoals.length > 0 ? ` with ${availableGoals.length} active goal(s) available` : ""}. You can review and edit the form, or ask me to make changes.`,
       workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
+      roleContributions,
+      supportAgreements,
     };
   },
 });
