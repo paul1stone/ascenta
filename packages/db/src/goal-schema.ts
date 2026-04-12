@@ -146,6 +146,7 @@ const goalSchema = new Schema(
     locked: { type: Boolean, default: false },
     notes: { type: String, default: "" },
     workflowRunId: { type: String, default: null },
+    contributionRef: { type: String, default: null },
   },
   {
     timestamps: true,
@@ -207,6 +208,7 @@ export type Goal_Type = {
   locked: boolean;
   notes: string;
   workflowRunId: string | null;
+  contributionRef: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

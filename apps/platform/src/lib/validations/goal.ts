@@ -64,6 +64,7 @@ export const goalFormSchema = z
       message: "Check-in cadence is required",
     }),
     notes: z.string().optional(),
+    contributionRef: z.string().optional(),
   })
   .refine(
     (data) => {

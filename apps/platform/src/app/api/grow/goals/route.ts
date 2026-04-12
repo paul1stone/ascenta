@@ -140,6 +140,7 @@ export async function POST(req: NextRequest) {
       owner: employee.id,
       manager: employee.id,
       workflowRunId: effectiveRunId,
+      contributionRef: data.contributionRef || null,
     });
 
     const goalObj = goal.toJSON() as Record<string, unknown>;
