@@ -25,7 +25,8 @@
     "./strategy-translation-constants": "./src/strategy-translation-constants.ts",
     "./strategy-translation-schema": "./src/strategy-translation-schema.ts",
     "./performance-review-constants": "./src/performance-review-constants.ts",
-    "./performance-review-schema": "./src/performance-review-schema.ts"
+    "./performance-review-schema": "./src/performance-review-schema.ts",
+    "./notification-schema": "./src/notification-schema.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"
