@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { StrategyTranslation } from "@ascenta/db/strategy-translation-schema";
 import { Employee } from "@ascenta/db/employee-schema";
-import { generateTranslationForDepartment, checkTranslationStaleness } from "@/lib/ai/translation-engine";
+import { generateTranslationForDepartment, checkTranslationStalenessBatch } from "@/lib/ai/translation-engine";
 
 // ============================================================================
 // GET — List translations
@@ -27,23 +27,30 @@ export async function GET(req: NextRequest) {
       .sort({ department: 1, version: -1 })
       .lean();
 
-    // Check staleness for each non-archived translation
-    const results = [];
-    for (const t of translations) {
+    // Batch staleness check (2 DB queries total instead of N*3)
+    const checkable = translations.filter(
+      (t) => {
+        const s = (t as Record<string, unknown>).status;
+        return s === "published" || s === "draft";
+      },
+    ) as Record<string, unknown>[];
+    const stalenessMap = checkable.length > 0
+      ? await checkTranslationStalenessBatch(checkable)
+      : new Map<string, { isStale: boolean; reasons: string[] }>();
+
+    const results = translations.map((t) => {
       const doc = t as Record<string, unknown>;
-      let staleness = { isStale: false, reasons: [] as string[] };
-      if (doc.status === "published" || doc.status === "draft") {
-        staleness = await checkTranslationStaleness(doc);
-      }
-      results.push({
+      const id = String(doc._id);
+      const staleness = stalenessMap.get(id) ?? { isStale: false, reasons: [] };
+      return {
         ...doc,
-        id: String(doc._id),
+        id,
         _id: undefined,
         __v: undefined,
         isStale: staleness.isStale,
         stalenessReasons: staleness.reasons,
-      });
-    }
+      };
+    });
 
     return NextResponse.json({ success: true, translations: results });
   } catch (error) {
