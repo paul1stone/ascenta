@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Languages, RefreshCw, ChevronRight, AlertTriangle } from "lucide-react";
+import { Loader2, Languages, RefreshCw, ChevronRight, AlertTriangle, Pencil, Check } from "lucide-react";
 import { cn } from "@ascenta/ui";
 import { TRANSLATION_STATUS_LABELS } from "@ascenta/db/strategy-translation-constants";
 import { TranslationRolePreview } from "./translation-role-preview";
@@ -48,6 +48,14 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
   const [generating, setGenerating] = useState<string | null>(null);
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editRoles, setEditRoles] = useState<Role[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [regeneratingSection, setRegeneratingSection] = useState<{
+    translationId: string;
+    roleIndex: number;
+    section: string;
+  } | null>(null);
 
   const fetchTranslations = useCallback(async () => {
     try {
@@ -127,6 +135,77 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
       body: JSON.stringify({ action: "archive" }),
     });
     fetchTranslations();
+  }
+
+  function handleStartEdit(translation: TranslationData) {
+    setEditingId(translation.id);
+    setEditRoles(JSON.parse(JSON.stringify(translation.roles)));
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setEditRoles([]);
+  }
+
+  async function handleSaveEdit(id: string) {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/plan/strategy-translations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roles: editRoles }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingId(null);
+        setEditRoles([]);
+        fetchTranslations();
+      } else {
+        setError(data.error ?? "Save failed");
+      }
+    } catch {
+      setError("Failed to save edits");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleFieldChange(roleIndex: number, field: string, value: unknown) {
+    setEditRoles((prev) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      const parts = field.split(".");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let target: any = updated[roleIndex];
+      for (let i = 0; i < parts.length - 1; i++) {
+        target = target[parts[i]];
+      }
+      target[parts[parts.length - 1]] = value;
+      return updated;
+    });
+  }
+
+  async function handleRegenerateSection(
+    translationId: string,
+    roleIndex: number,
+    section: "contributions" | "behaviors" | "decisionRights",
+  ) {
+    setRegeneratingSection({ translationId, roleIndex, section });
+    try {
+      const res = await fetch(`/api/plan/strategy-translations/${translationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "regenerateSection", roleIndex, section }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.error ?? "Regeneration failed");
+      }
+      await fetchTranslations();
+    } catch {
+      setError("Section regeneration failed");
+    } finally {
+      setRegeneratingSection(null);
+    }
   }
 
   if (loading) {
@@ -211,7 +290,13 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
               return (
                 <div key={dept} className="rounded-xl border bg-white shadow-sm overflow-hidden">
                   <button
-                    onClick={() => setExpandedDept(isExpanded ? null : dept)}
+                    onClick={() => {
+                      if (isExpanded && editingId === translation.id) {
+                        if (!confirm("You have unsaved edits. Discard changes?")) return;
+                        handleCancelEdit();
+                      }
+                      setExpandedDept(isExpanded ? null : dept);
+                    }}
                     className="flex w-full items-center gap-3 px-5 py-4 text-left"
                   >
                     <span className="flex-1 font-display text-sm font-semibold text-deep-blue">
@@ -267,7 +352,35 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                             )}
                             Regenerate
                           </button>
-                          {translation.status === "draft" && (
+                          {(translation.status === "draft" || translation.status === "published") && editingId !== translation.id && (
+                            <button
+                              onClick={() => handleStartEdit(translation)}
+                              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Pencil className="size-3" />
+                              Edit
+                            </button>
+                          )}
+                          {editingId === translation.id && (
+                            <>
+                              <button
+                                onClick={() => handleSaveEdit(translation.id)}
+                                disabled={saving}
+                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                                style={{ backgroundColor: "#22c55e" }}
+                              >
+                                {saving ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+                                Save
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          )}
+                          {translation.status === "draft" && editingId !== translation.id && (
                             <button
                               onClick={() => handlePublish(translation.id)}
                               className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
@@ -276,7 +389,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                               Publish
                             </button>
                           )}
-                          {translation.status !== "archived" && (
+                          {translation.status !== "archived" && editingId !== translation.id && (
                             <button
                               onClick={() => handleArchive(translation.id)}
                               className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -287,7 +400,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                         </div>
 
                         {/* Role previews */}
-                        {translation.roles.map((role, i) => (
+                        {(editingId === translation.id ? editRoles : translation.roles).map((role, i) => (
                           <TranslationRolePreview
                             key={i}
                             jobTitle={role.jobTitle}
@@ -296,6 +409,17 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                             behaviors={role.behaviors}
                             decisionRights={role.decisionRights}
                             accentColor={accentColor}
+                            editing={editingId === translation.id}
+                            roleIndex={i}
+                            translationId={translation.id}
+                            onFieldChange={editingId === translation.id ? handleFieldChange : undefined}
+                            onRegenerateSection={editingId !== translation.id ? handleRegenerateSection : undefined}
+                            regeneratingSection={
+                              regeneratingSection?.translationId === translation.id &&
+                              regeneratingSection?.roleIndex === i
+                                ? regeneratingSection.section
+                                : null
+                            }
                           />
                         ))}
                       </div>
