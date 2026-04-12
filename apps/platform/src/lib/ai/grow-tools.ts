@@ -626,10 +626,21 @@ export const startPerformanceReviewTool = tool({
     const checkInSummaries = checkIns.map((c) => ({
       checkInId: c._id,
       completedAt: c.completedAt,
-      managerNotes: [c.managerProgressObserved, c.managerCoachingNeeded, c.managerRecognition]
+      managerNotes: [
+        c.participate?.recognition,
+        c.participate?.development,
+        c.participate?.stuckPointDiscussion,
+        c.managerPrepare?.recognitionNote,
+        c.managerPrepare?.developmentalFocus,
+      ]
         .filter(Boolean)
         .join(" | "),
-      employeeNotes: [c.employeeProgress, c.employeeObstacles, c.employeeSupportNeeded]
+      employeeNotes: [
+        c.employeePrepare?.progressReflection,
+        c.employeePrepare?.stuckPointReflection,
+        c.participate?.employeeOpening,
+        c.participate?.employeeKeyTakeaways,
+      ]
         .filter(Boolean)
         .join(" | "),
     }));
@@ -1130,16 +1141,17 @@ export const completeGrowWorkflowTool = tool({
           goals: goalIds,
           employee: employee.id,
           manager: employee.id, // default to same; can be updated later
-          dueDate: new Date(),
+          scheduledAt: new Date(),
           completedAt: new Date(),
-          managerProgressObserved: (inputs.managerProgressObserved as string) ?? null,
-          managerCoachingNeeded: (inputs.managerCoachingNeeded as string) ?? null,
-          managerRecognition: (inputs.managerRecognition as string) ?? null,
-          employeeProgress: (inputs.employeeProgress as string) ?? null,
-          employeeObstacles: (inputs.employeeObstacles as string) ?? null,
-          employeeSupportNeeded: (inputs.employeeSupportNeeded as string) ?? null,
+          participate: {
+            stuckPointDiscussion: (inputs.managerCoachingNeeded as string) ?? null,
+            recognition: (inputs.managerRecognition as string) ?? null,
+            development: (inputs.managerProgressObserved as string) ?? null,
+            employeeOpening: (inputs.employeeProgress as string) ?? null,
+            employeeKeyTakeaways: (inputs.employeeObstacles as string) ?? null,
+            managerCommitment: (inputs.employeeSupportNeeded as string) ?? null,
+          },
           status: "completed",
-          workflowRunId: runId,
         });
         const checkInObj = checkIn.toJSON() as Record<string, unknown>;
         recordId = checkInObj.id as string;

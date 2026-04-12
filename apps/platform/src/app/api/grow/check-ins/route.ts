@@ -36,16 +36,17 @@ export async function POST(req: NextRequest) {
       goals: data.linkedGoals,
       employee: employee.id,
       manager: employee.id,
-      dueDate: new Date(),
+      scheduledAt: new Date(),
       completedAt: new Date(),
-      managerProgressObserved: data.managerProgressObserved,
-      managerCoachingNeeded: data.managerCoachingNeeded,
-      managerRecognition: data.managerRecognition ?? null,
-      employeeProgress: data.employeeProgress,
-      employeeObstacles: data.employeeObstacles,
-      employeeSupportNeeded: data.employeeSupportNeeded ?? null,
+      participate: {
+        stuckPointDiscussion: data.managerCoachingNeeded,
+        recognition: data.managerRecognition ?? null,
+        development: data.managerProgressObserved,
+        employeeOpening: data.employeeProgress,
+        employeeKeyTakeaways: data.employeeObstacles,
+        managerCommitment: data.employeeSupportNeeded ?? null,
+      },
       status: "completed",
-      workflowRunId: effectiveRunId,
     });
 
     const checkInObj = checkIn.toJSON() as Record<string, unknown>;

@@ -1,45 +1,96 @@
-/**
- * CheckIn Schema (Mongoose)
- * Tracks scheduled check-ins between managers and employees for goal progress.
- */
-
-import mongoose, { Schema, Types } from "mongoose";
-
-// ============================================================================
-// SHARED
-// ============================================================================
-
-const toJSONOptions = {
-  virtuals: true,
-  transform(_doc: unknown, ret: Record<string, unknown>) {
-    ret.id = String(ret._id);
-    delete ret._id;
-    delete ret.__v;
-    return ret;
-  },
-};
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
+import mongoose, { Schema, type Document, type Types } from "mongoose";
 
 export const CHECKIN_STATUSES = [
-  "scheduled",
+  "preparing",
+  "ready",
+  "in_progress",
+  "reflecting",
   "completed",
   "missed",
   "cancelled",
 ] as const;
 
-// ============================================================================
-// CHECKIN SCHEMA
-// ============================================================================
+export type CheckInStatus = (typeof CHECKIN_STATUSES)[number];
 
-const checkInSchema = new Schema(
+export const CADENCE_SOURCES = ["auto", "manual"] as const;
+
+const EmployeePrepareSchema = new Schema(
   {
-    goals: {
-      type: [{ type: Schema.Types.ObjectId, ref: "Goal" }],
-      required: true,
-    },
+    progressReflection: { type: String, default: null },
+    stuckPointReflection: { type: String, default: null },
+    conversationIntent: { type: String, default: null },
+    completedAt: { type: Date, default: null },
+    distilledPreview: { type: String, default: null },
+  },
+  { _id: false }
+);
+
+const ManagerPrepareSchema = new Schema(
+  {
+    contextBriefingViewed: { type: Boolean, default: false },
+    gapRecoveryViewed: { type: Boolean, default: false },
+    openingMove: { type: String, default: null },
+    recognitionNote: { type: String, default: null },
+    developmentalFocus: { type: String, default: null },
+    completedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const ParticipateSchema = new Schema(
+  {
+    employeeOpening: { type: String, default: null },
+    employeeKeyTakeaways: { type: String, default: null },
+    stuckPointDiscussion: { type: String, default: null },
+    recognition: { type: String, default: null },
+    development: { type: String, default: null },
+    performance: { type: String, default: null },
+    employeeCommitment: { type: String, default: null },
+    managerCommitment: { type: String, default: null },
+    employeeApprovedManagerCommitment: { type: Boolean, default: null },
+    managerApprovedEmployeeCommitment: { type: Boolean, default: null },
+    completedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const EmployeeReflectSchema = new Schema(
+  {
+    heard: { type: Number, default: null, min: 1, max: 5 },
+    clarity: { type: Number, default: null, min: 1, max: 5 },
+    recognition: { type: Number, default: null, min: 1, max: 5 },
+    development: { type: Number, default: null, min: 1, max: 5 },
+    safety: { type: Number, default: null, min: 1, max: 5 },
+    completedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const ManagerReflectSchema = new Schema(
+  {
+    clarity: { type: Number, default: null, min: 1, max: 5 },
+    recognition: { type: Number, default: null, min: 1, max: 5 },
+    development: { type: Number, default: null, min: 1, max: 5 },
+    safety: { type: Number, default: null, min: 1, max: 5 },
+    forwardAction: { type: String, default: null },
+    completedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const GapSignalsSchema = new Schema(
+  {
+    clarity: { type: Number, default: null },
+    recognition: { type: Number, default: null },
+    development: { type: Number, default: null },
+    safety: { type: Number, default: null },
+    generatedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const CheckInSchema = new Schema(
+  {
     employee: {
       type: Schema.Types.ObjectId,
       ref: "Employee",
@@ -52,57 +103,115 @@ const checkInSchema = new Schema(
       required: true,
       index: true,
     },
-    dueDate: { type: Date, required: true, index: true },
-    completedAt: { type: Date, default: null },
-    managerProgressObserved: { type: String, default: null },
-    managerCoachingNeeded: { type: String, default: null },
-    managerRecognition: { type: String, default: null },
-    employeeProgress: { type: String, default: null },
-    employeeObstacles: { type: String, default: null },
-    employeeSupportNeeded: { type: String, default: null },
+    goals: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Goal",
+        required: true,
+      },
+    ],
+    scheduledAt: { type: Date, required: true, index: true },
+    cadenceSource: {
+      type: String,
+      enum: CADENCE_SOURCES,
+      default: "manual",
+    },
     status: {
       type: String,
-      required: true,
       enum: CHECKIN_STATUSES,
-      default: "scheduled",
+      required: true,
+      default: "preparing",
       index: true,
     },
-    workflowRunId: { type: String, default: null },
+    employeePrepare: { type: EmployeePrepareSchema, default: () => ({}) },
+    managerPrepare: { type: ManagerPrepareSchema, default: () => ({}) },
+    participate: { type: ParticipateSchema, default: () => ({}) },
+    employeeReflect: { type: EmployeeReflectSchema, default: () => ({}) },
+    managerReflect: { type: ManagerReflectSchema, default: () => ({}) },
+    gapSignals: { type: GapSignalsSchema, default: () => ({}) },
+    completedAt: { type: Date, default: null },
+    previousCheckInId: {
+      type: Schema.Types.ObjectId,
+      ref: "CheckIn",
+      default: null,
+    },
   },
   {
     timestamps: true,
-    toJSON: toJSONOptions,
-    toObject: toJSONOptions,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Compound indexes
-checkInSchema.index({ employee: 1, dueDate: 1 });
-checkInSchema.index({ status: 1, dueDate: 1 });
-checkInSchema.index({ manager: 1, status: 1 });
+CheckInSchema.index({ employee: 1, scheduledAt: -1 });
+CheckInSchema.index({ manager: 1, status: 1 });
+CheckInSchema.index({ status: 1, scheduledAt: 1 });
+CheckInSchema.index({ employee: 1, manager: 1, status: 1 });
 
-export const CheckIn =
-  mongoose.models.CheckIn || mongoose.model("CheckIn", checkInSchema);
-
-// ============================================================================
-// TYPE ALIASES
-// ============================================================================
-
-export type CheckIn_Type = {
-  id: string;
-  goals: Types.ObjectId[];
+export interface CheckIn_Type extends Document {
   employee: Types.ObjectId;
   manager: Types.ObjectId;
-  dueDate: Date;
+  goals: Types.ObjectId[];
+  scheduledAt: Date;
+  cadenceSource: "auto" | "manual";
+  status: CheckInStatus;
+  employeePrepare: {
+    progressReflection: string | null;
+    stuckPointReflection: string | null;
+    conversationIntent: string | null;
+    completedAt: Date | null;
+    distilledPreview: string | null;
+  };
+  managerPrepare: {
+    contextBriefingViewed: boolean;
+    gapRecoveryViewed: boolean;
+    openingMove: string | null;
+    recognitionNote: string | null;
+    developmentalFocus: string | null;
+    completedAt: Date | null;
+  };
+  participate: {
+    employeeOpening: string | null;
+    employeeKeyTakeaways: string | null;
+    stuckPointDiscussion: string | null;
+    recognition: string | null;
+    development: string | null;
+    performance: string | null;
+    employeeCommitment: string | null;
+    managerCommitment: string | null;
+    employeeApprovedManagerCommitment: boolean | null;
+    managerApprovedEmployeeCommitment: boolean | null;
+    completedAt: Date | null;
+  };
+  employeeReflect: {
+    heard: number | null;
+    clarity: number | null;
+    recognition: number | null;
+    development: number | null;
+    safety: number | null;
+    completedAt: Date | null;
+  };
+  managerReflect: {
+    clarity: number | null;
+    recognition: number | null;
+    development: number | null;
+    safety: number | null;
+    forwardAction: string | null;
+    completedAt: Date | null;
+  };
+  gapSignals: {
+    clarity: number | null;
+    recognition: number | null;
+    development: number | null;
+    safety: number | null;
+    generatedAt: Date | null;
+  };
   completedAt: Date | null;
-  managerProgressObserved: string | null;
-  managerCoachingNeeded: string | null;
-  managerRecognition: string | null;
-  employeeProgress: string | null;
-  employeeObstacles: string | null;
-  employeeSupportNeeded: string | null;
-  status: (typeof CHECKIN_STATUSES)[number];
-  workflowRunId: string | null;
+  previousCheckInId: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
-};
+}
+
+export const CheckIn =
+  (mongoose.models.CheckIn as mongoose.Model<CheckIn_Type>) ||
+  mongoose.model<CheckIn_Type>("CheckIn", CheckInSchema);

@@ -73,17 +73,17 @@ export async function GET(req: Request) {
 
     const checkInsLast30 = await CheckIn.find({
       employee: { $in: reportIds },
-      dueDate: { $gte: thirtyDaysAgo },
+      scheduledAt: { $gte: thirtyDaysAgo },
     }).lean();
 
     const checkInsLast7 = checkInsLast30.filter(
-      (c) => new Date(c.dueDate as string | number | Date) >= sevenDaysAgo,
+      (c) => new Date(c.scheduledAt as string | number | Date) >= sevenDaysAgo,
     );
 
     const overdueCheckIns = await CheckIn.find({
       employee: { $in: reportIds },
-      status: "scheduled",
-      dueDate: { $lt: now },
+      status: "preparing",
+      scheduledAt: { $lt: now },
     }).lean();
 
     // Build per-employee summary

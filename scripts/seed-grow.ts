@@ -362,71 +362,140 @@ async function main() {
       goals: [goals[0]._id],
       employee: reports[0]._id,
       manager: manager._id,
-      dueDate: daysAgo(7),
+      scheduledAt: daysAgo(7),
       completedAt: daysAgo(6),
       status: "completed" as const,
-      managerProgressObserved:
-        "Resolution time has dropped from 4.2 to 3.8 hours. Good progress on the auto-categorization feature — it's handling about 40% of incoming tickets already.",
-      managerCoachingNeeded:
-        "Consider pairing with the data team to improve the categorization model accuracy. Some mis-routes are adding to resolution time.",
-      managerRecognition:
-        "Great initiative in documenting the triage workflow changes. The team wiki updates have been really helpful for new hires.",
-      employeeProgress:
-        "Auto-categorization is live and handling simple tickets well. Working on expanding coverage to medium-complexity issues next.",
-      employeeObstacles:
-        "The legacy ticketing API has rate limits that slow down batch processing. Need to discuss a caching strategy.",
-      employeeSupportNeeded:
-        "Would benefit from a 30-minute session with the data team to review model accuracy metrics.",
+      employeePrepare: {
+        progressReflection:
+          "Auto-categorization is live and handling simple tickets well. Working on expanding coverage to medium-complexity issues next.",
+        stuckPointReflection:
+          "The legacy ticketing API has rate limits that slow down batch processing. Need to discuss a caching strategy.",
+        conversationIntent:
+          "Want to discuss pairing with the data team for model accuracy improvements.",
+        completedAt: daysAgo(8),
+      },
+      managerPrepare: {
+        contextBriefingViewed: true,
+        gapRecoveryViewed: false,
+        recognitionNote:
+          "Great initiative in documenting the triage workflow changes. The team wiki updates have been really helpful for new hires.",
+        developmentalFocus:
+          "Consider pairing with the data team to improve the categorization model accuracy.",
+        completedAt: daysAgo(8),
+      },
+      participate: {
+        employeeOpening:
+          "Auto-categorization is live and handling simple tickets well.",
+        employeeKeyTakeaways:
+          "Need a caching strategy for the legacy ticketing API rate limits.",
+        stuckPointDiscussion:
+          "Discussed pairing with data team to improve model accuracy. Some mis-routes are adding to resolution time.",
+        recognition:
+          "Great initiative in documenting the triage workflow changes. The team wiki updates have been really helpful for new hires.",
+        development:
+          "Resolution time has dropped from 4.2 to 3.8 hours. Good progress on the auto-categorization feature — handling about 40% of incoming tickets already.",
+        employeeCommitment:
+          "Will set up a 30-minute session with the data team to review model accuracy metrics this week.",
+        managerCommitment:
+          "Will ensure protected time for data team pairing sessions and remove blockers on API rate limiting.",
+        completedAt: daysAgo(7),
+      },
+      employeeReflect: {
+        heard: 5,
+        clarity: 4,
+        recognition: 5,
+        development: 4,
+        safety: 5,
+        completedAt: daysAgo(6),
+      },
+      managerReflect: {
+        clarity: 4,
+        recognition: 5,
+        development: 4,
+        safety: 5,
+        forwardAction:
+          "Follow up on data team pairing session scheduling next 1:1.",
+        completedAt: daysAgo(6),
+      },
     },
     // Completed check-in 2 (for the leadership/collaboration goal)
     {
       goals: [goals[1]._id],
       employee: reports[1]._id,
       manager: manager._id,
-      dueDate: daysAgo(14),
+      scheduledAt: daysAgo(14),
       completedAt: daysAgo(13),
       status: "completed" as const,
-      managerProgressObserved:
-        "Led 2 retrospectives so far. The team feedback has been positive — 88% satisfaction on the last one. Good use of the Start/Stop/Continue format.",
-      managerCoachingNeeded:
-        "Try to draw out quieter team members more actively. Consider using anonymous input tools before the session to get broader participation.",
-      managerRecognition:
-        "The action items from the last retro actually got completed, which is a big improvement from previous quarters. Nice follow-through.",
-      employeeProgress:
-        "Completed 2 of 6 retrospectives. Created a shared template and feedback form that the team seems to like.",
-      employeeObstacles:
-        "Scheduling is tough with the team spread across 3 time zones. May need to alternate meeting times.",
-      employeeSupportNeeded: null,
+      employeePrepare: {
+        progressReflection:
+          "Completed 2 of 6 retrospectives. Created a shared template and feedback form that the team seems to like.",
+        stuckPointReflection:
+          "Scheduling is tough with the team spread across 3 time zones. May need to alternate meeting times.",
+        conversationIntent:
+          "Discuss how to draw out quieter team members and explore anonymous input tools.",
+        completedAt: daysAgo(15),
+      },
+      managerPrepare: {
+        contextBriefingViewed: true,
+        gapRecoveryViewed: false,
+        recognitionNote:
+          "The action items from the last retro actually got completed, which is a big improvement from previous quarters. Nice follow-through.",
+        developmentalFocus:
+          "Try to draw out quieter team members more actively. Consider using anonymous input tools.",
+        completedAt: daysAgo(15),
+      },
+      participate: {
+        employeeOpening:
+          "Completed 2 of 6 retrospectives with positive team feedback.",
+        employeeKeyTakeaways:
+          "Need to alternate meeting times to accommodate 3 time zones and explore anonymous pre-session input.",
+        stuckPointDiscussion:
+          "Time zone scheduling challenges and getting broader participation from quieter members.",
+        recognition:
+          "The action items from the last retro actually got completed — big improvement from previous quarters.",
+        development:
+          "Led 2 retrospectives so far. 88% satisfaction on the last one. Good use of the Start/Stop/Continue format.",
+        employeeCommitment:
+          "Will research anonymous input tools and propose alternating meeting times by next week.",
+        managerCommitment:
+          "Will support schedule changes and provide feedback on facilitation techniques after each session.",
+        completedAt: daysAgo(14),
+      },
+      employeeReflect: {
+        heard: 4,
+        clarity: 4,
+        recognition: 5,
+        development: 4,
+        safety: 5,
+        completedAt: daysAgo(13),
+      },
+      managerReflect: {
+        clarity: 4,
+        recognition: 5,
+        development: 4,
+        safety: 5,
+        forwardAction:
+          "Check in on anonymous input tool selection and schedule changes next week.",
+        completedAt: daysAgo(13),
+      },
     },
-    // Scheduled (future) check-in for the needs_attention goal
+    // Preparing (future) check-in for the needs_attention goal
     {
       goals: [goals[2]._id],
       employee: reports[2]._id,
       manager: manager._id,
-      dueDate: daysFromNow(7),
+      scheduledAt: daysFromNow(7),
       completedAt: null,
-      status: "scheduled" as const,
-      managerProgressObserved: null,
-      managerCoachingNeeded: null,
-      managerRecognition: null,
-      employeeProgress: null,
-      employeeObstacles: null,
-      employeeSupportNeeded: null,
+      status: "preparing" as const,
     },
-    // Overdue check-in (scheduled but past due) for the off_track goal
+    // Overdue check-in (preparing but past due) for the off_track goal
     {
       goals: [goals[3]._id],
       employee: reports[3]._id,
       manager: manager._id,
-      dueDate: daysAgo(5),
+      scheduledAt: daysAgo(5),
       completedAt: null,
-      status: "scheduled" as const,
-      managerProgressObserved: null,
-      managerCoachingNeeded: null,
-      managerRecognition: null,
-      employeeProgress: null,
-      employeeObstacles: null,
-      employeeSupportNeeded: null,
+      status: "preparing" as const,
     },
   ];
 
@@ -434,10 +503,10 @@ async function main() {
   console.log(`Created ${checkIns.length} check-ins:`);
   checkIns.forEach((c) => {
     const overdue =
-      c.status === "scheduled" && new Date(c.dueDate) < new Date()
+      c.status === "preparing" && new Date(c.scheduledAt) < new Date()
         ? " (OVERDUE)"
         : "";
-    console.log(`  - [${c.status}${overdue}] due ${c.dueDate.toLocaleDateString()}`);
+    console.log(`  - [${c.status}${overdue}] scheduled ${c.scheduledAt.toLocaleDateString()}`);
   });
   console.log();
 
