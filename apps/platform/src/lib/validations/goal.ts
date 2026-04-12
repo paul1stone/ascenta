@@ -51,8 +51,7 @@ export const goalFormSchema = z
     goalType: z.enum(GOAL_TYPES, { message: "Goal type is required" }),
     keyResults: z
       .array(keyResultSchema)
-      .min(2, "At least 2 key results are required")
-      .max(4, "No more than 4 key results allowed"),
+      .min(1, "At least 1 key result is required"),
     strategyGoalId: z.string().optional(),
     strategyGoalTitle: z.string().optional(),
     teamGoalId: z.string().optional(),
