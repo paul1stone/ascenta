@@ -11,7 +11,8 @@
     "test": "turbo test",
     "db:seed": "pnpm --filter @ascenta/db db:seed",
     "db:seed-grow": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-grow.ts",
-    "db:seed-strategy": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-strategy.ts"
+    "db:seed-strategy": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-strategy.ts",
+    "db:seed-translations": "npx tsx scripts/seed-strategy-translations.ts"
   },
   "devDependencies": {
     "turbo": "^2"
