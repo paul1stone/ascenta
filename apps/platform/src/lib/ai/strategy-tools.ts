@@ -117,8 +117,6 @@ export const getStrategyBreakdownTool = tool({
             mission: (foundation as Record<string, unknown>).mission,
             vision: (foundation as Record<string, unknown>).vision,
             values: (foundation as Record<string, unknown>).values,
-            nonNegotiableBehaviors: (foundation as Record<string, unknown>).nonNegotiableBehaviors ?? [],
-            livedPrinciples: (foundation as Record<string, unknown>).livedPrinciples ?? [],
           }
         : null,
       companyGoals: (companyGoals as Record<string, unknown>[]).map((g) => ({

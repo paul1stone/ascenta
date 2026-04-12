@@ -13,7 +13,6 @@ Strategic Translation converts high-level organizational strategy into language 
 - [x] Leadership can define the organization's **mission** (why it exists)
 - [x] Leadership can define the organization's **vision** (where it is headed)
 - [x] Leadership can define **core values** that shape culture
-- [x] Leadership can define **non-negotiable behaviors** and lived principles
 - [x] Foundation elements are persisted and serve as cultural anchor for all translated outputs
 
 ## Screen 2: Strategic Priorities
@@ -39,7 +38,7 @@ For each department and function, the translation generates:
 
 - [x] **Role Contribution** — what each role is expected to contribute toward each strategic priority
 - [x] **Outcomes** — measurable results demonstrating alignment between the role and the priority
-- [x] **Behaviors** — observable actions reflecting core values and lived principles within the role context
+- [x] **Behaviors** — observable actions reflecting core values within the role context
 - [x] **Decision Rights** — clarity on what each level of contributor is empowered to decide, recommend, or escalate
 - [x] **Alignment Descriptors** — what strong, acceptable, and poor alignment looks like for each role relative to each priority
 
@@ -49,8 +48,7 @@ Each translated output must be shaped by the pillars in these specific ways:
 
 - [x] **Mission** anchors every role contribution statement to the reason the organization exists
 - [x] **Vision** shapes forward-looking outcomes and growth indicators within each role
-- [x] **Core Values** define behavioral expectations embedded in every role (woven in, not a separate section)
-- [x] **Non-Negotiable Behaviors** set the floor for alignment descriptors (poor alignment defined in part by failure to demonstrate these)
+- [x] **Core Values** define behavioral expectations embedded in every role and set the floor for alignment descriptors (woven in, not a separate section)
 - [x] **Strategic Priorities** determine the substance of each role contribution statement, mapped to priorities and horizons
 - [x] **Planning Horizons** calibrate expectations by timeframe:
   - [x] Short-term priorities produce immediate, tactical role language

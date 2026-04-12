@@ -87,38 +87,6 @@ async function main() {
       "A world where every employee has a clear path to growth, every manager has the tools to lead effectively, and every organization can build a thriving, high-performance culture — powered by AI that amplifies human judgment rather than replacing it.",
     values:
       "People First — Every feature we build starts with the question: does this make someone's work life better?\n\nTransparency by Default — We believe in open communication, clear expectations, and honest feedback at every level.\n\nContinuous Growth — We invest in learning, embrace feedback, and measure progress — for our customers and ourselves.\n\nAccountable Autonomy — We trust our people to own their work, make decisions, and deliver results with integrity.\n\nPragmatic Innovation — We use technology to solve real problems, not to chase trends. AI should make work simpler, not more complex.",
-    nonNegotiableBehaviors: [
-      {
-        name: "Transparency in Decision-Making",
-        description: "Every significant decision must be explainable to anyone affected by it. No black-box choices, no hidden agendas.",
-      },
-      {
-        name: "Psychological Safety in Feedback",
-        description: "Feedback flows in all directions without fear of retaliation. Dissent is welcomed when respectful and constructive.",
-      },
-      {
-        name: "Data Before Opinion",
-        description: "When data is available, it leads the conversation. Gut feel is a starting point, not a conclusion.",
-      },
-      {
-        name: "Follow Through on Commitments",
-        description: "If you commit to something, deliver it or renegotiate early. Ghosting on commitments erodes trust faster than anything else.",
-      },
-    ],
-    livedPrinciples: [
-      {
-        name: "Default to Action Over Consensus",
-        description: "When a decision is reversible and low-risk, move forward. Don't wait for perfect alignment when progress is possible.",
-      },
-      {
-        name: "Own the Outcome, Not Just the Task",
-        description: "Completing your assignment isn't enough. If the outcome isn't right, keep pushing until it is or escalate clearly.",
-      },
-      {
-        name: "Teach What You Learn",
-        description: "Knowledge shared is knowledge multiplied. Document, demo, and debrief so the team levels up together.",
-      },
-    ],
     status: "published",
     publishedAt: daysAgo(30),
   });
@@ -251,8 +219,6 @@ async function main() {
 
   console.log("=== Seed Summary ===");
   console.log(`  Foundation:       1 document (${foundation.status})`);
-  console.log(`    Behaviors:      ${foundation.nonNegotiableBehaviors.length}`);
-  console.log(`    Principles:     ${foundation.livedPrinciples.length}`);
   console.log(`  Strategy Goals:   ${strategyGoals.length} total`);
   console.log(`    Company-wide:   ${companyGoals.length}`);
   console.log(`    Department:     ${deptGoals.length} across ${departments.length} departments (${departments.join(", ")})`);
