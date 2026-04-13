@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, Pencil, Eye, Compass, Download } from "lucide-react";
 import Link from "next/link";
-import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import { MarkdownRenderer } from "@/components/chat/markdown-renderer";
 
 interface FoundationData {
@@ -41,8 +41,8 @@ interface FoundationPanelProps {
 }
 
 export function FoundationPanel({ accentColor }: FoundationPanelProps) {
-  const { role } = useRole();
-  const isAdmin = role === "hr";
+  const { user } = useAuth();
+  const isAdmin = user?.role === "hr";
   const [foundation, setFoundation] = useState<FoundationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
