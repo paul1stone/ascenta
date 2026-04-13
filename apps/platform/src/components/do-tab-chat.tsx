@@ -13,7 +13,7 @@ import { parseWorkflowBlocks } from "@/components/chat/workflow-blocks";
 import { OptionSelectorBlock } from "@/components/chat/option-selector-block";
 import type { PageConfig } from "@/lib/constants/dashboard-nav";
 import type { WorkflowType } from "@/lib/chat/chat-context";
-import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import { getGreeting } from "@/lib/utils/greeting";
 
 const TOOL_KEY_TO_WORKFLOW: Record<string, WorkflowType> = {
@@ -47,7 +47,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
     updateWorkingDocumentFields,
   } = useChat();
 
-  const { persona } = useRole();
+  const { user } = useAuth();
 
   const pageState = getPageState(pageKey);
   const { messages, isLoading, input } = pageState;
@@ -92,7 +92,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
       const wd = parsed.workingDoc;
 
       if (wd.action === "open_working_document" && wd.workflowType) {
-        // Use AI-provided employee info if valid, otherwise fall back to current persona
+        // Use AI-provided employee info if valid, otherwise fall back to current auth user
         const aiEmployeeId = wd.employeeId ?? "";
         const aiEmployeeName = wd.employeeName ?? "";
         const hasValidAiEmployee =
@@ -102,11 +102,11 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
           !aiEmployeeName.toLowerCase().includes("current user");
         const employeeId = hasValidAiEmployee
           ? aiEmployeeId
-          : persona?.id ?? "";
+          : user?.id ?? "";
         const employeeName = hasValidAiEmployee
           ? aiEmployeeName
-          : persona
-            ? `${persona.firstName} ${persona.lastName}`
+          : user
+            ? `${user.firstName} ${user.lastName}`
             : "";
         const prefilled = {
           ...(wd.prefilled ?? {}),
@@ -223,7 +223,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
           {pageConfig.title}
         </p>
         <h1 className="font-display mt-1 text-2xl font-bold text-deep-blue">
-          {getGreeting(persona ? persona.firstName : "there")}
+          {getGreeting(user ? user.firstName : "there")}
         </h1>
 
         {/* Chat input card + tool pills share same width */}
@@ -243,7 +243,7 @@ export function DoTabChat({ pageKey, pageConfig, accentColor }: DoTabChatProps) 
             <div className="mt-4">
               <SuggestPromptPills
                 tools={pageConfig.tools}
-                user={persona}
+                user={user}
                 accentColor={accentColor}
                 onPromptSelect={handlePromptSelect}
                 onDirectOpen={handleDirectOpen}
