@@ -7,10 +7,14 @@
 
 export const REVIEW_STATUSES = [
   "not_started",
-  "in_progress",
+  "in_progress",        // v1 legacy — kept for backward compat
+  "self_in_progress",   // v2: employee has started self-assessment
+  "self_submitted",     // v2: employee submitted, manager now unlocked
+  "manager_in_progress", // v2: manager has started assessment
   "draft_complete",
   "finalized",
-  "shared",
+  "acknowledged",       // v2: employee acknowledged final review
+  "shared",             // v1 legacy — kept for backward compat
 ] as const;
 
 export const REVIEW_STATUS_LABELS: Record<
@@ -19,8 +23,12 @@ export const REVIEW_STATUS_LABELS: Record<
 > = {
   not_started: "Not Started",
   in_progress: "In Progress",
+  self_in_progress: "Self-Assessment In Progress",
+  self_submitted: "Self-Assessment Submitted",
+  manager_in_progress: "Manager Assessment In Progress",
   draft_complete: "Draft Complete",
   finalized: "Finalized",
+  acknowledged: "Acknowledged",
   shared: "Shared",
 };
 
