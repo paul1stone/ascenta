@@ -1,6 +1,7 @@
 import { connectDB } from "@ascenta/db";
 import { CheckIn } from "@ascenta/db/checkin-schema";
 import { NextRequest, NextResponse } from "next/server";
+import { approveCommitmentSchema } from "@/lib/validations/check-in";
 
 export async function POST(
   request: NextRequest,
@@ -36,20 +37,31 @@ export async function POST(
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  // Employee approves manager's commitment
+  const body = await request.json();
+  const parsed = approveCommitmentSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const { approved } = parsed.data;
+
+  // Employee approves/flags manager's commitment
   if (isEmployee) {
-    checkIn.participate.employeeApprovedManagerCommitment = true;
+    checkIn.participate.employeeApprovedManagerCommitment = approved;
   }
 
-  // Manager approves employee's commitment
+  // Manager approves/flags employee's commitment
   if (isManager) {
-    checkIn.participate.managerApprovedEmployeeCommitment = true;
+    checkIn.participate.managerApprovedEmployeeCommitment = approved;
   }
 
-  // If BOTH approved: set completedAt on participate, transition to reflecting
+  // If BOTH approved (true): set completedAt on participate, transition to reflecting
   const bothApproved =
-    checkIn.participate.employeeApprovedManagerCommitment &&
-    checkIn.participate.managerApprovedEmployeeCommitment;
+    checkIn.participate.employeeApprovedManagerCommitment === true &&
+    checkIn.participate.managerApprovedEmployeeCommitment === true;
 
   if (bothApproved) {
     checkIn.participate.completedAt = new Date();
