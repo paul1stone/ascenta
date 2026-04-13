@@ -26,7 +26,6 @@ import {
   type CheckInStatus,
 } from "@ascenta/db/checkin-constants";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useRole } from "@/lib/role/role-context";
 import {
   EmployeeCombobox,
   type EmployeeOption,
@@ -149,8 +148,7 @@ function ScheduleDialog({
   onScheduled: () => void;
 }) {
   const { user } = useAuth();
-  const { role, persona } = useRole();
-  const canSelectEmployee = role === "hr" || role === "manager";
+  const canSelectEmployee = user?.role === "hr" || user?.role === "manager";
 
   const [open, setOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] =
@@ -267,7 +265,7 @@ function ScheduleDialog({
                 value={selectedEmployee?.id ?? null}
                 onChange={setSelectedEmployee}
                 department={
-                  role === "manager" ? persona?.department : undefined
+                  user?.role === "manager" ? user?.department : undefined
                 }
                 selfLabel="Select employee..."
                 className="w-full justify-between"
@@ -379,7 +377,6 @@ function ScheduleDialog({
 
 export function CheckinsPanel({ accentColor }: CheckinsPanelProps) {
   const { user } = useAuth();
-  const { role } = useRole();
   const router = useRouter();
 
   const [checkIns, setCheckIns] = useState<CheckInData[]>([]);
