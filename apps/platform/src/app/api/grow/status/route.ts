@@ -9,7 +9,9 @@ export async function GET(req: Request) {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
-    const managerId = searchParams.get("managerId");
+    const headerUserId = (req.headers as unknown as { get: (key: string) => string | null }).get("x-dev-user-id");
+    // Prefer x-dev-user-id header, fall back to managerId query param for backwards compat
+    const managerId = headerUserId || searchParams.get("managerId");
 
     type ManagerDoc = { _id: unknown; firstName: string; lastName: string; employeeId: string };
 
@@ -73,17 +75,17 @@ export async function GET(req: Request) {
 
     const checkInsLast30 = await CheckIn.find({
       employee: { $in: reportIds },
-      dueDate: { $gte: thirtyDaysAgo },
+      scheduledAt: { $gte: thirtyDaysAgo },
     }).lean();
 
     const checkInsLast7 = checkInsLast30.filter(
-      (c) => new Date(c.dueDate as string | number | Date) >= sevenDaysAgo,
+      (c) => new Date(c.scheduledAt as string | number | Date) >= sevenDaysAgo,
     );
 
     const overdueCheckIns = await CheckIn.find({
       employee: { $in: reportIds },
-      status: "scheduled",
-      dueDate: { $lt: now },
+      status: "preparing",
+      scheduledAt: { $lt: now },
     }).lean();
 
     // Build per-employee summary

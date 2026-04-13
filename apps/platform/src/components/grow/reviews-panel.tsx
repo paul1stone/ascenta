@@ -15,7 +15,7 @@ import {
 } from "@ascenta/db/performance-review-constants";
 import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
-import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 
 interface ReviewEntry {
@@ -61,8 +61,10 @@ function getAvailablePeriods(): string[] {
 }
 
 export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsPanelProps) {
-  const { persona, loading: roleLoading } = useRole();
-  const managerId = persona?.employeeId ?? "";
+  const { user, loading: authLoading } = useAuth();
+  // /api/grow/reviews queries Employee.findOne({ employeeId: ... }), so we must
+  // pass the EMP-style employeeId string here, not the Mongo ObjectId (user.id).
+  const managerId = user?.employeeId ?? "";
 
   const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   const [aggregates, setAggregates] = useState<ReviewAggregates>({
@@ -78,8 +80,11 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   const fetchReviews = useCallback(async () => {
     setIsLoading(true);
     try {
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
       const res = await fetch(
         `/api/grow/reviews?managerId=${managerId}&period=${period}`,
+        { headers },
       );
       if (res.ok) {
         const data = await res.json();
@@ -96,12 +101,12 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   }, [managerId, period]);
 
   useEffect(() => {
-    if (managerId && !roleLoading) {
+    if (managerId && !authLoading) {
       fetchReviews();
-    } else if (!roleLoading) {
+    } else if (!authLoading) {
       setIsLoading(false);
     }
-  }, [managerId, roleLoading, fetchReviews]);
+  }, [managerId, authLoading, fetchReviews]);
 
   const handleStartReview = (employeeName: string, employeeId: string) => {
     onSwitchToDoTab?.();

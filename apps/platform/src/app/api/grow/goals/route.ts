@@ -33,10 +33,10 @@ export async function GET(req: NextRequest) {
     // Look up the most recent check-in date for each goal
     const goalIds = goals.map((g) => g._id);
     const latestCheckIns = await CheckIn.aggregate([
-      { $match: { goalIds: { $in: goalIds } } },
-      { $unwind: "$goalIds" },
-      { $match: { goalIds: { $in: goalIds } } },
-      { $group: { _id: "$goalIds", lastCheckInDate: { $max: "$createdAt" } } },
+      { $match: { goals: { $in: goalIds } } },
+      { $unwind: "$goals" },
+      { $match: { goals: { $in: goalIds } } },
+      { $group: { _id: "$goals", lastCheckInDate: { $max: "$createdAt" } } },
     ]);
     const checkInMap = new Map(
       latestCheckIns.map((c: { _id: unknown; lastCheckInDate: Date }) => [

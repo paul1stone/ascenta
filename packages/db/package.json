@@ -14,6 +14,7 @@
     "./documents": "./src/documents.ts",
     "./tracked-documents": "./src/tracked-documents.ts",
     "./employees": "./src/employees.ts",
+    "./checkin-constants": "./src/checkin-constants.ts",
     "./checkin-schema": "./src/checkin-schema.ts",
     "./goal-constants": "./src/goal-constants.ts",
     "./goal-schema": "./src/goal-schema.ts",
@@ -25,7 +26,8 @@
     "./strategy-translation-constants": "./src/strategy-translation-constants.ts",
     "./strategy-translation-schema": "./src/strategy-translation-schema.ts",
     "./performance-review-constants": "./src/performance-review-constants.ts",
-    "./performance-review-schema": "./src/performance-review-schema.ts"
+    "./performance-review-schema": "./src/performance-review-schema.ts",
+    "./notification-schema": "./src/notification-schema.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"

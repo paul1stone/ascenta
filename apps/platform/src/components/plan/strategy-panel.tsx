@@ -15,7 +15,7 @@ import { STRATEGY_HORIZON_LABELS } from "@ascenta/db/strategy-goal-constants";
 import { StrategyGoalForm } from "./strategy-goal-form";
 import type { StrategyGoalData } from "./strategy-goal-card";
 import Link from "next/link";
-import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface StrategyPanelProps {
   accentColor: string;
@@ -62,9 +62,9 @@ function formatTimePeriod(start: string, end: string): string {
 }
 
 export function StrategyPanel({ accentColor }: StrategyPanelProps) {
-  const { role, persona } = useRole();
-  const canCreate = role === "hr" || role === "manager";
-  const canEditAll = role === "hr";
+  const { user } = useAuth();
+  const canCreate = user?.role === "hr" || user?.role === "manager";
+  const canEditAll = user?.role === "hr";
 
   const [goals, setGoals] = useState<StrategyGoalData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,10 +116,10 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
       : goals.filter((g) => g.scope === "department");
 
   const visibleGoals =
-    role === "employee"
+    user?.role === "employee"
       ? filteredGoals.filter(
           (g) =>
-            g.scope === "company" || g.department === persona?.department,
+            g.scope === "company" || g.department === user?.department,
         )
       : filteredGoals;
 
@@ -162,9 +162,9 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
   function canEditGoal(goal: StrategyGoalData) {
     return (
       canEditAll ||
-      (role === "manager" &&
+      (user?.role === "manager" &&
         goal.scope === "department" &&
-        goal.department === persona?.department)
+        goal.department === user?.department)
     );
   }
 

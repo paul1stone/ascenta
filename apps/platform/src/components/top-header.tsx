@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@ascenta/ui/button";
-import { Settings, CircleUser } from "lucide-react";
+import { Settings } from "lucide-react";
 import { NotificationCenter } from "@/components/notification-center";
-import { RoleSwitcher } from "@/components/role-switcher";
+import { UserPicker } from "@/components/auth/user-picker";
 
 export function TopHeader() {
   return (
@@ -20,14 +20,11 @@ export function TopHeader() {
 
       {/* Right: App actions */}
       <div className="flex items-center gap-1">
-        <RoleSwitcher />
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-deep-blue">
           <Settings className="size-4" />
         </Button>
         <NotificationCenter />
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-deep-blue">
-          <CircleUser className="size-4" />
-        </Button>
+        <UserPicker />
       </div>
     </header>
   );

@@ -17,7 +17,12 @@ import {
   Send,
   Activity,
   CheckCircle,
+  Calendar,
+  PlayCircle,
+  Brain,
+  AlertTriangle,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface Notification {
   id: string;
@@ -27,6 +32,7 @@ interface Notification {
   timestamp: string;
   read: boolean;
   link?: string;
+  checkInId?: string;
 }
 
 function getRelativeTime(timestamp: string): string {
@@ -53,12 +59,23 @@ function getNotificationIcon(type: string) {
       return <Check className="size-4 text-summit" />;
     case "audit_event":
       return <Activity className="size-4 text-slate-500" />;
+    case "prepare_open":
+    case "prepare_reminder":
+      return <Calendar className="size-4 text-sky-500" />;
+    case "checkin_ready":
+      return <PlayCircle className="size-4 text-emerald-500" />;
+    case "reflect_open":
+    case "reflect_reminder":
+      return <Brain className="size-4 text-violet-500" />;
+    case "gap_signal":
+      return <AlertTriangle className="size-4 text-amber-500" />;
     default:
       return <FileText className="size-4 text-slate-500" />;
   }
 }
 
 export function NotificationCenter() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -67,7 +84,9 @@ export function NotificationCenter() {
   async function fetchNotifications() {
     setLoading(true);
     try {
-      const response = await fetch("/api/notifications");
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
+      const response = await fetch("/api/notifications", { headers });
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications);
@@ -77,6 +96,20 @@ export function NotificationCenter() {
       console.error("Failed to fetch notifications:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function markAsRead(notificationId: string) {
+    // Extract the DB id from the composite id (e.g. "checkin-notif-6623...")
+    const dbId = notificationId.replace(/^checkin-notif-/, "");
+    try {
+      await fetch(`/api/notifications/${dbId}/read`, { method: "PATCH" });
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch {
+      // silent
     }
   }
 
@@ -136,7 +169,7 @@ export function NotificationCenter() {
                 const content = (
                   <div
                     key={notification.id}
-                    className="px-4 py-3 border-b last:border-0 hover:bg-slate-50 transition-colors"
+                    className={`px-4 py-3 border-b last:border-0 hover:bg-slate-50 transition-colors ${notification.read ? "opacity-60" : ""}`}
                   >
                     <div className="flex gap-3">
                       <div className="mt-0.5 shrink-0">
@@ -157,12 +190,21 @@ export function NotificationCenter() {
                   </div>
                 );
 
-                if (notification.link) {
+                const notificationLink = notification.checkInId
+                  ? `/grow/check-ins/${notification.checkInId}`
+                  : notification.link;
+
+                if (notificationLink) {
                   return (
                     <Link
                       key={notification.id}
-                      href={notification.link}
-                      onClick={() => setOpen(false)}
+                      href={notificationLink}
+                      onClick={() => {
+                        if (!notification.read) {
+                          markAsRead(notification.id);
+                        }
+                        setOpen(false);
+                      }}
                     >
                       {content}
                     </Link>

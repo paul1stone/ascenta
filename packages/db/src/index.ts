@@ -24,3 +24,4 @@ export * from "./schema";
 export * from "./checkin-schema";
 export * from "./goal-schema";
 export * from "./performance-note-schema";
+export * from "./notification-schema";
