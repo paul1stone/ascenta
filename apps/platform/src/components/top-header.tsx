@@ -3,7 +3,6 @@
 import { Button } from "@ascenta/ui/button";
 import { Settings } from "lucide-react";
 import { NotificationCenter } from "@/components/notification-center";
-import { RoleSwitcher } from "@/components/role-switcher";
 import { UserPicker } from "@/components/auth/user-picker";
 
 export function TopHeader() {
@@ -21,7 +20,6 @@ export function TopHeader() {
 
       {/* Right: App actions */}
       <div className="flex items-center gap-1">
-        <RoleSwitcher />
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-deep-blue">
           <Settings className="size-4" />
         </Button>
