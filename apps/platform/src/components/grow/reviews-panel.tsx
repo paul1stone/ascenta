@@ -15,7 +15,6 @@ import {
 } from "@ascenta/db/performance-review-constants";
 import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
-import { useRole } from "@/lib/role/role-context";
 import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 
@@ -62,10 +61,8 @@ function getAvailablePeriods(): string[] {
 }
 
 export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsPanelProps) {
-  const { persona, loading: roleLoading } = useRole();
-  const { user } = useAuth();
-  // Prefer auth user's id; fall back to role persona for backwards compatibility
-  const managerId = user?.id ?? persona?.employeeId ?? "";
+  const { user, loading: authLoading } = useAuth();
+  const managerId = user?.id ?? "";
 
   const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   const [aggregates, setAggregates] = useState<ReviewAggregates>({
@@ -102,12 +99,12 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   }, [managerId, period]);
 
   useEffect(() => {
-    if (managerId && !roleLoading) {
+    if (managerId && !authLoading) {
       fetchReviews();
-    } else if (!roleLoading) {
+    } else if (!authLoading) {
       setIsLoading(false);
     }
-  }, [managerId, roleLoading, fetchReviews]);
+  }, [managerId, authLoading, fetchReviews]);
 
   const handleStartReview = (employeeName: string, employeeId: string) => {
     onSwitchToDoTab?.();
