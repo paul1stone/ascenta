@@ -41,6 +41,24 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
+  // Prevent a party from re-submitting their reflection and overwriting
+  // their own scores while the other side hasn't completed yet. The status
+  // guard above already blocks edits once the check-in is "completed", but
+  // during the "reflecting" window only the first submission per side
+  // should be honored.
+  if (isEmployee && checkIn.employeeReflect?.completedAt) {
+    return NextResponse.json(
+      { error: "You have already submitted your reflection" },
+      { status: 409 },
+    );
+  }
+  if (isManager && checkIn.managerReflect?.completedAt) {
+    return NextResponse.json(
+      { error: "You have already submitted your reflection" },
+      { status: 409 },
+    );
+  }
+
   const body = await request.json();
 
   if (isEmployee) {

@@ -134,13 +134,17 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Compute gap signals for completed check-ins missing them
+    // 3. Compute gap signals for completed check-ins missing them.
+    // Uses findOneAndUpdate with the `gapSignals.generatedAt: null` guard
+    // in the filter so two concurrent cron runs can't double-write — the
+    // first update flips generatedAt non-null, and the second update's
+    // filter no longer matches.
     const needsGaps = await CheckIn.find({
       status: "completed",
       "employeeReflect.completedAt": { $ne: null },
       "managerReflect.completedAt": { $ne: null },
       "gapSignals.generatedAt": null,
-    });
+    }).lean();
 
     for (const checkIn of needsGaps) {
       const gaps = computeGapSignals(
@@ -159,13 +163,20 @@ export async function GET(request: Request) {
         },
       );
 
-      checkIn.gapSignals.clarity = gaps.clarity;
-      checkIn.gapSignals.recognition = gaps.recognition;
-      checkIn.gapSignals.development = gaps.development;
-      checkIn.gapSignals.safety = gaps.safety;
-      checkIn.gapSignals.generatedAt = new Date();
-      await checkIn.save();
-      results.gapsComputed++;
+      const updated = await CheckIn.findOneAndUpdate(
+        { _id: checkIn._id, "gapSignals.generatedAt": null },
+        {
+          $set: {
+            "gapSignals.clarity": gaps.clarity,
+            "gapSignals.recognition": gaps.recognition,
+            "gapSignals.development": gaps.development,
+            "gapSignals.safety": gaps.safety,
+            "gapSignals.generatedAt": new Date(),
+          },
+        },
+        { new: true },
+      );
+      if (updated) results.gapsComputed++;
     }
 
     return NextResponse.json({ success: true, ...results });

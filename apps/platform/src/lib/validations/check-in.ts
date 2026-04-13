@@ -6,11 +6,25 @@ export const employeePrepareSchema = z.object({
   conversationIntent: z.string().min(1, "Conversation intent is required"),
 });
 
-export const managerPrepareSchema = z.object({
-  openingMove: z.string().nullable().optional(),
-  recognitionNote: z.string().nullable().optional(),
-  developmentalFocus: z.string().nullable().optional(),
-});
+// A manager "completing" preparation must fill in at least one field. Without
+// this refine, a manager could POST {} and flip the check-in status to
+// "ready" without having actually prepared anything.
+export const managerPrepareSchema = z
+  .object({
+    openingMove: z.string().nullable().optional(),
+    recognitionNote: z.string().nullable().optional(),
+    developmentalFocus: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) =>
+      Boolean(data.openingMove) ||
+      Boolean(data.recognitionNote) ||
+      Boolean(data.developmentalFocus),
+    {
+      message:
+        "Fill in at least one preparation field (opening move, recognition, or developmental focus)",
+    },
+  );
 
 export const participateManagerSchema = z.object({
   stuckPointDiscussion: z.string().min(1, "Stuck point discussion is required"),
