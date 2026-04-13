@@ -8,7 +8,11 @@ export type AuthUser = {
   id: string;
   employeeId: string;
   name: string;
+  firstName: string;
+  lastName: string;
   role: UserRole;
+  title: string;
+  department: string;
   managerId?: string;
   directReports?: string[];
 };

@@ -66,7 +66,11 @@ export async function GET(request: NextRequest) {
       id: employee._id.toString(),
       employeeId: employee.employeeId,
       name: `${employee.firstName} ${employee.lastName}`,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
       role,
+      title: employee.jobTitle,
+      department: employee.department,
       managerId,
       directReports: hasDirectReports
         ? directReports.map((r) => r._id.toString())
