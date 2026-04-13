@@ -14,6 +14,7 @@ import { DoTabChat } from "@/components/do-tab-chat";
 import { LearnPanel } from "@/components/grow/learn-panel";
 import { GoalsPanel } from "@/components/grow/goals-panel";
 import { ReviewsPanel } from "@/components/grow/reviews-panel";
+import { CheckinsPanel } from "@/components/grow/checkins-panel";
 
 export default function CategorySubPage({
   params,
@@ -67,6 +68,8 @@ export default function CategorySubPage({
         </div>
       ) : activeTab === "goals" ? (
         <GoalsPanel accentColor={ctx.category.color} />
+      ) : activeTab === "checkins" ? (
+        <CheckinsPanel accentColor={ctx.category.color} />
       ) : activeTab === "reviews" ? (
         <div className="flex-1 overflow-y-auto p-6">
           <ReviewsPanel
