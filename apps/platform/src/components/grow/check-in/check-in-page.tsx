@@ -6,6 +6,13 @@ import { cn } from "@ascenta/ui";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "next/navigation";
 import { PhaseStepper } from "./phase-stepper";
+import { PrepareEmployee } from "./prepare-employee";
+import { PrepareManager } from "./prepare-manager";
+import { ParticipateManager } from "./participate-manager";
+import { ParticipateEmployee } from "./participate-employee";
+import { ReflectEmployee } from "./reflect-employee";
+import { ReflectManager } from "./reflect-manager";
+import { GapSignals } from "./gap-signals";
 import {
   CHECKIN_STATUS_LABELS,
   type CheckInStatus,
@@ -278,43 +285,56 @@ export function CheckInPage({ checkInId }: { checkInId: string }) {
           </div>
         )}
 
-        {/* Phase content placeholders */}
+        {/* Phase content */}
         <div className="rounded-xl border bg-white p-6 shadow-sm">
-          {checkIn.status === "preparing" && isManager && (
-            <div className="text-sm text-muted-foreground">
-              Prepare Manager View — coming soon
-            </div>
-          )}
           {checkIn.status === "preparing" && !isManager && (
-            <div className="text-sm text-muted-foreground">
-              Prepare Employee View — coming soon
-            </div>
+            <PrepareEmployee checkIn={checkIn} onComplete={refreshData} />
+          )}
+          {checkIn.status === "preparing" && isManager && (
+            <PrepareManager checkIn={checkIn} onComplete={refreshData} />
           )}
           {(checkIn.status === "ready" || checkIn.status === "in_progress") &&
             isManager && (
-              <div className="text-sm text-muted-foreground">
-                Participate Manager View — coming soon
-              </div>
+              <ParticipateManager
+                checkIn={checkIn}
+                onSave={refreshData}
+                onComplete={refreshData}
+              />
             )}
           {(checkIn.status === "ready" || checkIn.status === "in_progress") &&
             !isManager && (
-              <div className="text-sm text-muted-foreground">
-                Participate Employee View — coming soon
-              </div>
+              <ParticipateEmployee
+                checkIn={checkIn}
+                onSave={refreshData}
+                onComplete={refreshData}
+              />
             )}
-          {checkIn.status === "reflecting" && isManager && (
-            <div className="text-sm text-muted-foreground">
-              Reflect Manager View — coming soon
-            </div>
-          )}
           {checkIn.status === "reflecting" && !isManager && (
-            <div className="text-sm text-muted-foreground">
-              Reflect Employee View — coming soon
+            <ReflectEmployee checkIn={checkIn} onComplete={refreshData} />
+          )}
+          {checkIn.status === "reflecting" && isManager && (
+            <ReflectManager checkIn={checkIn} onComplete={refreshData} />
+          )}
+          {checkIn.status === "completed" && isManager && checkIn.gapSignals && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                Gap Signals
+              </h3>
+              <GapSignals gaps={checkIn.gapSignals} />
             </div>
           )}
-          {checkIn.status === "completed" && (
-            <div className="text-sm text-muted-foreground">
-              Completed Summary View — coming soon
+          {checkIn.status === "completed" && !isManager && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="size-12 rounded-full bg-[#44aa99]/10 flex items-center justify-center mb-3">
+                <MessageCircle className="size-6 text-[#44aa99]" />
+              </div>
+              <h3 className="font-display text-lg font-bold text-foreground mb-1">
+                Check-in Complete
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                This check-in has been completed. Thank you for your
+                participation and reflection.
+              </p>
             </div>
           )}
           {isTerminal && (
