@@ -62,7 +62,9 @@ function getAvailablePeriods(): string[] {
 
 export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsPanelProps) {
   const { user, loading: authLoading } = useAuth();
-  const managerId = user?.id ?? "";
+  // /api/grow/reviews queries Employee.findOne({ employeeId: ... }), so we must
+  // pass the EMP-style employeeId string here, not the Mongo ObjectId (user.id).
+  const managerId = user?.employeeId ?? "";
 
   const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   const [aggregates, setAggregates] = useState<ReviewAggregates>({
