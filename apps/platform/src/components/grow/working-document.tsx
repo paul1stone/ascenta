@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback } from "react";
-import { X, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { X, Sparkles, ArrowUpRight } from "lucide-react";
 import { Button } from "@ascenta/ui/button";
 import { useChat, type WorkflowType } from "@/lib/chat/chat-context";
 import { GoalCreationForm } from "@/components/grow/forms/goal-creation-form";
-import { CheckInForm } from "@/components/grow/forms/check-in-form";
 import { PerformanceNoteForm } from "@/components/grow/forms/performance-note-form";
 import { MVVForm } from "@/components/plan/mvv-form";
 import { StrategyBriefPanel } from "@/components/strategy/strategy-brief-panel";
@@ -102,13 +102,23 @@ export function WorkingDocument({ pageKey, accentColor }: WorkingDocumentProps) 
           )}
 
           {workingDocument.workflowType === "run-check-in" && (
-            <CheckInForm
-              initialValues={workingDocument.fields}
-              availableGoals={workingDocument.availableGoals ?? []}
-              onFieldChange={updateWorkingDocumentField}
-              onSubmit={handleSubmit}
-              onCancel={closeWorkingDocument}
-            />
+            <div className="p-6 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Check-in has been scheduled.
+              </p>
+              <p className="text-sm mb-4">
+                View and manage this check-in from the dedicated check-in page.
+              </p>
+              {typeof workingDocument.fields?.checkInId === "string" && (
+                <Link
+                  href={`/grow/check-ins/${workingDocument.fields.checkInId}`}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  Open Check-in
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
+              )}
+            </div>
           )}
 
           {workingDocument.workflowType === "add-performance-note" && (

@@ -1,3 +1,6 @@
+// DEPRECATED: This form is no longer used for the check-in lifecycle.
+// Check-ins now use the dedicated page at /grow/check-ins/[id].
+// This file is kept for reference during migration and can be removed once confirmed.
 "use client";
 
 import { useEffect } from "react";
