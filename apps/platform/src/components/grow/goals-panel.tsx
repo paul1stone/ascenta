@@ -23,6 +23,7 @@ import {
   type EmployeeOption,
 } from "@/components/grow/employee-combobox";
 import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import Link from "next/link";
 
 interface KeyResult {
@@ -92,7 +93,8 @@ function formatDate(dateStr: string): string {
 
 export function GoalsPanel({ accentColor }: GoalsPanelProps) {
   const { role, persona, loading: roleLoading } = useRole();
-  const canViewOthers = role === "hr" || role === "manager";
+  const { user } = useAuth();
+  const canViewOthers = user?.role === "manager" || user?.role === "hr" || role === "hr" || role === "manager";
 
   const [goals, setGoals] = useState<GoalData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,8 +106,8 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
   const [suggestedOutcomes, setSuggestedOutcomes] = useState<SuggestedOutcome[]>([]);
   const [showAllOutcomes, setShowAllOutcomes] = useState(false);
 
-  // The employee whose goals we're viewing
-  const viewingEmployeeId = selectedEmployee?.id ?? persona?.id;
+  // The employee whose goals we're viewing — prefer auth user's employeeId for self-view
+  const viewingEmployeeId = selectedEmployee?.id ?? persona?.id ?? user?.employeeId;
   const viewingEmployeeName = selectedEmployee
     ? `${selectedEmployee.firstName} ${selectedEmployee.lastName}`
     : persona
@@ -124,8 +126,11 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
       setLoading(true);
       setError(null);
 
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
       const goalsRes = await fetch(
         `/api/grow/goals?employeeId=${viewingEmployeeId}`,
+        { headers },
       );
       const goalsData = await goalsRes.json();
 
@@ -144,8 +149,11 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
   const fetchOutcomes = useCallback(async () => {
     if (!viewingEmployeeId) return;
     try {
+      const outcomeHeaders: Record<string, string> = {};
+      if (user?.id) outcomeHeaders["x-dev-user-id"] = user.id;
       const res = await fetch(
         `/api/grow/suggested-outcomes?employeeId=${viewingEmployeeId}`,
+        { headers: outcomeHeaders },
       );
       if (res.ok) {
         const data = await res.json();
@@ -398,6 +406,7 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                                         method: "PATCH",
                                         headers: {
                                           "Content-Type": "application/json",
+                                          ...(user?.id ? { "x-dev-user-id": user.id } : {}),
                                         },
                                         body: JSON.stringify({
                                           goalId: goal.id,
@@ -418,6 +427,7 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
                                         method: "PATCH",
                                         headers: {
                                           "Content-Type": "application/json",
+                                          ...(user?.id ? { "x-dev-user-id": user.id } : {}),
                                         },
                                         body: JSON.stringify({
                                           goalId: goal.id,

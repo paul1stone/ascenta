@@ -14,6 +14,7 @@ import {
 } from "@ascenta/ui/table";
 import { cn } from "@ascenta/ui";
 import { Users, Target, AlertTriangle, Clock, BarChart2 } from "lucide-react";
+import { useAuth } from "@/lib/auth/auth-context";
 
 // ---------------------------------------------------------------------------
 // Types — mirrors expected API response from /api/grow/status
@@ -218,16 +219,32 @@ interface StatusDashboardProps {
 }
 
 export function StatusDashboard({ managerId }: StatusDashboardProps) {
+  const { user } = useAuth();
   const [data, setData] = useState<StatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Employees see a simplified message — the dashboard is manager-oriented
+  if (user?.role === "employee") {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16">
+        <Target className="mb-3 size-10 text-muted-foreground/50" />
+        <h3 className="text-sm font-medium text-foreground">Team Status Dashboard</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          This view is available for managers. Check the Goals tab to see your own goals.
+        </p>
+      </div>
+    );
+  }
 
   const fetchStatus = async () => {
     setLoading(true);
     setError(null);
     try {
       const params = managerId ? `?managerId=${encodeURIComponent(managerId)}` : "";
-      const res = await fetch(`/api/grow/status${params}`);
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
+      const res = await fetch(`/api/grow/status${params}`, { headers });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(

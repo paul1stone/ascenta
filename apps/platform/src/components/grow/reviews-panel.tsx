@@ -16,6 +16,7 @@ import {
 import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
 import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 
 interface ReviewEntry {
@@ -62,7 +63,9 @@ function getAvailablePeriods(): string[] {
 
 export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsPanelProps) {
   const { persona, loading: roleLoading } = useRole();
-  const managerId = persona?.employeeId ?? "";
+  const { user } = useAuth();
+  // Prefer auth user's id; fall back to role persona for backwards compatibility
+  const managerId = user?.id ?? persona?.employeeId ?? "";
 
   const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   const [aggregates, setAggregates] = useState<ReviewAggregates>({
@@ -78,8 +81,11 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   const fetchReviews = useCallback(async () => {
     setIsLoading(true);
     try {
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
       const res = await fetch(
         `/api/grow/reviews?managerId=${managerId}&period=${period}`,
+        { headers },
       );
       if (res.ok) {
         const data = await res.json();
