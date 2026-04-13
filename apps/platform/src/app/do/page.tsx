@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { DoTabChat } from "@/components/do-tab-chat";
 import { PAGE_CONFIG, DEFAULT_PAGE_CONFIG } from "@/lib/constants/dashboard-nav";
 import { useChat } from "@/lib/chat/chat-context";
-import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 
 const DO_ACCENT_COLOR = "#ff6b35"; // Summit Orange
 
@@ -14,7 +14,7 @@ function DoPageInner() {
   const pageConfig = PAGE_CONFIG["do"] || DEFAULT_PAGE_CONFIG;
   const searchParams = useSearchParams();
   const { setPageInput, sendMessage } = useChat();
-  const { persona } = useRole();
+  const { user } = useAuth();
   const hasSeededRef = useRef(false);
 
   // Pre-seed chat input from URL params (e.g., ?prompt=Help+me+build+our+MVV&tool=buildMVV)
@@ -32,14 +32,14 @@ function DoPageInner() {
       setPageInput("do", prompt);
       // Auto-send after a brief delay to let the component mount
       setTimeout(() => {
-        const employeeInfo = persona
+        const employeeInfo = user
           ? {
-              id: persona.id,
-              employeeId: persona.employeeId,
-              firstName: persona.firstName,
-              lastName: persona.lastName,
-              department: persona.department,
-              title: persona.title,
+              id: user.id,
+              employeeId: user.employeeId,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              department: user.department,
+              title: user.title,
             }
           : undefined;
         const outcomeCtx =
@@ -49,7 +49,7 @@ function DoPageInner() {
         sendMessage("do", prompt, toolKey ?? undefined, employeeInfo, outcomeCtx);
       }, 100);
     }
-  }, [searchParams, setPageInput, sendMessage, persona]);
+  }, [searchParams, setPageInput, sendMessage, user]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
