@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Compass } from "lucide-react";
-import { useRole } from "@/lib/role/role-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import { StrategyContributionCard } from "./strategy-contribution-card";
 import { TeamStrategyTable } from "./team-strategy-table";
 import { TranslationHealthDashboard } from "./translation-health-dashboard";
@@ -50,18 +50,18 @@ interface StrategyData {
 }
 
 export function MyStrategyView() {
-  const { role, persona, loading: roleLoading } = useRole();
+  const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<StrategyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (roleLoading || !persona?.id) return;
+    if (authLoading || !user?.id) return;
 
     async function fetchStrategy() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/plan/my-strategy?employeeId=${persona!.id}`);
+        const res = await fetch(`/api/plan/my-strategy?employeeId=${user!.id}`);
         const json = await res.json();
         if (json.success) {
           setData(json);
@@ -76,9 +76,9 @@ export function MyStrategyView() {
     }
 
     fetchStrategy();
-  }, [persona?.id, roleLoading]);
+  }, [user?.id, authLoading]);
 
-  if (loading || roleLoading) {
+  if (loading || authLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -107,15 +107,15 @@ export function MyStrategyView() {
         </h3>
         <p className="text-sm text-muted-foreground max-w-sm">
           A strategic translation hasn&apos;t been published for your department yet.
-          {role === "hr" && " Go to Strategy Studio \u2192 Translations to generate one."}
+          {user?.role === "hr" && " Go to Strategy Studio \u2192 Translations to generate one."}
         </p>
       </div>
     );
   }
 
   const { employee, myRole, team, departmentTranslationStatus } = data;
-  const isManager = role === "manager" || employee.isManager;
-  const isHR = role === "hr";
+  const isManager = user?.role === "manager" || employee.isManager;
+  const isHR = user?.role === "hr";
   const showAlignment = isManager || isHR;
 
   return (
