@@ -52,7 +52,10 @@ export async function PATCH(
       );
     }
 
-    // Generate distilled preview (stub: first 200 chars of combined reflections)
+    // TODO(check-ins): replace stub with an LLM-generated summary that
+    // preserves the employee's intent without exposing their raw reflections
+    // to the manager. Current stub returns the first 200 characters of the
+    // concatenated reflections, which may leak verbatim content.
     const combined = [
       parsed.data.progressReflection,
       parsed.data.stuckPointReflection,

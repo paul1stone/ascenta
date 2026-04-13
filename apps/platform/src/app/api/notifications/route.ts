@@ -32,6 +32,12 @@ export async function GET(request: NextRequest) {
 
     const allNotifications: NotificationItem[] = [];
 
+    // The first five buckets are workspace-wide activity (not scoped to
+    // a specific user), so they are surfaced as `read: true` — they show
+    // in the feed for context but must not inflate the per-user unread
+    // count. Only the per-user Notification model (bucket 6) claims
+    // unread state.
+
     // 1. Documents acknowledged recently (last 7 days)
     try {
       const acknowledgedDocs = await TrackedDocument.find({
@@ -46,7 +52,7 @@ export async function GET(request: NextRequest) {
           message: `${doc.employeeName} acknowledged '${doc.title}'`,
           link: "/tracker",
           timestamp: doc.acknowledgedAt as Date,
-          read: false,
+          read: true,
         });
       }
     } catch (error) {
@@ -67,7 +73,7 @@ export async function GET(request: NextRequest) {
           message: `'${doc.title}' was sent to ${doc.employeeName}`,
           link: "/tracker",
           timestamp: doc.sentAt as Date,
-          read: false,
+          read: true,
         });
       }
     } catch (error) {
@@ -96,7 +102,7 @@ export async function GET(request: NextRequest) {
           title: "Workflow Completed",
           message: `${workflowName} completed successfully`,
           timestamp: run.completedAt as Date,
-          read: false,
+          read: true,
         });
       }
     } catch (error) {
@@ -122,7 +128,7 @@ export async function GET(request: NextRequest) {
           title: capitalize(event.action as string),
           message: (event.description as string) || `Action: ${event.action}`,
           timestamp: event.timestamp as Date,
-          read: false,
+          read: true,
         });
       }
     } catch (error) {
@@ -150,7 +156,7 @@ export async function GET(request: NextRequest) {
           title: "Goal Pending Review",
           message: `${ownerName} submitted a goal for review: ${g.title}`,
           timestamp: g.createdAt as Date,
-          read: false,
+          read: true,
         });
       }
     } catch {

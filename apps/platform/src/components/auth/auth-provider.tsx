@@ -5,6 +5,14 @@ import { AuthContext, type AuthUser } from "@/lib/auth/auth-context";
 
 const STORAGE_KEY = "ascenta-dev-user-id";
 
+/**
+ * localStorage keys written by the removed RoleProvider. Cleared on first
+ * AuthProvider mount so stale state from pre-migration sessions doesn't
+ * linger in a user's browser. Can be deleted entirely once no active
+ * browsers carry these keys (~30 days post-merge).
+ */
+const LEGACY_KEYS = ["ascenta-role", "ascenta-persona"] as const;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // One-time cleanup of stale keys from the pre-consolidation RoleProvider.
+    for (const key of LEGACY_KEYS) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // localStorage unavailable (SSR, private mode); ignore.
+      }
+    }
+
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       fetchUser(stored);

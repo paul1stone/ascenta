@@ -2,8 +2,21 @@ import { connectDB } from "@ascenta/db";
 import { CheckIn } from "@ascenta/db/checkin-schema";
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
-import { getModel } from "@/lib/ai/providers";
+import { getModel, checkProviderConfig } from "@/lib/ai/providers";
 import { AI_CONFIG } from "@/lib/ai/config";
+
+/**
+ * Pick a default model from whichever AI provider is actually configured.
+ * Prefers OpenAI (default model here is gpt-4o), falls back to Anthropic,
+ * then Ollama. Returns null if nothing is configured so callers can 503.
+ */
+function pickConfiguredModel(): string | null {
+  const { openai, anthropic, ollama } = checkProviderConfig();
+  if (openai) return AI_CONFIG.defaultModels.openai;
+  if (anthropic) return AI_CONFIG.defaultModels.anthropic;
+  if (ollama) return AI_CONFIG.defaultModels.ollama;
+  return null;
+}
 
 const FIELD_PROMPTS: Record<string, string> = {
   openingMove:
@@ -87,8 +100,15 @@ export async function POST(
     }
   }
 
+  const modelId = pickConfiguredModel();
+  if (!modelId) {
+    return NextResponse.json(
+      { error: "No AI provider configured" },
+      { status: 503 },
+    );
+  }
+
   try {
-    const modelId = AI_CONFIG.defaultModels.openai;
     const model = getModel(modelId);
 
     const result = await generateText({

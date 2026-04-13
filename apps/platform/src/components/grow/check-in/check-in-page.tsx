@@ -16,87 +16,9 @@ import { GapSignals } from "./gap-signals";
 import {
   CHECKIN_STATUS_LABELS,
   type CheckInStatus,
+  type CheckInDetailView,
+  type PopulatedRef,
 } from "@ascenta/db/checkin-constants";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface PopulatedRef {
-  _id: string;
-  firstName?: string;
-  lastName?: string;
-  employeeId?: string;
-  objectiveStatement?: string;
-  status?: string;
-  category?: string;
-}
-
-interface CheckInDetail {
-  _id: string;
-  id?: string;
-  employee: PopulatedRef;
-  manager: PopulatedRef;
-  goals: PopulatedRef[];
-  scheduledAt: string;
-  cadenceSource: string;
-  status: CheckInStatus;
-  employeePrepare: {
-    progressReflection: string | null;
-    stuckPointReflection: string | null;
-    conversationIntent: string | null;
-    completedAt: string | null;
-    distilledPreview: string | null;
-  };
-  managerPrepare: {
-    contextBriefingViewed: boolean;
-    gapRecoveryViewed: boolean;
-    openingMove: string | null;
-    recognitionNote: string | null;
-    developmentalFocus: string | null;
-    completedAt: string | null;
-  };
-  participate: {
-    employeeOpening: string | null;
-    employeeKeyTakeaways: string | null;
-    stuckPointDiscussion: string | null;
-    recognition: string | null;
-    development: string | null;
-    performance: string | null;
-    employeeCommitment: string | null;
-    managerCommitment: string | null;
-    employeeApprovedManagerCommitment: boolean | null;
-    managerApprovedEmployeeCommitment: boolean | null;
-    completedAt: string | null;
-  };
-  employeeReflect: {
-    heard: number | null;
-    clarity: number | null;
-    recognition: number | null;
-    development: number | null;
-    safety: number | null;
-    completedAt: string | null;
-  };
-  managerReflect: {
-    clarity: number | null;
-    recognition: number | null;
-    development: number | null;
-    safety: number | null;
-    forwardAction: string | null;
-    completedAt: string | null;
-  };
-  gapSignals: {
-    clarity: number | null;
-    recognition: number | null;
-    development: number | null;
-    safety: number | null;
-    generatedAt: string | null;
-  };
-  completedAt: string | null;
-  previousCheckInId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 // ---------------------------------------------------------------------------
 // Status badge colors
@@ -138,7 +60,7 @@ export function CheckInPage({ checkInId }: { checkInId: string }) {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [checkIn, setCheckIn] = useState<CheckInDetail | null>(null);
+  const [checkIn, setCheckIn] = useState<CheckInDetailView | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
