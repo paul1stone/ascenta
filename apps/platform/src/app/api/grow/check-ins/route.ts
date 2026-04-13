@@ -7,6 +7,10 @@ import { scheduleCheckInSchema } from "@/lib/validations/check-in";
 import { filterCheckInForRole } from "@/lib/check-in/privacy";
 import type { UserRole } from "@/lib/auth/auth-context";
 
+// Escape regex metacharacters so employee names can't inject regex syntax
+// (mirrors the helper in apps/platform/src/app/api/auth/me/route.ts).
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export async function GET(request: NextRequest) {
   const userId = request.headers.get("x-dev-user-id");
   if (!userId) {
@@ -21,10 +25,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Determine role
+  // Determine role — escape user names so regex metacharacters in a name
+  // can't create malformed or catastrophically-backtracking patterns.
   const directReports = await Employee.find({
     managerName: {
-      $regex: new RegExp(`${user.firstName}.*${user.lastName}`, "i"),
+      $regex: new RegExp(
+        `${escapeRegex(user.firstName)}.*${escapeRegex(user.lastName)}`,
+        "i",
+      ),
     },
     status: "active",
   })
@@ -73,9 +81,29 @@ export async function POST(request: NextRequest) {
 
   const { employeeId, goalIds, scheduledAt } = parsed.data;
 
-  const employee = await Employee.findById(employeeId).lean();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const employee = (await Employee.findById(employeeId).lean()) as any;
   if (!employee) {
     return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+  }
+
+  // Authorization: the caller must be the employee's manager. We verify via
+  // managerName substring match (the same mechanism used in GET), scoped to
+  // this specific employee. Names are regex-escaped to prevent injection.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const caller = (await Employee.findById(userId).lean()) as any;
+  if (!caller) {
+    return NextResponse.json({ error: "Caller not found" }, { status: 404 });
+  }
+  const callerNamePattern = new RegExp(
+    `${escapeRegex(caller.firstName)}.*${escapeRegex(caller.lastName)}`,
+    "i",
+  );
+  if (!employee.managerName || !callerNamePattern.test(employee.managerName)) {
+    return NextResponse.json(
+      { error: "Only the employee's manager may schedule check-ins" },
+      { status: 403 },
+    );
   }
 
   const goals = await Goal.find({
