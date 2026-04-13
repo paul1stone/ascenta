@@ -16,7 +16,7 @@ type PickerUser = {
   employeeId: string;
   name: string;
   department: string;
-  jobTitle: string;
+  title: string;
   role: "manager" | "employee" | "hr";
 };
 
@@ -113,7 +113,7 @@ export function UserPicker() {
                 </span>
               </div>
               <div className="text-xs text-muted-foreground">
-                {u.jobTitle} · {u.department}
+                {u.title} · {u.department}
               </div>
             </button>
           ))}
