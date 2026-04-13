@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import {
   TrackedDocument,
@@ -7,8 +7,9 @@ import {
   AuditEvent,
 } from "@ascenta/db/workflow-schema";
 import { Goal } from "@ascenta/db/goal-schema";
+import { Notification as NotificationModel } from "@ascenta/db/notification-schema";
 
-interface Notification {
+interface NotificationItem {
   id: string;
   type: string;
   title: string;
@@ -16,9 +17,10 @@ interface Notification {
   timestamp: Date;
   read: boolean;
   link?: string;
+  checkInId?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -26,7 +28,9 @@ export async function GET() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
 
-    const allNotifications: Notification[] = [];
+    const userId = request.headers.get("x-dev-user-id");
+
+    const allNotifications: NotificationItem[] = [];
 
     // 1. Documents acknowledged recently (last 7 days)
     try {
@@ -151,6 +155,43 @@ export async function GET() {
       }
     } catch {
       // silent
+    }
+
+    // 6. Check-in lifecycle notifications (from Notification model)
+    if (userId) {
+      try {
+        const NOTIFICATION_TITLES: Record<string, string> = {
+          prepare_open: "Check-in Preparation Open",
+          prepare_reminder: "Preparation Reminder",
+          checkin_ready: "Check-in Ready",
+          reflect_open: "Reflection Open",
+          reflect_reminder: "Reflection Reminder",
+          gap_signal: "Gap Signal Detected",
+        };
+
+        const checkInNotifications = await NotificationModel.find({
+          userId,
+          createdAt: { $gt: sevenDaysAgo },
+        })
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .lean();
+
+        for (const n of checkInNotifications) {
+          allNotifications.push({
+            id: `checkin-notif-${n._id}`,
+            type: n.type,
+            title: NOTIFICATION_TITLES[n.type] ?? n.type,
+            message: n.message,
+            timestamp: n.createdAt,
+            read: n.read,
+            link: `/grow/check-ins/${n.checkInId}`,
+            checkInId: String(n.checkInId),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching check-in notifications:", error);
+      }
     }
 
     // Combine all, sort by timestamp desc, limit 20
