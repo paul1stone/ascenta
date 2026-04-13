@@ -342,110 +342,88 @@ export const openGoalDocumentTool = tool({
 
 export const startCheckInTool = tool({
   description:
-    "Open the check-in working document for an employee. Call after getEmployeeInfo and any clarifying questions. You MUST provide a value for EVERY field you can infer from context. The user should only need to review the form, not fill it out.\n\nWhen roleContributions are available in the response, reference the employee's strategic contribution expectations when drafting manager observations. When supportAgreements are present, remind the manager of their committed support for each active goal.",
+    "Schedule a lifecycle check-in for an employee. Creates a check-in record in the database and returns a link to the check-in page. Call after getEmployeeInfo. The check-in follows a prepare → participate → reflect lifecycle rather than a single form.",
   inputSchema: z.object({
     employeeName: z.string().describe("Full name of the employee"),
     employeeId: z.string().describe("Employee ID (e.g. EMP1001) from getEmployeeInfo"),
-    // ALL fields below should be filled — infer from context when not explicit
-    managerProgressObserved: z.string().describe("Manager's observations on the employee's progress — synthesize from conversation context"),
-    managerCoachingNeeded: z.string().describe("What coaching or support the manager sees as needed — infer from discussed challenges or goals"),
-    managerRecognition: z.string().optional().describe("Any recognition or praise for the employee — include if positive context exists, omit if none"),
-    employeeProgress: z.string().describe("Employee's self-reported progress — summarize what the employee/manager shared about accomplishments"),
-    employeeObstacles: z.string().describe("Obstacles the employee is facing — infer from conversation or write 'None identified' if truly unclear"),
-    employeeSupportNeeded: z.string().optional().describe("What support the employee needs — include if mentioned, omit if not discussed"),
+    scheduledAt: z.string().optional().describe("When to schedule the check-in (ISO date string). Defaults to 48 hours from now if omitted."),
   }),
   execute: async (params) => {
-    await ensureWorkflowsSynced();
     await connectDB();
 
     // Look up employee to get ObjectId for goal query
     const employee = await getEmployeeByEmployeeId(params.employeeId);
-
-    // Fetch active goals for this employee
-    let availableGoals: { id: string; title: string }[] = [];
-    if (employee) {
-      const activeGoals = await Goal.find({
-        owner: employee.id,
-        status: { $in: ["on_track", "needs_attention"] },
-      }).lean();
-
-      availableGoals = activeGoals.map((g) => ({
-        id: String(g._id),
-        title: (g as Record<string, unknown>).title as string,
-      }));
+    if (!employee) {
+      return {
+        success: false,
+        message: `Employee ${params.employeeName} (${params.employeeId}) not found.`,
+      };
     }
 
-    // Load translation for strategy context
-    let roleContributions: { strategyGoalTitle: string; roleContribution: string }[] | null = null;
-    if (employee) {
-      try {
-        const translation = await getTranslationForEmployee(
-          (employee as unknown as Record<string, unknown>).department as string,
-          (employee as unknown as Record<string, unknown>).jobTitle as string,
-        );
-        if (translation) {
-          roleContributions = translation.contributions.map((c) => ({
-            strategyGoalTitle: c.strategyGoalTitle,
-            roleContribution: c.roleContribution,
-          }));
-        }
-      } catch {
-        // silent
+    const empRecord = employee as unknown as Record<string, unknown>;
+
+    // Resolve manager from employee's managerName field
+    const managerName = empRecord.managerName as string | undefined;
+    let managerId: string | null = null;
+    if (managerName) {
+      const { Employee } = await import("@ascenta/db/employee-schema");
+      const parts = managerName.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        const mgr = await Employee.findOne({
+          firstName: { $regex: new RegExp(`^${parts[0]}$`, "i") },
+          lastName: { $regex: new RegExp(`^${parts[parts.length - 1]}$`, "i") },
+          status: "active",
+        }).select("_id").lean() as { _id: unknown } | null;
+        if (mgr) managerId = String(mgr._id);
       }
     }
 
-    // Load active goals with support agreements
-    let supportAgreements: { goal: string; support: string }[] = [];
-    if (employee) {
-      const goalsWithSupport = await Goal.find({
-        owner: (employee as unknown as Record<string, unknown>)._id,
-        status: "active",
-        supportAgreement: { $ne: "" },
-      })
-        .select("objectiveStatement supportAgreement")
-        .lean();
-
-      supportAgreements = goalsWithSupport.map((g) => ({
-        goal: (g as Record<string, unknown>).objectiveStatement as string,
-        support: (g as Record<string, unknown>).supportAgreement as string,
-      }));
+    if (!managerId) {
+      return {
+        success: false,
+        message: `Could not resolve manager for ${params.employeeName}. Please ensure the employee has a valid manager assigned.`,
+      };
     }
 
-    const initialInputs: WorkflowInputs = {
-      employeeName: params.employeeName,
-      employeeId: params.employeeId,
-    };
+    // Fetch active goals for this employee
+    const activeGoals = await Goal.find({
+      owner: empRecord._id,
+      status: { $in: ["active", "needs_attention"] },
+    }).select("_id").lean();
 
-    const run = await startWorkflowRun("run-check-in", "system", initialInputs);
-
-    const prefilled: Record<string, unknown> = {
-      employeeName: params.employeeName,
-      employeeId: params.employeeId,
-    };
-    for (const key of [
-      "managerProgressObserved", "managerCoachingNeeded", "managerRecognition",
-      "employeeProgress", "employeeObstacles", "employeeSupportNeeded",
-    ] as const) {
-      if (params[key]) prefilled[key] = params[key];
+    if (activeGoals.length === 0) {
+      return {
+        success: false,
+        message: `${params.employeeName} has no active goals. A check-in requires at least one active goal.`,
+      };
     }
 
-    const workingDocPayload = {
-      action: "open_working_document" as const,
-      workflowType: "run-check-in" as const,
-      runId: run.id,
-      employeeId: params.employeeId,
-      employeeName: params.employeeName,
-      prefilled,
-      availableGoals,
-    };
+    const scheduledDate = params.scheduledAt
+      ? new Date(params.scheduledAt)
+      : new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    // Find previous completed check-in for the loop chain
+    const previousCheckIn = await CheckIn.findOne({
+      employee: empRecord._id,
+      manager: managerId,
+      status: "completed",
+    }).sort({ completedAt: -1 }).select("_id").lean();
+
+    const checkIn = await CheckIn.create({
+      employee: empRecord._id,
+      manager: managerId,
+      goals: activeGoals.map((g) => g._id),
+      scheduledAt: scheduledDate,
+      cadenceSource: "manual",
+      status: "preparing",
+      previousCheckInId: previousCheckIn?._id || null,
+    });
 
     return {
       success: true,
-      runId: run.id,
-      message: `I've opened the check-in form for ${params.employeeName}${availableGoals.length > 0 ? ` with ${availableGoals.length} active goal(s) available` : ""}. You can review and edit the form, or ask me to make changes.`,
-      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(workingDocPayload)}${WORKING_DOC_SUFFIX}`,
-      roleContributions,
-      supportAgreements,
+      message: `Check-in scheduled with ${params.employeeName} for ${scheduledDate.toLocaleDateString()}. View it at /grow/check-ins/${checkIn._id}`,
+      checkInId: checkIn._id.toString(),
+      link: `/grow/check-ins/${checkIn._id}`,
     };
   },
 });
