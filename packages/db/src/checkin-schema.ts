@@ -1,18 +1,11 @@
 import mongoose, { Schema, type Document, type Types } from "mongoose";
+import {
+  CHECKIN_STATUSES,
+  CADENCE_SOURCES,
+  type CheckInStatus,
+} from "./checkin-constants";
 
-export const CHECKIN_STATUSES = [
-  "preparing",
-  "ready",
-  "in_progress",
-  "reflecting",
-  "completed",
-  "missed",
-  "cancelled",
-] as const;
-
-export type CheckInStatus = (typeof CHECKIN_STATUSES)[number];
-
-export const CADENCE_SOURCES = ["auto", "manual"] as const;
+export { CHECKIN_STATUSES, CADENCE_SOURCES, type CheckInStatus };
 
 const EmployeePrepareSchema = new Schema(
   {
