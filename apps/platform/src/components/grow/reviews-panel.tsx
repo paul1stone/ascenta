@@ -307,7 +307,7 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
                         </Button>
                       )}
                       {(review.status === "in_progress" ||
-                        review.status === "draft_complete") && (
+                        review.status === "draft_complete") && review.reviewId && (
                         <Button
                           variant="ghost"
                           size="sm"
