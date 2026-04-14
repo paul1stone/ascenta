@@ -1,6 +1,10 @@
-// packages/db/src/review-cycle-schema.ts
+/**
+ * ReviewCycle Schema (Mongoose)
+ * HR-configured review periods that group employee reviews into formal cycles
+ * (annual, mid-year, 90-day). Linked to PerformanceReview documents.
+ */
 
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import {
   REVIEW_TYPES,
   CYCLE_STATUSES,
@@ -30,9 +34,10 @@ const reviewCycleSchema = new Schema(
     periodEnd: { type: Date, required: true },
     selfAssessmentDeadline: { type: Date, default: null },
     managerDeadline: { type: Date, default: null },
-    participantEmployeeIds: [
-      { type: Schema.Types.ObjectId, ref: "Employee" },
-    ],
+    participantEmployeeIds: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Employee" }],
+      default: [],
+    },
     status: {
       type: String,
       required: true,
@@ -54,3 +59,18 @@ reviewCycleSchema.index({ type: 1, periodEnd: 1 });
 export const ReviewCycle =
   mongoose.models.ReviewCycle ||
   mongoose.model("ReviewCycle", reviewCycleSchema);
+
+export type ReviewCycle_Type = {
+  id: string;
+  orgId: string;
+  label: string;
+  type: (typeof REVIEW_TYPES)[number];
+  periodStart: Date;
+  periodEnd: Date;
+  selfAssessmentDeadline: Date | null;
+  managerDeadline: Date | null;
+  participantEmployeeIds: Types.ObjectId[];
+  status: (typeof CYCLE_STATUSES)[number];
+  createdAt: Date;
+  updatedAt: Date;
+};
