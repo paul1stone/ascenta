@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
       return {
         employeeId: emp.employeeId,
         employeeObjectId: empId,
-        name: `${emp.firstName} ${emp.lastName}`,
+        employeeName: `${emp.firstName} ${emp.lastName}`,
         department: emp.department,
         goalCount: goalCountMap.get(empId) || 0,
         status: review ? review.status : "not_started",
