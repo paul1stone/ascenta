@@ -56,6 +56,7 @@ export const REVIEW_CATEGORIES: Record<ReviewCategoryKey, ReviewCategory> = {
       "Do they apply expertise to solve problems?",
     ],
   },
+  // Note: quality_of_work intentionally has 4 subcategories (source: docs/reqs/perf-reviews.md §2)
   quality_of_work: {
     key: "quality_of_work",
     label: "Quality of Work",
@@ -255,6 +256,8 @@ export const REVIEW_CATEGORIES: Record<ReviewCategoryKey, ReviewCategory> = {
       "Do they adapt to new expectations?",
     ],
   },
+  // Note: culture_values intentionally has 2 guidedPrompts (source: docs/reqs/perf-reviews.md §10)
+  // Subcategories here are org-default placeholders; Strategy Studio populates org-specific values
   culture_values: {
     key: "culture_values",
     label: "Culture and Values Alignment",
