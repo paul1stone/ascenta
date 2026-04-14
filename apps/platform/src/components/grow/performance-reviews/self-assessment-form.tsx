@@ -18,7 +18,6 @@ interface SelfAssessmentFormProps {
   reviewId: string;
   employeeName: string;
   reviewPeriod: string;
-  initialSections: CategorySectionValue[];
   initialStatus: SelfAssessmentStatus;
   accentColor: string;
   onBack: () => void;
@@ -40,14 +39,13 @@ export function SelfAssessmentForm({
   reviewId,
   employeeName,
   reviewPeriod,
-  initialSections,
   initialStatus,
   accentColor,
   onBack,
   onSubmitted,
 }: SelfAssessmentFormProps) {
   const [sections, setSections] = useState<CategorySectionValue[]>(() =>
-    buildInitialSections(initialSections),
+    buildInitialSections([]),
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

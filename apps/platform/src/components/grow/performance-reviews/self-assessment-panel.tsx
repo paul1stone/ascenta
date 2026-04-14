@@ -87,7 +87,6 @@ export function SelfAssessmentPanel({
         reviewId={activeReview.id}
         employeeName={activeReview.employeeName}
         reviewPeriod={activeReview.reviewPeriod}
-        initialSections={[]}
         initialStatus={activeReview.selfAssessmentStatus}
         accentColor={accentColor}
         onBack={() => setActiveReviewId(null)}
