@@ -17,6 +17,8 @@ interface CategorySectionCardProps {
   onNotesChange: (notes: string) => void;
   onExamplesChange: (examples: string) => void;
   onBlur?: () => void;
+  employeeRating?: number | null;
+  employeeNotes?: string;
 }
 
 export function CategorySectionCard({
@@ -30,6 +32,8 @@ export function CategorySectionCard({
   onNotesChange,
   onExamplesChange,
   onBlur,
+  employeeRating = undefined,
+  employeeNotes = undefined,
 }: CategorySectionCardProps) {
   const category = REVIEW_CATEGORIES[categoryKey];
 
@@ -42,6 +46,19 @@ export function CategorySectionCard({
         </h3>
         <p className="text-xs text-muted-foreground">{category.definition}</p>
       </div>
+
+      {/* Employee self-assessment reference (manager view only) */}
+      {employeeRating != null && (
+        <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5 space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">Employee's self-assessment</p>
+          <p className="text-xs text-foreground">
+            {employeeRating} — {RATING_SCALE[employeeRating as keyof typeof RATING_SCALE]?.label ?? ""}
+          </p>
+          {employeeNotes && employeeNotes.trim() !== "" && (
+            <p className="text-xs text-muted-foreground line-clamp-3">{employeeNotes}</p>
+          )}
+        </div>
+      )}
 
       {/* Guided prompts */}
       <ul className="space-y-1 pl-4 list-disc">
