@@ -140,6 +140,88 @@ const performanceReviewSchema = new Schema(
     },
 
     workflowRunId: { type: String, default: null },
+
+    // V2 — review cycle link and type
+    reviewCycleId: {
+      type: Schema.Types.ObjectId,
+      ref: "ReviewCycle",
+      default: null,
+    },
+    reviewType: {
+      type: String,
+      enum: ["annual", "mid_year", "ninety_day", "custom"],
+      default: "custom",
+    },
+
+    // V2 — employee self-assessment (must be submitted before manager can begin)
+    selfAssessment: {
+      status: {
+        type: String,
+        enum: ["not_started", "in_progress", "submitted"],
+        default: "not_started",
+      },
+      submittedAt: { type: Date, default: null },
+      sections: [
+        {
+          categoryKey: { type: String, required: true },
+          rating: { type: Number, min: 1, max: 5, default: null },
+          notes: { type: String, default: "" },
+          examples: { type: String, default: "" },
+          evidence: [
+            {
+              type: { type: String, enum: ["goal", "checkin", "note", "other"] },
+              refId: { type: String, default: null },
+              label: { type: String, default: "" },
+            },
+          ],
+        },
+      ],
+    },
+
+    // V2 — manager assessment (gated on selfAssessment.status === "submitted")
+    managerAssessment: {
+      status: {
+        type: String,
+        enum: ["not_started", "in_progress", "submitted"],
+        default: "not_started",
+      },
+      submittedAt: { type: Date, default: null },
+      blockedUntilSelfSubmitted: { type: Boolean, default: true },
+      sections: [
+        {
+          categoryKey: { type: String, required: true },
+          rating: { type: Number, min: 1, max: 5, default: null },
+          notes: { type: String, default: "" },
+          examples: { type: String, default: "" },
+          evidence: [
+            {
+              type: { type: String, enum: ["goal", "checkin", "note", "other"] },
+              refId: { type: String, default: null },
+              label: { type: String, default: "" },
+            },
+          ],
+        },
+      ],
+    },
+
+    // V2 — development plan (mandatory in final review)
+    developmentPlan: {
+      status: {
+        type: String,
+        enum: ["not_started", "draft", "finalized"],
+        default: "not_started",
+      },
+      areasOfImprovement: [
+        {
+          area: { type: String, default: "" },
+          actions: [{ type: String }],
+          timeline: { type: String, default: "" },
+          owner: { type: String, default: "" },
+        },
+      ],
+      managerCommitments: [{ type: String }],
+      nextReviewDate: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,
@@ -151,6 +233,8 @@ const performanceReviewSchema = new Schema(
 performanceReviewSchema.index({ employee: 1, "reviewPeriod.end": 1 });
 performanceReviewSchema.index({ manager: 1, status: 1 });
 performanceReviewSchema.index({ status: 1, "reviewPeriod.end": 1 });
+performanceReviewSchema.index({ reviewCycleId: 1, status: 1 });
+performanceReviewSchema.index({ reviewType: 1, "reviewPeriod.end": 1 });
 
 export const PerformanceReview =
   mongoose.models.PerformanceReview ||
