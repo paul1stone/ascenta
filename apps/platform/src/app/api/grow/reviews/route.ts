@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
           employeeName: r.employeeName as string,
           reviewPeriod: typeof r.reviewPeriod === "string"
             ? r.reviewPeriod
-            : (r.reviewPeriod?.label as string | undefined) ?? String(r.reviewPeriod),
+            : (r.reviewPeriod?.label as string | undefined) ?? "",
           reviewType: (r.reviewType as string | undefined) ?? "custom",
           selfAssessmentStatus: (r.selfAssessment?.status as string | undefined) ?? "not_started",
         })),

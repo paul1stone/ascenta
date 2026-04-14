@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@ascenta/ui/button";
 import { REVIEW_CATEGORY_KEYS } from "@ascenta/db/performance-review-categories";
 import type { ReviewCategoryKey, SelfAssessmentStatus } from "@ascenta/db/performance-review-categories";
@@ -52,17 +52,77 @@ export function SelfAssessmentForm({
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(initialStatus === "submitted");
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sectionsRef = useRef<CategorySectionValue[]>(sections);
+  // Track whether status has already been advanced to "in_progress" so we only
+  // send that field on the very first save for a "not_started" review.
+  const hasFirstSavedRef = useRef(initialStatus !== "not_started");
+
+  // Bug 1: fetch persisted sections on mount so "Continue" restores prior work
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSections() {
+      try {
+        const res = await fetch(`/api/grow/reviews/${reviewId}`);
+        if (!res.ok || cancelled) return;
+
+        const data = await res.json();
+        const fetchedSections: CategorySectionValue[] =
+          data?.review?.selfAssessment?.sections ?? [];
+        const fetchedStatus: SelfAssessmentStatus =
+          data?.review?.selfAssessment?.status ?? initialStatus;
+
+        if (!cancelled) {
+          const built = buildInitialSections(fetchedSections);
+          setSections(built);
+          sectionsRef.current = built;
+          if (fetchedStatus === "submitted") {
+            setSubmitted(true);
+          }
+          // If the DB already shows in_progress (or submitted), no need to
+          // advance status again on the first save.
+          if (fetchedStatus !== "not_started") {
+            hasFirstSavedRef.current = true;
+          }
+        }
+      } finally {
+        if (!cancelled) setIsLoadingInitial(false);
+      }
+    }
+
+    loadSections();
+    return () => {
+      cancelled = true;
+    };
+  }, [reviewId, initialStatus]);
 
   const saveSections = useCallback(
     async (updatedSections: CategorySectionValue[]) => {
       setIsSaving(true);
       try {
-        await fetch(`/api/grow/reviews/${reviewId}`, {
+        // Bug 2: advance status to "in_progress" on the very first save
+        const body: Record<string, unknown> = { sections: updatedSections };
+        if (!hasFirstSavedRef.current) {
+          hasFirstSavedRef.current = true;
+          body.status = "in_progress";
+        }
+
+        const res = await fetch(`/api/grow/reviews/${reviewId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ selfAssessment: { sections: updatedSections } }),
+          body: JSON.stringify({ selfAssessment: body }),
         });
+
+        // Medium fix A: surface save errors
+        if (!res.ok) {
+          setSaveError("Failed to save — please try again.");
+        } else {
+          setSaveError(null);
+        }
       } finally {
         setIsSaving(false);
       }
@@ -70,10 +130,17 @@ export function SelfAssessmentForm({
     [reviewId],
   );
 
+  // Bug 3c: cancel any pending debounce before saving the rating immediately
   const handleRatingChange = useCallback(
     (index: number, rating: number) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
       setSections((prev) => {
+        // Bug 3a: keep sectionsRef in sync inside the updater
         const updated = prev.map((s, i) => (i === index ? { ...s, rating } : s));
+        sectionsRef.current = updated;
         saveSections(updated);
         return updated;
       });
@@ -83,31 +150,40 @@ export function SelfAssessmentForm({
 
   const handleTextChange = useCallback(
     (index: number, field: "notes" | "examples", value: string) => {
-      setSections((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
+      setSections((prev) => {
+        // Bug 3a: keep sectionsRef in sync inside the updater
+        const next = prev.map((s, i) => (i === index ? { ...s, [field]: value } : s));
+        sectionsRef.current = next;
+        return next;
+      });
     },
     [],
   );
 
-  const handleBlur = useCallback(
-    (currentSections: CategorySectionValue[]) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-      debounceRef.current = setTimeout(() => {
-        saveSections(currentSections);
-      }, 500);
-    },
-    [saveSections],
-  );
+  // Bug 3b: no argument — reads from sectionsRef to avoid stale closure
+  const handleBlur = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      saveSections(sectionsRef.current);
+    }, 500);
+  }, [saveSections]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      await fetch(`/api/grow/reviews/${reviewId}`, {
+      const res = await fetch(`/api/grow/reviews/${reviewId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selfAssessment: { status: "submitted", sections } }),
       });
+
+      // Medium fix A: surface submit errors
+      if (!res.ok) {
+        setSubmitError("Failed to submit — please try again.");
+        return;
+      }
+
       setSubmitted(true);
       onSubmitted();
     } finally {
@@ -143,6 +219,8 @@ export function SelfAssessmentForm({
                 Submitted
               </span>
             </>
+          ) : saveError ? (
+            <span className="text-red-500">{saveError}</span>
           ) : isSaving ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -154,44 +232,61 @@ export function SelfAssessmentForm({
         </div>
       </div>
 
-      {/* Category sections */}
-      <div className="space-y-4">
-        {sections.map((section, index) => (
-          <CategorySectionCard
-            key={section.categoryKey}
-            categoryKey={section.categoryKey}
-            index={index + 1}
-            rating={section.rating}
-            notes={section.notes}
-            examples={section.examples}
-            disabled={submitted}
-            onRatingChange={(rating) => handleRatingChange(index, rating)}
-            onNotesChange={(value) => handleTextChange(index, "notes", value)}
-            onExamplesChange={(value) => handleTextChange(index, "examples", value)}
-            onBlur={() => handleBlur(sections)}
-          />
-        ))}
-      </div>
-
-      {/* Submit row */}
-      {!submitted && (
-        <div className="flex justify-end pt-2">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="text-white"
-            style={{ backgroundColor: accentColor }}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting…
-              </>
-            ) : (
-              "Submit Self-Assessment"
-            )}
-          </Button>
+      {/* Bug 1: show spinner while fetching persisted data */}
+      {isLoadingInitial ? (
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
+      ) : (
+        <>
+          {/* Category sections */}
+          <div className="space-y-4">
+            {sections.map((section, index) => (
+              <CategorySectionCard
+                key={section.categoryKey}
+                categoryKey={section.categoryKey}
+                index={index + 1}
+                rating={section.rating}
+                notes={section.notes}
+                examples={section.examples}
+                disabled={submitted}
+                onRatingChange={(rating) => handleRatingChange(index, rating)}
+                onNotesChange={(value) => handleTextChange(index, "notes", value)}
+                onExamplesChange={(value) => handleTextChange(index, "examples", value)}
+                onBlur={handleBlur}
+              />
+            ))}
+          </div>
+
+          {/* Submit row */}
+          {!submitted && (
+            <div className="flex flex-col items-end gap-2 pt-2">
+              {/* Medium fix B: warn about unrated categories */}
+              {sections.some((s) => s.rating === null) && (
+                <p className="text-xs text-amber-600">
+                  {sections.filter((s) => s.rating === null).length} of 10 categories have no
+                  rating yet.
+                </p>
+              )}
+              {submitError && <p className="text-xs text-red-500">{submitError}</p>}
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="text-white"
+                style={{ backgroundColor: accentColor }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  "Submit Self-Assessment"
+                )}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

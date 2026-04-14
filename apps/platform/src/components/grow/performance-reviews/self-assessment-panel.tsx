@@ -64,7 +64,7 @@ export function SelfAssessmentPanel({
     setIsLoading(true);
     try {
       const res = await fetch(
-        `/api/grow/reviews?employeeObjectId=${employeeObjectId}`,
+        `/api/grow/reviews?employeeObjectId=${encodeURIComponent(employeeObjectId)}`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -128,7 +128,7 @@ export function SelfAssessmentPanel({
                     {review.reviewPeriod}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {review.reviewType.replace("_", " ")}
+                    {review.reviewType.replaceAll("_", " ")}
                   </p>
                 </div>
                 <span
