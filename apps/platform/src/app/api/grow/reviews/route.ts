@@ -108,6 +108,8 @@ export async function GET(req: NextRequest) {
         status: review ? review.status : "not_started",
         currentStep: review ? review.currentStep : null,
         reviewId: review ? String(review._id) : null,
+        selfAssessmentStatus: review ? (review.selfAssessment?.status as string | undefined) ?? "not_started" : "not_started",
+        managerAssessmentStatus: review ? (review.managerAssessment?.status as string | undefined) ?? "not_started" : "not_started",
       };
     });
 
