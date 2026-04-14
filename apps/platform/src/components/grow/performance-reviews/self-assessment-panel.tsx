@@ -118,7 +118,7 @@ export function SelfAssessmentPanel({
           </div>
         ) : (
           reviews.map((review) => {
-            const config = STATUS_CONFIG[review.selfAssessmentStatus];
+            const config = STATUS_CONFIG[review.selfAssessmentStatus] ?? STATUS_CONFIG["not_started"];
             const Icon = config.icon;
             return (
               <div key={review.id} className="flex items-center gap-3 px-4 py-3">

@@ -66,7 +66,11 @@ export function SelfAssessmentForm({
     async function loadSections() {
       try {
         const res = await fetch(`/api/grow/reviews/${reviewId}`);
-        if (!res.ok || cancelled) return;
+        if (!res.ok) {
+          if (!cancelled) setSaveError("Could not load saved progress. Your changes will still be saved.");
+          return;
+        }
+        if (cancelled) return;
 
         const data = await res.json();
         const fetchedSections: CategorySectionValue[] =
@@ -173,7 +177,7 @@ export function SelfAssessmentForm({
       const res = await fetch(`/api/grow/reviews/${reviewId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selfAssessment: { status: "submitted", sections } }),
+        body: JSON.stringify({ selfAssessment: { status: "submitted", sections: sectionsRef.current } }),
       });
 
       // Medium fix A: surface submit errors
@@ -187,7 +191,7 @@ export function SelfAssessmentForm({
     } finally {
       setIsSubmitting(false);
     }
-  }, [reviewId, sections, onSubmitted]);
+  }, [reviewId, onSubmitted]);
 
   return (
     <div className="space-y-6">
