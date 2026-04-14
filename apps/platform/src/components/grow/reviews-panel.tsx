@@ -17,16 +17,20 @@ import { cn } from "@ascenta/ui";
 import { useChat } from "@/lib/chat/chat-context";
 import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
+import { ManagerAssessmentForm } from "./performance-reviews/manager-assessment-form";
+import type { ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 
 interface ReviewEntry {
   employeeId: string;
   employeeObjectId: string;
-  name: string;
+  employeeName: string;
   department: string;
   goalCount: number;
   status: string;
   currentStep: string | null;
   reviewId: string | null;
+  selfAssessmentStatus: string;
+  managerAssessmentStatus: string;
 }
 
 interface ReviewAggregates {
@@ -75,7 +79,12 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   });
   const [period, setPeriod] = useState(getCurrentPeriod());
   const [isLoading, setIsLoading] = useState(true);
+  const [activeAssessmentReviewId, setActiveAssessmentReviewId] = useState<string | null>(null);
   const { sendMessage } = useChat();
+
+  const activeAssessmentReview = activeAssessmentReviewId
+    ? (reviews.find((r) => r.reviewId === activeAssessmentReviewId) ?? null)
+    : null;
 
   const fetchReviews = useCallback(async () => {
     setIsLoading(true);
@@ -130,6 +139,23 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   };
 
   const dueWithin2Weeks = aggregates.notStarted > 0;
+
+  if (activeAssessmentReview) {
+    return (
+      <ManagerAssessmentForm
+        reviewId={activeAssessmentReview.reviewId!}
+        employeeName={activeAssessmentReview.employeeName}
+        reviewPeriod={period}
+        initialStatus={activeAssessmentReview.managerAssessmentStatus as ManagerAssessmentStatus}
+        accentColor={accentColor}
+        onBack={() => setActiveAssessmentReviewId(null)}
+        onSubmitted={() => {
+          fetchReviews();
+          setActiveAssessmentReviewId(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -243,7 +269,7 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
                 const colors = STATUS_COLORS[review.status] || STATUS_COLORS.not_started;
                 return (
                   <tr key={review.employeeId} className="border-b last:border-0">
-                    <td className="px-3 py-2.5 font-medium">{review.name}</td>
+                    <td className="px-3 py-2.5 font-medium">{review.employeeName}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{review.department}</td>
                     <td className="px-3 py-2.5 text-center text-muted-foreground">
                       {review.goalCount}
@@ -275,23 +301,45 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
                           size="sm"
                           className="h-7 text-xs"
                           style={{ color: accentColor }}
-                          onClick={() => handleStartReview(review.name, review.employeeId)}
+                          onClick={() => handleStartReview(review.employeeName, review.employeeId)}
                         >
                           Start Review
                         </Button>
                       )}
                       {(review.status === "in_progress" ||
-                        review.status === "draft_complete") && (
+                        review.status === "draft_complete") && review.reviewId && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs"
                           style={{ color: accentColor }}
                           onClick={() =>
-                            handleContinueReview(review.name, review.reviewId!)
+                            handleContinueReview(review.employeeName, review.reviewId!)
                           }
                         >
                           Continue →
+                        </Button>
+                      )}
+                      {review.status === "self_submitted" && review.reviewId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          style={{ color: accentColor }}
+                          onClick={() => setActiveAssessmentReviewId(review.reviewId!)}
+                        >
+                          Begin Assessment
+                        </Button>
+                      )}
+                      {review.status === "manager_in_progress" && review.reviewId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          style={{ color: accentColor }}
+                          onClick={() => setActiveAssessmentReviewId(review.reviewId!)}
+                        >
+                          Continue Assessment →
                         </Button>
                       )}
                       {(review.status === "finalized" || review.status === "shared") && (

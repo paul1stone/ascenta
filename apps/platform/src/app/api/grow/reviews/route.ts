@@ -102,12 +102,14 @@ export async function GET(req: NextRequest) {
       return {
         employeeId: emp.employeeId,
         employeeObjectId: empId,
-        name: `${emp.firstName} ${emp.lastName}`,
+        employeeName: `${emp.firstName} ${emp.lastName}`,
         department: emp.department,
         goalCount: goalCountMap.get(empId) || 0,
         status: review ? review.status : "not_started",
         currentStep: review ? review.currentStep : null,
         reviewId: review ? String(review._id) : null,
+        selfAssessmentStatus: review ? (review.selfAssessment?.status as string | undefined) ?? "not_started" : "not_started",
+        managerAssessmentStatus: review ? (review.managerAssessment?.status as string | undefined) ?? "not_started" : "not_started",
       };
     });
 
