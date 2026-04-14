@@ -20,9 +20,10 @@ export async function GET(
       );
     }
 
+    const { _id, __v, ...rest } = cycle;
     return NextResponse.json({
       success: true,
-      cycle: { ...cycle, id: String(cycle._id) },
+      cycle: { ...rest, id: String(_id) },
     });
   } catch (error) {
     console.error("Error fetching review cycle:", error);

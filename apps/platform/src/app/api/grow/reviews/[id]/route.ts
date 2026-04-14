@@ -63,8 +63,13 @@ export async function PATCH(
       );
     }
 
-    // V2 gate: block manager assessment updates until self-assessment is submitted
-    if (data.managerAssessment) {
+    // V2 gate: block manager assessment work until self-assessment is submitted.
+    // Only applies when sections or status are being written — not on config-only
+    // payloads (e.g., admin toggling blockedUntilSelfSubmitted).
+    const managerAssessmentWorkBeingWritten =
+      data.managerAssessment?.sections !== undefined ||
+      data.managerAssessment?.status !== undefined;
+    if (managerAssessmentWorkBeingWritten) {
       const selfStatus = review.selfAssessment?.status ?? "not_started";
       const blocked = review.managerAssessment?.blockedUntilSelfSubmitted ?? true;
       if (
@@ -88,8 +93,8 @@ export async function PATCH(
     const updateOps: Record<string, unknown> = {};
 
     // V1 fields
-    if (data.status) updateOps.status = data.status;
-    if (data.currentStep) updateOps.currentStep = data.currentStep;
+    if (data.status !== undefined) updateOps.status = data.status;
+    if (data.currentStep !== undefined) updateOps.currentStep = data.currentStep;
     if (data.goalHandoffCompleted !== undefined) {
       updateOps.goalHandoffCompleted = data.goalHandoffCompleted;
     }

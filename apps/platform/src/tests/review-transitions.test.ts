@@ -20,6 +20,7 @@ describe("canManagerAssess", () => {
   it("returns true when blockedUntilSelfSubmitted is false regardless of self status", () => {
     expect(canManagerAssess({ selfAssessmentStatus: "not_started", blockedUntilSelfSubmitted: false })).toBe(true);
     expect(canManagerAssess({ selfAssessmentStatus: "in_progress", blockedUntilSelfSubmitted: false })).toBe(true);
+    expect(canManagerAssess({ selfAssessmentStatus: "submitted", blockedUntilSelfSubmitted: false })).toBe(true);
   });
 });
 

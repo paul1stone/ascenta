@@ -1,5 +1,3 @@
-// apps/platform/src/lib/review-transitions.ts
-
 import type {
   SelfAssessmentStatus,
   ManagerAssessmentStatus,

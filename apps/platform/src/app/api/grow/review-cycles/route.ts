@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      cycles: cycles.map((c) => ({ ...c, id: String(c._id) })),
+      cycles: cycles.map(({ _id, __v, ...rest }) => ({ ...rest, id: String(_id) })),
     });
   } catch (error) {
     console.error("Error fetching review cycles:", error);
