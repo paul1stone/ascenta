@@ -4,17 +4,7 @@ import type {
   SelfAssessmentStatus,
   ManagerAssessmentStatus,
 } from "@ascenta/db/performance-review-categories";
-
-type ReviewStatus =
-  | "not_started"
-  | "in_progress"
-  | "self_in_progress"
-  | "self_submitted"
-  | "manager_in_progress"
-  | "draft_complete"
-  | "finalized"
-  | "acknowledged"
-  | "shared";
+import type { ReviewStatus } from "@ascenta/db/performance-review-constants";
 
 /**
  * Returns true if the manager is allowed to begin their assessment.
@@ -41,7 +31,9 @@ export function deriveReviewStatus(params: {
   const { currentStatus, selfAssessmentStatus, managerAssessmentStatus } =
     params;
 
-  // Do not override terminal statuses
+  // v1 legacy status "in_progress" is non-terminal and will be derived to the
+  // appropriate v2 status when this function is called on existing records.
+  // Do not override terminal statuses set by the finalize/acknowledge routes.
   if (
     currentStatus === "finalized" ||
     currentStatus === "acknowledged" ||

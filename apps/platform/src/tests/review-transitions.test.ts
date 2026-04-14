@@ -82,6 +82,16 @@ describe("deriveReviewStatus", () => {
     ).toBe("acknowledged");
   });
 
+  it("returns current status unchanged when already shared (v1 legacy)", () => {
+    expect(
+      deriveReviewStatus({
+        currentStatus: "shared",
+        selfAssessmentStatus: "submitted",
+        managerAssessmentStatus: "submitted",
+      })
+    ).toBe("shared");
+  });
+
   it("returns not_started when both still not started", () => {
     expect(deriveReviewStatus(base)).toBe("not_started");
   });

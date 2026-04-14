@@ -48,3 +48,5 @@ export const REVIEW_STEP_LABELS: Record<
   finalize: "Finalize",
   goals: "Goals",
 };
+
+export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
