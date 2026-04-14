@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { REVIEW_STATUSES, REVIEW_STEPS } from "@ascenta/db/performance-review-constants";
-import { REVIEW_CATEGORY_KEYS, REVIEW_TYPES } from "@ascenta/db/performance-review-categories";
+import {
+  REVIEW_CATEGORY_KEYS,
+  REVIEW_TYPES,
+  SELF_ASSESSMENT_STATUSES,
+  MANAGER_ASSESSMENT_STATUSES,
+  DEVELOPMENT_PLAN_STATUSES,
+} from "@ascenta/db/performance-review-categories";
 
 const categorySectionSchema = z.object({
   categoryKey: z.enum(REVIEW_CATEGORY_KEYS),
@@ -17,18 +23,18 @@ const categorySectionSchema = z.object({
 });
 
 const selfAssessmentUpdateSchema = z.object({
-  status: z.enum(["not_started", "in_progress", "submitted"]).optional(),
+  status: z.enum(SELF_ASSESSMENT_STATUSES).optional(),
   sections: z.array(categorySectionSchema).optional(),
 });
 
 const managerAssessmentUpdateSchema = z.object({
-  status: z.enum(["not_started", "in_progress", "submitted"]).optional(),
+  status: z.enum(MANAGER_ASSESSMENT_STATUSES).optional(),
   blockedUntilSelfSubmitted: z.boolean().optional(),
   sections: z.array(categorySectionSchema).optional(),
 });
 
 const developmentPlanUpdateSchema = z.object({
-  status: z.enum(["not_started", "draft", "finalized"]).optional(),
+  status: z.enum(DEVELOPMENT_PLAN_STATUSES).optional(),
   areasOfImprovement: z.array(
     z.object({
       area: z.string(),
