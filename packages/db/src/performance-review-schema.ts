@@ -8,6 +8,12 @@ export {
   REVIEW_STEP_LABELS,
 } from "./performance-review-constants";
 import { REVIEW_STATUSES, REVIEW_STEPS } from "./performance-review-constants";
+import {
+  REVIEW_TYPES,
+  SELF_ASSESSMENT_STATUSES,
+  MANAGER_ASSESSMENT_STATUSES,
+  DEVELOPMENT_PLAN_STATUSES,
+} from "./performance-review-categories";
 
 const toJSONOptions = {
   virtuals: true,
@@ -149,7 +155,7 @@ const performanceReviewSchema = new Schema(
     },
     reviewType: {
       type: String,
-      enum: ["annual", "mid_year", "ninety_day", "custom"],
+      enum: REVIEW_TYPES,
       default: "custom",
     },
 
@@ -157,7 +163,7 @@ const performanceReviewSchema = new Schema(
     selfAssessment: {
       status: {
         type: String,
-        enum: ["not_started", "in_progress", "submitted"],
+        enum: SELF_ASSESSMENT_STATUSES,
         default: "not_started",
       },
       submittedAt: { type: Date, default: null },
@@ -182,7 +188,7 @@ const performanceReviewSchema = new Schema(
     managerAssessment: {
       status: {
         type: String,
-        enum: ["not_started", "in_progress", "submitted"],
+        enum: MANAGER_ASSESSMENT_STATUSES,
         default: "not_started",
       },
       submittedAt: { type: Date, default: null },
@@ -208,7 +214,7 @@ const performanceReviewSchema = new Schema(
     developmentPlan: {
       status: {
         type: String,
-        enum: ["not_started", "draft", "finalized"],
+        enum: DEVELOPMENT_PLAN_STATUSES,
         default: "not_started",
       },
       areasOfImprovement: [
