@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@ascenta/ui/button";
 import { REVIEW_CATEGORY_KEYS } from "@ascenta/db/performance-review-categories";
-import type { ReviewCategoryKey, SelfAssessmentStatus } from "@ascenta/db/performance-review-categories";
+import type { ReviewCategoryKey, SelfAssessmentStatus, ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 import { ChevronLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { CategorySectionCard } from "./category-section-card";
 
@@ -18,7 +18,7 @@ interface ManagerAssessmentFormProps {
   reviewId: string;
   employeeName: string;
   reviewPeriod: string;
-  initialStatus: SelfAssessmentStatus;
+  initialStatus: ManagerAssessmentStatus;
   accentColor: string;
   onBack: () => void;
   onSubmitted: () => void;
@@ -84,7 +84,7 @@ export function ManagerAssessmentForm({
         // Load manager's assessment sections for editing
         const fetchedManagerSections: CategorySectionValue[] =
           data?.review?.managerAssessment?.sections ?? [];
-        const fetchedManagerStatus: SelfAssessmentStatus =
+        const fetchedManagerStatus: ManagerAssessmentStatus =
           data?.review?.managerAssessment?.status ?? initialStatus;
 
         if (!cancelled) {
@@ -131,7 +131,12 @@ export function ManagerAssessmentForm({
         });
 
         if (!res.ok) {
-          setSaveError("Failed to save — please try again.");
+          const errorData = await res.json().catch(() => ({})) as { error?: string };
+          const message =
+            res.status === 403
+              ? "Self-assessment must be submitted before you can save."
+              : errorData?.error ?? "Failed to save — please try again.";
+          setSaveError(message);
         } else {
           setSaveError(null);
         }
@@ -187,7 +192,12 @@ export function ManagerAssessmentForm({
       });
 
       if (!res.ok) {
-        setSubmitError("Failed to submit — please try again.");
+        const errorData = await res.json().catch(() => ({})) as { error?: string };
+        const message =
+          res.status === 403
+            ? "Self-assessment must be submitted before you can submit your assessment."
+            : errorData?.error ?? "Failed to submit — please try again.";
+        setSubmitError(message);
         return;
       }
 
