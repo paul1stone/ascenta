@@ -1,11 +1,53 @@
 import { z } from "zod";
 import { REVIEW_STATUSES, REVIEW_STEPS } from "@ascenta/db/performance-review-constants";
+import { REVIEW_CATEGORY_KEYS, REVIEW_TYPES } from "@ascenta/db/performance-review-categories";
+
+const categorySectionSchema = z.object({
+  categoryKey: z.enum(REVIEW_CATEGORY_KEYS),
+  rating: z.number().int().min(1).max(5).nullable().optional(),
+  notes: z.string().optional(),
+  examples: z.string().optional(),
+  evidence: z.array(
+    z.object({
+      type: z.enum(["goal", "checkin", "note", "other"]),
+      refId: z.string().nullable().optional(),
+      label: z.string().optional(),
+    })
+  ).optional(),
+});
+
+const selfAssessmentUpdateSchema = z.object({
+  status: z.enum(["not_started", "in_progress", "submitted"]).optional(),
+  sections: z.array(categorySectionSchema).optional(),
+});
+
+const managerAssessmentUpdateSchema = z.object({
+  status: z.enum(["not_started", "in_progress", "submitted"]).optional(),
+  blockedUntilSelfSubmitted: z.boolean().optional(),
+  sections: z.array(categorySectionSchema).optional(),
+});
+
+const developmentPlanUpdateSchema = z.object({
+  status: z.enum(["not_started", "draft", "finalized"]).optional(),
+  areasOfImprovement: z.array(
+    z.object({
+      area: z.string(),
+      actions: z.array(z.string()),
+      timeline: z.string(),
+      owner: z.string(),
+    })
+  ).optional(),
+  managerCommitments: z.array(z.string()).optional(),
+  nextReviewDate: z.string().nullable().optional(),
+});
 
 export const createReviewSchema = z.object({
   employeeId: z.string().min(1, "Employee ID is required"),
   employeeName: z.string().min(1, "Employee name is required"),
   managerId: z.string().min(1, "Manager ID is required"),
   reviewPeriod: z.enum(["Q1", "Q2", "Q3", "Q4", "H1", "H2", "annual", "custom"]),
+  reviewType: z.enum(REVIEW_TYPES).optional(),
+  reviewCycleId: z.string().nullable().optional(),
   customStartDate: z.string().optional(),
   customEndDate: z.string().optional(),
 }).refine(
@@ -22,6 +64,7 @@ export const createReviewSchema = z.object({
 );
 
 export const updateReviewSchema = z.object({
+  // V1 fields — preserved
   status: z.enum(REVIEW_STATUSES).optional(),
   currentStep: z.enum(REVIEW_STEPS).optional(),
   contributions: z.object({
@@ -56,6 +99,12 @@ export const updateReviewSchema = z.object({
     rationale: z.string(),
   })).optional(),
   goalHandoffCompleted: z.boolean().optional(),
+  // V2 fields
+  reviewCycleId: z.string().nullable().optional(),
+  reviewType: z.enum(REVIEW_TYPES).optional(),
+  selfAssessment: selfAssessmentUpdateSchema.optional(),
+  managerAssessment: managerAssessmentUpdateSchema.optional(),
+  developmentPlan: developmentPlanUpdateSchema.optional(),
 });
 
 export type CreateReviewValues = z.infer<typeof createReviewSchema>;
