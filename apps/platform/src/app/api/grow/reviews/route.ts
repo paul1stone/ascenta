@@ -15,10 +15,32 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const managerId = searchParams.get("managerId");
     const periodLabel = searchParams.get("period");
+    const employeeObjectId = searchParams.get("employeeObjectId");
+
+    if (employeeObjectId) {
+      // Employee view: reviews where this employee is the subject
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const employeeReviews = await PerformanceReview.find({ employee: employeeObjectId })
+        .sort({ "reviewPeriod.end": -1 })
+        .lean() as any[];
+
+      return NextResponse.json({
+        success: true,
+        reviews: employeeReviews.map((r) => ({
+          id: String(r._id),
+          employeeName: r.employeeName as string,
+          reviewPeriod: typeof r.reviewPeriod === "string"
+            ? r.reviewPeriod
+            : (r.reviewPeriod?.label as string | undefined) ?? "",
+          reviewType: (r.reviewType as string | undefined) ?? "custom",
+          selfAssessmentStatus: (r.selfAssessment?.status as string | undefined) ?? "not_started",
+        })),
+      });
+    }
 
     if (!managerId) {
       return NextResponse.json(
-        { success: false, error: "managerId is required" },
+        { success: false, error: "managerId or employeeObjectId is required" },
         { status: 400 },
       );
     }
