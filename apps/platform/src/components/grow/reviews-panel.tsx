@@ -18,6 +18,7 @@ import { useChat } from "@/lib/chat/chat-context";
 import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 import { ManagerAssessmentForm } from "./performance-reviews/manager-assessment-form";
+import { DevelopmentPlanForm } from "./performance-reviews/development-plan-form";
 import type { ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 
 interface ReviewEntry {
@@ -31,6 +32,7 @@ interface ReviewEntry {
   reviewId: string | null;
   selfAssessmentStatus: string;
   managerAssessmentStatus: string;
+  devPlanStatus: string;
 }
 
 interface ReviewAggregates {
@@ -80,10 +82,15 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   const [period, setPeriod] = useState(getCurrentPeriod());
   const [isLoading, setIsLoading] = useState(true);
   const [activeAssessmentReviewId, setActiveAssessmentReviewId] = useState<string | null>(null);
+  const [activePlanReviewId, setActivePlanReviewId] = useState<string | null>(null);
   const { sendMessage } = useChat();
 
   const activeAssessmentReview = activeAssessmentReviewId
     ? (reviews.find((r) => r.reviewId === activeAssessmentReviewId) ?? null)
+    : null;
+
+  const activePlanReview = activePlanReviewId
+    ? (reviews.find((r) => r.reviewId === activePlanReviewId) ?? null)
     : null;
 
   const fetchReviews = useCallback(async () => {
@@ -138,6 +145,23 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
     window.open(`/api/grow/reviews/${reviewId}/pdf`, "_blank");
   };
 
+  const [finalizeReviewError, setFinalizeReviewError] = useState<string | null>(null);
+
+  const handleFinalizeReview = async (reviewId: string) => {
+    setFinalizeReviewError(null);
+    const res = await fetch(`/api/grow/reviews/${reviewId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "finalized" }),
+    });
+    if (res.ok) {
+      fetchReviews();
+    } else {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setFinalizeReviewError(data.error ?? "Failed to finalize review. Please try again.");
+    }
+  };
+
   const dueWithin2Weeks = aggregates.notStarted > 0;
 
   if (activeAssessmentReview) {
@@ -152,6 +176,22 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
         onSubmitted={() => {
           fetchReviews();
           setActiveAssessmentReviewId(null);
+        }}
+      />
+    );
+  }
+
+  if (activePlanReview) {
+    return (
+      <DevelopmentPlanForm
+        reviewId={activePlanReview.reviewId!}
+        employeeName={activePlanReview.employeeName}
+        reviewPeriod={period}
+        accentColor={accentColor}
+        onBack={() => setActivePlanReviewId(null)}
+        onFinalized={() => {
+          fetchReviews();
+          setActivePlanReviewId(null);
         }}
       />
     );
@@ -235,6 +275,13 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      {/* Finalize review error */}
+      {finalizeReviewError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+          {finalizeReviewError}
         </div>
       )}
 
@@ -341,6 +388,29 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
                         >
                           Continue Assessment →
                         </Button>
+                      )}
+                      {review.status === "draft_complete" && review.reviewId && (
+                        review.devPlanStatus === "finalized" ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            style={{ color: accentColor }}
+                            onClick={() => handleFinalizeReview(review.reviewId!)}
+                          >
+                            Finalize Review →
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            style={{ color: accentColor }}
+                            onClick={() => setActivePlanReviewId(review.reviewId!)}
+                          >
+                            {review.devPlanStatus === "draft" ? "Continue Dev Plan →" : "Complete Dev Plan"}
+                          </Button>
+                        )
                       )}
                       {(review.status === "finalized" || review.status === "shared") && (
                         <Button

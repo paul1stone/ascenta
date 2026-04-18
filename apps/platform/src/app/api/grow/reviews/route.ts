@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
             ? r.reviewPeriod
             : (r.reviewPeriod?.label as string | undefined) ?? "",
           reviewType: (r.reviewType as string | undefined) ?? "custom",
+          status: (r.status as string) ?? "not_started",
           selfAssessmentStatus: (r.selfAssessment?.status as string | undefined) ?? "not_started",
         })),
       });
@@ -110,6 +111,7 @@ export async function GET(req: NextRequest) {
         reviewId: review ? String(review._id) : null,
         selfAssessmentStatus: review ? (review.selfAssessment?.status as string | undefined) ?? "not_started" : "not_started",
         managerAssessmentStatus: review ? (review.managerAssessment?.status as string | undefined) ?? "not_started" : "not_started",
+        devPlanStatus: review ? (review.developmentPlan?.status as string | undefined) ?? "not_started" : "not_started",
       };
     });
 

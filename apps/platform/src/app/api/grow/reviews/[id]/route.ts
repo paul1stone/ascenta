@@ -89,11 +89,39 @@ export async function PATCH(
       }
     }
 
+    // Status transition gates
+    if (data.status === "finalized") {
+      const devPlanStatus = review.developmentPlan?.status ?? "not_started";
+      if (devPlanStatus !== "finalized") {
+        return NextResponse.json(
+          { success: false, error: "Development plan must be finalized before the review can be finalized." },
+          { status: 422 },
+        );
+      }
+    }
+
+    if (data.status === "acknowledged") {
+      if (review.status !== "finalized") {
+        return NextResponse.json(
+          { success: false, error: "Review must be finalized before it can be acknowledged." },
+          { status: 422 },
+        );
+      }
+    }
+
     // Build $set update ops
     const updateOps: Record<string, unknown> = {};
 
     // V1 fields
-    if (data.status !== undefined) updateOps.status = data.status;
+    if (data.status !== undefined) {
+      updateOps.status = data.status;
+      if (data.status === "finalized" && !review.finalizedAt) {
+        updateOps.finalizedAt = new Date();
+      }
+      if (data.status === "acknowledged" && !review.acknowledgedAt) {
+        updateOps.acknowledgedAt = new Date();
+      }
+    }
     if (data.currentStep !== undefined) updateOps.currentStep = data.currentStep;
     if (data.goalHandoffCompleted !== undefined) {
       updateOps.goalHandoffCompleted = data.goalHandoffCompleted;
