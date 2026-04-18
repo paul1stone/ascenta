@@ -1,10 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { Textarea } from "@ascenta/ui/textarea";
 import { Label } from "@ascenta/ui/label";
 import { REVIEW_CATEGORIES, RATING_SCALE } from "@ascenta/db/performance-review-categories";
 import type { ReviewCategoryKey } from "@ascenta/db/performance-review-categories";
 import { LikertScale } from "@/components/grow/check-in/likert-scale";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+export interface EvidenceItem {
+  id: string;
+  kind: "goal" | "checkin" | "note";
+  label: string;
+}
+
+export interface EvidenceRef {
+  type: "goal" | "checkin" | "note" | "other";
+  refId: string;
+  label: string;
+}
 
 interface CategorySectionCardProps {
   categoryKey: ReviewCategoryKey;
@@ -19,6 +33,9 @@ interface CategorySectionCardProps {
   onBlur?: () => void;
   employeeRating?: number | null;
   employeeNotes?: string;
+  evidenceItems?: EvidenceItem[];
+  selectedEvidence?: EvidenceRef[];
+  onEvidenceChange?: (refs: EvidenceRef[]) => void;
 }
 
 export function CategorySectionCard({
@@ -34,8 +51,45 @@ export function CategorySectionCard({
   onBlur,
   employeeRating = undefined,
   employeeNotes = undefined,
+  evidenceItems = undefined,
+  selectedEvidence = undefined,
+  onEvidenceChange = undefined,
 }: CategorySectionCardProps) {
   const category = REVIEW_CATEGORIES[categoryKey];
+  const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
+
+  const handleEvidenceToggle = (item: EvidenceItem) => {
+    if (!onEvidenceChange) return;
+
+    const newRefs = selectedEvidence ? [...selectedEvidence] : [];
+    const evidenceRef: EvidenceRef = {
+      type: item.kind === "checkin" ? "checkin" : item.kind,
+      refId: item.id,
+      label: item.label,
+    };
+
+    const existingIndex = newRefs.findIndex((ref) => ref.refId === item.id);
+    if (existingIndex >= 0) {
+      newRefs.splice(existingIndex, 1);
+    } else {
+      newRefs.push(evidenceRef);
+    }
+
+    onEvidenceChange(newRefs);
+  };
+
+  const isItemSelected = (itemId: string): boolean => {
+    return selectedEvidence?.some((ref) => ref.refId === itemId) ?? false;
+  };
+
+  const groupedEvidence =
+    evidenceItems && evidenceItems.length > 0
+      ? {
+          goals: evidenceItems.filter((item) => item.kind === "goal"),
+          checkIns: evidenceItems.filter((item) => item.kind === "checkin"),
+          notes: evidenceItems.filter((item) => item.kind === "note"),
+        }
+      : null;
 
   return (
     <div className="rounded-lg border border-border bg-card p-5 space-y-4">
@@ -118,6 +172,143 @@ export function CategorySectionCard({
           className="min-h-[80px] resize-none"
         />
       </div>
+
+      {/* Supporting Evidence Section */}
+      {evidenceItems && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setIsEvidenceOpen(!isEvidenceOpen)}
+            className="flex w-full items-center justify-between rounded-md px-3 py-2 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Supporting Evidence</span>
+              {selectedEvidence && selectedEvidence.length > 0 && (
+                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  {selectedEvidence.length} tagged
+                </span>
+              )}
+            </div>
+            {isEvidenceOpen ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+
+          {isEvidenceOpen && (
+            <div className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+              {groupedEvidence ? (
+                <>
+                  {/* Goals */}
+                  {groupedEvidence.goals.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Goals
+                      </p>
+                      <div className="space-y-1 pl-2">
+                        {groupedEvidence.goals.map((item) => (
+                          <label
+                            key={item.id}
+                            className="flex items-start gap-2 cursor-pointer py-1"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isItemSelected(item.id)}
+                              onChange={() => handleEvidenceToggle(item)}
+                              disabled={disabled}
+                              className="mt-1 w-4 h-4"
+                            />
+                            <span className="text-sm text-foreground break-words">
+                              {item.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Check-ins */}
+                  {groupedEvidence.checkIns.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Check-ins
+                      </p>
+                      <div className="space-y-1 pl-2">
+                        {groupedEvidence.checkIns.map((item) => (
+                          <label
+                            key={item.id}
+                            className="flex items-start gap-2 cursor-pointer py-1"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isItemSelected(item.id)}
+                              onChange={() => handleEvidenceToggle(item)}
+                              disabled={disabled}
+                              className="mt-1 w-4 h-4"
+                            />
+                            <span className="text-sm text-foreground break-words">
+                              {item.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {groupedEvidence.notes.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Notes
+                      </p>
+                      <div className="space-y-1 pl-2">
+                        {groupedEvidence.notes.map((item) => (
+                          <label
+                            key={item.id}
+                            className="flex items-start gap-2 cursor-pointer py-1"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isItemSelected(item.id)}
+                              onChange={() => handleEvidenceToggle(item)}
+                              disabled={disabled}
+                              className="mt-1 w-4 h-4"
+                            />
+                            <span className="text-sm text-foreground break-words">
+                              {item.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground py-2">
+                  No linked items found for this review period.
+                </p>
+              )}
+
+              {/* Read-only evidence display when disabled */}
+              {disabled && selectedEvidence && selectedEvidence.length > 0 && (
+                <div className="space-y-1 pt-2 border-t border-border">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Tagged Evidence
+                  </p>
+                  <ul className="space-y-1 pl-2">
+                    {selectedEvidence.map((ref) => (
+                      <li key={ref.refId} className="text-sm text-foreground">
+                        • {ref.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
