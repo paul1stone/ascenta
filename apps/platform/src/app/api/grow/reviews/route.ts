@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
             ? r.reviewPeriod
             : (r.reviewPeriod?.label as string | undefined) ?? "",
           reviewType: (r.reviewType as string | undefined) ?? "custom",
+          status: (r.status as string) ?? "not_started",
           selfAssessmentStatus: (r.selfAssessment?.status as string | undefined) ?? "not_started",
         })),
       });
