@@ -111,6 +111,7 @@ export async function GET(req: NextRequest) {
         reviewId: review ? String(review._id) : null,
         selfAssessmentStatus: review ? (review.selfAssessment?.status as string | undefined) ?? "not_started" : "not_started",
         managerAssessmentStatus: review ? (review.managerAssessment?.status as string | undefined) ?? "not_started" : "not_started",
+        devPlanStatus: review ? (review.developmentPlan?.status as string | undefined) ?? "not_started" : "not_started",
       };
     });
 
