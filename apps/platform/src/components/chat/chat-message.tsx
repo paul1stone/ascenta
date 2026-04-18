@@ -44,7 +44,7 @@ export function ChatMessage({
   if (!isUser) {
     displayContent = displayContent
       .replace(/\[ASCENTA_\w+\][\s\S]*?\[\/ASCENTA_\w+\]/g, "") // strip complete blocks
-      .replace(/\[ASCENTA_\w+\][\s\S]*$/s, "") // strip from any unclosed block tag to end
+      .replace(/\[ASCENTA_\w+\][\s\S]*$/, "") // strip from any unclosed block tag to end
       .trim();
   }
 
