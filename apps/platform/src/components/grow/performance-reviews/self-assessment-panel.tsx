@@ -7,6 +7,7 @@ import { Button } from "@ascenta/ui/button";
 import type { ComponentType } from "react";
 import type { SelfAssessmentStatus } from "@ascenta/db/performance-review-categories";
 import { SelfAssessmentForm } from "./self-assessment-form";
+import { AcknowledgmentView } from "./acknowledgment-view";
 
 interface ReviewSummary {
   id: string;
@@ -14,6 +15,7 @@ interface ReviewSummary {
   reviewPeriod: string;
   reviewType: string;
   selfAssessmentStatus: SelfAssessmentStatus;
+  status: string;
 }
 
 interface SelfAssessmentPanelProps {
@@ -23,7 +25,7 @@ interface SelfAssessmentPanelProps {
 }
 
 const STATUS_CONFIG: Record<
-  SelfAssessmentStatus,
+  string,
   {
     label: string;
     bg: string;
@@ -49,6 +51,18 @@ const STATUS_CONFIG: Record<
     text: "text-blue-600",
     icon: CheckCircle,
   },
+  finalized: {
+    label: "Ready to Review",
+    bg: "bg-blue-500/15",
+    text: "text-blue-600",
+    icon: CheckCircle,
+  },
+  acknowledged: {
+    label: "Acknowledged",
+    bg: "bg-gray-500/15",
+    text: "text-gray-500",
+    icon: CheckCircle,
+  },
 };
 
 export function SelfAssessmentPanel({
@@ -59,6 +73,7 @@ export function SelfAssessmentPanel({
   const [reviews, setReviews] = useState<ReviewSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
+  const [activeAckReviewId, setActiveAckReviewId] = useState<string | null>(null);
 
   const fetchReviews = useCallback(async () => {
     setIsLoading(true);
@@ -80,6 +95,23 @@ export function SelfAssessmentPanel({
   }, [employeeObjectId, fetchReviews]);
 
   const activeReview = reviews.find((r) => r.id === activeReviewId) ?? null;
+  const activeAckReview = reviews.find((r) => r.id === activeAckReviewId) ?? null;
+
+  if (activeAckReview) {
+    return (
+      <AcknowledgmentView
+        reviewId={activeAckReview.id}
+        employeeName={activeAckReview.employeeName}
+        reviewPeriod={activeAckReview.reviewPeriod}
+        accentColor={accentColor}
+        onBack={() => setActiveAckReviewId(null)}
+        onAcknowledged={() => {
+          fetchReviews();
+          setActiveAckReviewId(null);
+        }}
+      />
+    );
+  }
 
   if (activeReview) {
     return (
@@ -118,7 +150,12 @@ export function SelfAssessmentPanel({
           </div>
         ) : (
           reviews.map((review) => {
-            const config = STATUS_CONFIG[review.selfAssessmentStatus] ?? STATUS_CONFIG["not_started"];
+            // For badge display: use overall status for finalized/acknowledged, else selfAssessmentStatus
+            const displayStatus =
+              review.status === "finalized" || review.status === "acknowledged"
+                ? review.status
+                : review.selfAssessmentStatus;
+            const config = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG["not_started"];
             const Icon = config.icon;
             return (
               <div key={review.id} className="flex items-center gap-3 px-4 py-3">
@@ -140,20 +177,33 @@ export function SelfAssessmentPanel({
                   <Icon className="h-3 w-3" />
                   {config.label}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 shrink-0 px-2 text-xs"
-                  style={{ color: accentColor }}
-                  onClick={() => setActiveReviewId(review.id)}
-                >
-                  {review.selfAssessmentStatus === "not_started"
-                    ? "Start"
-                    : review.selfAssessmentStatus === "in_progress"
-                      ? "Continue"
-                      : "View"}
-                  <ChevronRight className="ml-0.5 h-3 w-3" />
-                </Button>
+                {review.status === "finalized" ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 shrink-0 px-2 text-xs"
+                    style={{ color: accentColor }}
+                    onClick={() => setActiveAckReviewId(review.id)}
+                  >
+                    View &amp; Sign Off
+                    <ChevronRight className="ml-0.5 h-3 w-3" />
+                  </Button>
+                ) : review.status === "acknowledged" ? null : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 shrink-0 px-2 text-xs"
+                    style={{ color: accentColor }}
+                    onClick={() => setActiveReviewId(review.id)}
+                  >
+                    {review.selfAssessmentStatus === "not_started"
+                      ? "Start"
+                      : review.selfAssessmentStatus === "in_progress"
+                        ? "Continue"
+                        : "View"}
+                    <ChevronRight className="ml-0.5 h-3 w-3" />
+                  </Button>
+                )}
               </div>
             );
           })
