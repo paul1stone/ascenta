@@ -6,12 +6,14 @@ import { REVIEW_CATEGORY_KEYS } from "@ascenta/db/performance-review-categories"
 import type { ReviewCategoryKey, SelfAssessmentStatus, ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 import { ChevronLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { CategorySectionCard } from "./category-section-card";
+import type { EvidenceItem, EvidenceRef } from "./category-section-card";
 
 interface CategorySectionValue {
   categoryKey: ReviewCategoryKey;
   rating: number | null;
   notes: string;
   examples: string;
+  evidence: EvidenceRef[];
 }
 
 interface ManagerAssessmentFormProps {
@@ -31,7 +33,10 @@ function buildInitialSections(initial: CategorySectionValue[]): CategorySectionV
   }
   return REVIEW_CATEGORY_KEYS.map((key) => {
     const existing = byKey.get(key);
-    return existing ?? { categoryKey: key, rating: null, notes: "", examples: "" };
+    if (existing) {
+      return { ...existing, evidence: existing.evidence ?? [] };
+    }
+    return { categoryKey: key, rating: null, notes: "", examples: "", evidence: [] };
   });
 }
 
@@ -47,6 +52,7 @@ export function ManagerAssessmentForm({
   const [sections, setSections] = useState<CategorySectionValue[]>(() =>
     buildInitialSections([]),
   );
+  const [allEvidenceItems, setAllEvidenceItems] = useState<EvidenceItem[]>([]);
   const [employeeSections, setEmployeeSections] = useState<CategorySectionValue[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,14 +74,18 @@ export function ManagerAssessmentForm({
 
     async function loadSections() {
       try {
-        const res = await fetch(`/api/grow/reviews/${reviewId}`);
-        if (!res.ok) {
+        const [reviewRes, evidenceRes] = await Promise.all([
+          fetch(`/api/grow/reviews/${reviewId}`),
+          fetch(`/api/grow/reviews/${reviewId}/evidence`),
+        ]);
+
+        if (!reviewRes.ok) {
           if (!cancelled) setSaveError("Could not load saved progress. Your changes will still be saved.");
           return;
         }
         if (cancelled) return;
 
-        const data = await res.json();
+        const data = await reviewRes.json();
 
         // Load employee's self-assessment sections as read-only reference
         const fetchedEmployeeSections: CategorySectionValue[] =
@@ -86,6 +96,28 @@ export function ManagerAssessmentForm({
           data?.review?.managerAssessment?.sections ?? [];
         const fetchedManagerStatus: ManagerAssessmentStatus =
           data?.review?.managerAssessment?.status ?? initialStatus;
+
+        // Load evidence items (non-blocking — fall back to empty on error)
+        if (evidenceRes.ok) {
+          try {
+            const evidenceData = await evidenceRes.json() as {
+              success: boolean;
+              goals: EvidenceItem[];
+              checkIns: EvidenceItem[];
+              notes: EvidenceItem[];
+            };
+            if (evidenceData.success && !cancelled) {
+              const items: EvidenceItem[] = [
+                ...(evidenceData.goals ?? []),
+                ...(evidenceData.checkIns ?? []),
+                ...(evidenceData.notes ?? []),
+              ];
+              setAllEvidenceItems(items);
+            }
+          } catch {
+            // Evidence fetch failed — form still loads fine with empty items
+          }
+        }
 
         if (!cancelled) {
           setEmployeeSections(fetchedEmployeeSections);
@@ -181,6 +213,18 @@ export function ManagerAssessmentForm({
     }, 500);
   }, [saveSections]);
 
+  const handleEvidenceChange = useCallback(
+    (index: number, refs: EvidenceRef[]) => {
+      setSections((prev) => {
+        const updated = prev.map((s, i) => (i === index ? { ...s, evidence: refs } : s));
+        sectionsRef.current = updated;
+        saveSections(updated);
+        return updated;
+      });
+    },
+    [saveSections],
+  );
+
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     setSubmitError(null);
@@ -274,6 +318,9 @@ export function ManagerAssessmentForm({
                   onBlur={handleBlur}
                   employeeRating={empSection?.rating ?? null}
                   employeeNotes={empSection?.notes ?? ""}
+                  evidenceItems={allEvidenceItems}
+                  selectedEvidence={section.evidence}
+                  onEvidenceChange={(refs) => handleEvidenceChange(index, refs)}
                 />
               );
             })}
