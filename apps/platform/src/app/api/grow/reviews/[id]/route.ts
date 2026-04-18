@@ -113,7 +113,15 @@ export async function PATCH(
     const updateOps: Record<string, unknown> = {};
 
     // V1 fields
-    if (data.status !== undefined) updateOps.status = data.status;
+    if (data.status !== undefined) {
+      updateOps.status = data.status;
+      if (data.status === "finalized" && !review.finalizedAt) {
+        updateOps.finalizedAt = new Date();
+      }
+      if (data.status === "acknowledged" && !review.acknowledgedAt) {
+        updateOps.acknowledgedAt = new Date();
+      }
+    }
     if (data.currentStep !== undefined) updateOps.currentStep = data.currentStep;
     if (data.goalHandoffCompleted !== undefined) {
       updateOps.goalHandoffCompleted = data.goalHandoffCompleted;

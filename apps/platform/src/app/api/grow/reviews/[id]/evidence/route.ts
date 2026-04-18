@@ -65,7 +65,7 @@ export async function GET(
         "timePeriod.end": { $gte: reviewPeriodStart },
         "timePeriod.start": { $lte: reviewPeriodEnd },
       })
-        .select("_id objectiveStatement goalType status")
+        .select("_id objectiveStatement goalType title category status")
         .lean(),
       CheckIn.find({
         employee: employeeObjectId,
@@ -84,8 +84,8 @@ export async function GET(
     const goalsEvidence: GoalEvidence[] = goals.map((g: any) => ({
       id: String(g._id),
       kind: "goal" as const,
-      label: g.objectiveStatement,
-      category: g.goalType,
+      label: g.objectiveStatement ?? g.title ?? "Untitled goal",
+      category: g.goalType ?? g.category ?? "goal",
       status: g.status,
     }));
 
