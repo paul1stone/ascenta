@@ -182,6 +182,12 @@ const performanceReviewSchema = new Schema(
           ],
         },
       ],
+      // Free-form narratives that sit alongside the category grid.
+      // Required by docs/reqs/perf-reviews.md Step 2:
+      //   strengthsNarrative, developmentPriorities, supportNeeds.
+      strengthsNarrative: { type: String, default: "" },
+      developmentPriorities: { type: String, default: "" },
+      supportNeeds: { type: String, default: "" },
     },
 
     // V2 — manager assessment (gated on selfAssessment.status === "submitted")

@@ -171,6 +171,17 @@ export async function PATCH(
         updateOps["selfAssessment.submittedAt"] = new Date();
       }
     }
+    if (data.selfAssessment?.strengthsNarrative !== undefined) {
+      updateOps["selfAssessment.strengthsNarrative"] =
+        data.selfAssessment.strengthsNarrative;
+    }
+    if (data.selfAssessment?.developmentPriorities !== undefined) {
+      updateOps["selfAssessment.developmentPriorities"] =
+        data.selfAssessment.developmentPriorities;
+    }
+    if (data.selfAssessment?.supportNeeds !== undefined) {
+      updateOps["selfAssessment.supportNeeds"] = data.selfAssessment.supportNeeds;
+    }
 
     // Manager assessment sections patch
     if (data.managerAssessment?.sections !== undefined) {
