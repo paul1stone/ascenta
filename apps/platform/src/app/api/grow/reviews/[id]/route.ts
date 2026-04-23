@@ -200,6 +200,15 @@ export async function PATCH(
       }
     }
 
+    // Employee response — captured during acknowledgment.
+    // Stamp submittedAt whenever text is saved (treat the current text as
+    // "the response as of this submission"); the UI only writes it once,
+    // alongside the acknowledgment PATCH.
+    if (data.employeeResponse?.text !== undefined) {
+      updateOps["employeeResponse.text"] = data.employeeResponse.text;
+      updateOps["employeeResponse.submittedAt"] = new Date();
+    }
+
     // V2 auto-advance: derive overall status from subdocument statuses
     // (only applies when v2 assessment data is being updated)
     if (data.selfAssessment || data.managerAssessment) {

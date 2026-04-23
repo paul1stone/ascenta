@@ -210,6 +210,13 @@ const performanceReviewSchema = new Schema(
       ],
     },
 
+    // V2 — employee written response, captured at acknowledgment time.
+    // Required by docs/reqs/perf-reviews.md Step 7.
+    employeeResponse: {
+      text: { type: String, default: "" },
+      submittedAt: { type: Date, default: null },
+    },
+
     // V2 — development plan (mandatory in final review)
     developmentPlan: {
       status: {
