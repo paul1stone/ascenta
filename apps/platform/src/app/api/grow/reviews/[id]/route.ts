@@ -186,6 +186,14 @@ export async function PATCH(
       updateOps["managerAssessment.blockedUntilSelfSubmitted"] =
         data.managerAssessment.blockedUntilSelfSubmitted;
     }
+    if (data.managerAssessment?.strengthsNarrative !== undefined) {
+      updateOps["managerAssessment.strengthsNarrative"] =
+        data.managerAssessment.strengthsNarrative;
+    }
+    if (data.managerAssessment?.recognitionHighlights !== undefined) {
+      updateOps["managerAssessment.recognitionHighlights"] =
+        data.managerAssessment.recognitionHighlights;
+    }
 
     // Development plan patch
     if (data.developmentPlan) {

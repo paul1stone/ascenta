@@ -208,6 +208,13 @@ const performanceReviewSchema = new Schema(
           ],
         },
       ],
+      // Dedicated "Employee Strengths and Documented Contributions" section
+      // required by docs/reqs/perf-reviews.md Five Core Review Sections #3.
+      // This is the narrative primary input to compensation and promotion
+      // decisions — what the employee did well, contributions that exceeded
+      // expectations, and recognition-worthy behaviors tied to values.
+      strengthsNarrative: { type: String, default: "" },
+      recognitionHighlights: { type: String, default: "" },
     },
 
     // V2 — development plan (mandatory in final review)
