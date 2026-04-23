@@ -147,6 +147,21 @@ const goalSchema = new Schema(
     notes: { type: String, default: "" },
     workflowRunId: { type: String, default: null },
     contributionRef: { type: String, default: null },
+    // Traceability for goals created during performance review handoff.
+    // Set by POST /api/grow/reviews/[id]/handoff when carrying a goal
+    // forward into the next period.
+    carriedFromGoalId: {
+      type: Schema.Types.ObjectId,
+      ref: "Goal",
+      default: null,
+      index: true,
+    },
+    sourceReviewId: {
+      type: Schema.Types.ObjectId,
+      ref: "PerformanceReview",
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
