@@ -82,6 +82,8 @@ export function GoalCreationForm({
       customEndDate: "",
       checkInCadence: "every_check_in",
       notes: "",
+      stretchConfidence: null,
+      milestones: [],
       ...initialValues,
     },
   });
@@ -97,6 +99,15 @@ export function GoalCreationForm({
   const { fields, append, remove } = useFieldArray({
     control,
     name: "keyResults",
+  });
+
+  const {
+    fields: milestoneFields,
+    append: appendMilestone,
+    remove: removeMilestone,
+  } = useFieldArray({
+    control,
+    name: "milestones",
   });
 
   const timePeriod = watch("timePeriod");
@@ -415,6 +426,125 @@ export function GoalCreationForm({
           </div>
         </div>
       )}
+
+      {/* Stretch confidence — goals should sit at stretch-but-achievable
+          (~70-80% confidence) per docs/reqs/goals.md Goal Best Practices. */}
+      <div className="space-y-1.5">
+        <Label htmlFor="stretchConfidence">
+          Stretch confidence
+          <span className="text-muted-foreground font-normal"> — how likely to achieve? (optional)</span>
+        </Label>
+        <div className="flex items-center gap-3">
+          <input
+            id="stretchConfidence"
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            className="flex-1"
+            value={watch("stretchConfidence") ?? 75}
+            onChange={(e) =>
+              setValue("stretchConfidence", Number(e.target.value), {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
+          />
+          <span
+            className="w-12 text-sm tabular-nums text-right"
+            aria-live="polite"
+          >
+            {watch("stretchConfidence") ?? 75}%
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Aim for 70–80% — stretch but achievable. Below 50% may be too risky;
+          above 90% may not be ambitious enough.
+        </p>
+      </div>
+
+      {/* Milestones — required for year-long goals (quarterly checkpoints) and
+          longer-range goals (midpoint revisit) per docs/reqs/goals.md Goal
+          Best Practices. */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>
+            Milestones
+            <span className="text-muted-foreground font-normal"> — optional checkpoints</span>
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              appendMilestone({ label: "", targetDate: "", notes: "" })
+            }
+          >
+            Add milestone
+          </Button>
+        </div>
+        {(timePeriod === "annual" || timePeriod === "H1" || timePeriod === "H2") &&
+          milestoneFields.length === 0 && (
+            <p className="text-xs text-amber-600">
+              Goals spanning a half or full year benefit from quarterly
+              checkpoints.
+            </p>
+          )}
+        {milestoneFields.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">
+            No milestones yet. Add one to break this goal into checkpoints.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {milestoneFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="rounded-md border bg-muted/20 p-3 space-y-2"
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      placeholder="Milestone label (e.g. Q1 checkpoint)"
+                      {...register(`milestones.${index}.label` as const)}
+                    />
+                    {errors.milestones?.[index]?.label && (
+                      <p className="text-xs text-destructive">
+                        {errors.milestones[index]?.label?.message}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeMilestone(index)}
+                    aria-label={`Remove milestone ${index + 1}`}
+                  >
+                    Remove
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <Input
+                      type="date"
+                      {...register(`milestones.${index}.targetDate` as const)}
+                    />
+                    {errors.milestones?.[index]?.targetDate && (
+                      <p className="text-xs text-destructive">
+                        {errors.milestones[index]?.targetDate?.message}
+                      </p>
+                    )}
+                  </div>
+                  <Input
+                    placeholder="Notes (optional)"
+                    {...register(`milestones.${index}.notes` as const)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Notes (optional) */}
       <div className="space-y-1.5">

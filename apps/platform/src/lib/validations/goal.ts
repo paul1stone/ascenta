@@ -37,6 +37,24 @@ const keyResultSchema = z.object({
   deadline: z.string().min(1, "Deadline is required"),
 });
 
+const milestoneSchema = z.object({
+  label: z.string().min(1, "Milestone label is required"),
+  targetDate: z.string().min(1, "Target date is required"),
+  notes: z.string().optional(),
+});
+
+// Best-practice guidance: stretch goals sit at 70-80% confidence.
+// Returns a soft warning string (not a hard validation error) the UI can show.
+export function getStretchConfidenceGuidance(
+  value: number | null | undefined,
+): string | null {
+  if (value == null) return null;
+  if (value >= 90) return "That's very high confidence — consider a more ambitious target.";
+  if (value <= 50) return "That's low confidence — consider whether this is achievable or needs support.";
+  if (value < 70 || value > 80) return null;
+  return null;
+}
+
 export const goalFormSchema = z
   .object({
     employeeName: z.string().min(1, "Employee name is required"),
@@ -64,6 +82,8 @@ export const goalFormSchema = z
     }),
     notes: z.string().optional(),
     contributionRef: z.string().optional(),
+    stretchConfidence: z.number().int().min(0).max(100).optional().nullable(),
+    milestones: z.array(milestoneSchema).optional(),
   })
   .refine(
     (data) => {

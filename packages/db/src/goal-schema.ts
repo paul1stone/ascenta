@@ -71,6 +71,20 @@ const recalibrationSchema = new Schema(
   { _id: true },
 );
 
+// Milestones / quarterly checkpoints for longer-range goals.
+// Required by docs/reqs/goals.md Goal Best Practices: "For goals spanning a
+// full year, include quarterly checkpoints"; "Longer-range goals include
+// milestones and are revisited at midpoint".
+const milestoneSchema = new Schema(
+  {
+    label: { type: String, required: true },
+    targetDate: { type: Date, required: true },
+    completedAt: { type: Date, default: null },
+    notes: { type: String, default: "" },
+  },
+  { _id: true },
+);
+
 // ============================================================================
 // GOAL SCHEMA
 // ============================================================================
@@ -129,6 +143,19 @@ const goalSchema = new Schema(
     },
     recalibrations: {
       type: [recalibrationSchema],
+      default: [],
+    },
+    // Stretch-but-achievable level, expressed as % confidence of achievement.
+    // Guidance is ~70-80%. Required by docs/reqs/goals.md Goal Best Practices.
+    stretchConfidence: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+    },
+    // Quarterly / longer-range milestones.
+    milestones: {
+      type: [milestoneSchema],
       default: [],
     },
     owner: {

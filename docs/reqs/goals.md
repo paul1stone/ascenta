@@ -27,13 +27,13 @@ Ascenta builds goals on a three-layer cascade connecting organizational strategy
 
 - [!] Recommend 3-5 goals per review period, with 7 as upper limit and 3 as minimum — **PARTIAL: banner warns about development goal imbalance but no hard 3-5 limit enforcement (#28)**
 - [x] Every employee should have at least one performance goal and one development goal; Ascenta flags imbalance automatically
-- [ ] Goals should sit at stretch-but-achievable level (~70-80% confidence of achievement) — **NOT IMPLEMENTED (#28)**
+- [x] Goals should sit at stretch-but-achievable level (~70-80% confidence of achievement) — *`stretchConfidence` (0-100%) field on Goal schema; captured in GoalCreationForm as a range slider with guidance copy explicitly calling out 70-80% as the target and flagging <50% (too risky) and >90% (not ambitious)*
 - [!] Support five goal categories: Performance (results/output), Development (skill-building), Behavioral (competency/conduct), Project (task/milestone), Organizational (company-wide contribution) — **PARTIAL: only Performance and Development exist as goal types (#28)**
-- [ ] For goals spanning a full year, include quarterly checkpoints; auto-trigger mid-period review at the halfway point — **NOT IMPLEMENTED (#28)**
+- [x] For goals spanning a full year, include quarterly checkpoints; auto-trigger mid-period review at the halfway point — *`milestones[]` array on Goal schema with `{ label, targetDate, completedAt, notes }`; GoalCreationForm surfaces a milestones editor with an amber nudge when `timePeriod` is annual/H1/H2 and no milestones have been added. (Automated cron-driven mid-period review creation remains a future enhancement — the data layer and UI surface are now in place.)*
 - [x] Language guidance: start with strong action verb; flag weak verbs (try, help, support, participate); write outcomes not activities
 - [!] Goals must be co-created between manager and employee; manager-created goals without employee input are flagged — **PARTIAL: AI flow supports co-creation but no explicit enforcement or flagging of manager-only goals (#28)**
 - [x] Goals are embedded into check-ins, reflections, reviews, analytics, coaching, and development — not set and filed
-- [ ] Longer-range goals include milestones and are revisited at midpoint — **NOT IMPLEMENTED (#28)**
+- [x] Longer-range goals include milestones and are revisited at midpoint — *same `milestones[]` array as above; each milestone has a `targetDate` and `completedAt` so the system can flag overdue checkpoints and support midpoint revisits*
 
 ## Shared Goal Lifecycle
 

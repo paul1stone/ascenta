@@ -122,6 +122,13 @@ export async function POST(req: NextRequest) {
     const isManagerOrHR =
       createdByRole === "hr" || createdByRole === "manager";
 
+    const milestones = (data.milestones ?? []).map((m) => ({
+      label: m.label,
+      targetDate: new Date(m.targetDate),
+      notes: m.notes ?? "",
+      completedAt: null,
+    }));
+
     const goal = await Goal.create({
       objectiveStatement: data.objectiveStatement,
       goalType: data.goalType,
@@ -141,6 +148,8 @@ export async function POST(req: NextRequest) {
       manager: employee.id,
       workflowRunId: effectiveRunId,
       contributionRef: data.contributionRef || null,
+      stretchConfidence: data.stretchConfidence ?? null,
+      milestones,
     });
 
     const goalObj = goal.toJSON() as Record<string, unknown>;
