@@ -25,6 +25,9 @@ const categorySectionSchema = z.object({
 const selfAssessmentUpdateSchema = z.object({
   status: z.enum(SELF_ASSESSMENT_STATUSES).optional(),
   sections: z.array(categorySectionSchema).optional(),
+  strengthsNarrative: z.string().optional(),
+  developmentPriorities: z.string().optional(),
+  supportNeeds: z.string().optional(),
 });
 
 const managerAssessmentUpdateSchema = z.object({
