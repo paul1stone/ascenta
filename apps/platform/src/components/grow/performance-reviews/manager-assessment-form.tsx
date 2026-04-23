@@ -2,9 +2,11 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@ascenta/ui/button";
+import { Label } from "@ascenta/ui/label";
+import { Textarea } from "@ascenta/ui/textarea";
 import { REVIEW_CATEGORY_KEYS } from "@ascenta/db/performance-review-categories";
 import type { ReviewCategoryKey, SelfAssessmentStatus, ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
-import { ChevronLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { ChevronLeft, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { CategorySectionCard } from "./category-section-card";
 import type { EvidenceItem, EvidenceRef } from "./category-section-card";
 
@@ -15,6 +17,16 @@ interface CategorySectionValue {
   examples: string;
   evidence: EvidenceRef[];
 }
+
+interface StrengthsFields {
+  strengthsNarrative: string;
+  recognitionHighlights: string;
+}
+
+const EMPTY_STRENGTHS: StrengthsFields = {
+  strengthsNarrative: "",
+  recognitionHighlights: "",
+};
 
 interface ManagerAssessmentFormProps {
   reviewId: string;
@@ -52,6 +64,7 @@ export function ManagerAssessmentForm({
   const [sections, setSections] = useState<CategorySectionValue[]>(() =>
     buildInitialSections([]),
   );
+  const [strengths, setStrengths] = useState<StrengthsFields>(EMPTY_STRENGTHS);
   const [allEvidenceItems, setAllEvidenceItems] = useState<EvidenceItem[]>([]);
   const [employeeSections, setEmployeeSections] = useState<CategorySectionValue[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +75,7 @@ export function ManagerAssessmentForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sectionsRef = useRef<CategorySectionValue[]>(sections);
+  const strengthsRef = useRef<StrengthsFields>(EMPTY_STRENGTHS);
   // Track whether status has already been advanced to "in_progress" so we only
   // send that field on the very first save for a "not_started" review.
   const hasFirstSavedRef = useRef(initialStatus !== "not_started");
@@ -96,6 +110,12 @@ export function ManagerAssessmentForm({
           data?.review?.managerAssessment?.sections ?? [];
         const fetchedManagerStatus: ManagerAssessmentStatus =
           data?.review?.managerAssessment?.status ?? initialStatus;
+        const fetchedStrengths: StrengthsFields = {
+          strengthsNarrative:
+            data?.review?.managerAssessment?.strengthsNarrative ?? "",
+          recognitionHighlights:
+            data?.review?.managerAssessment?.recognitionHighlights ?? "",
+        };
 
         // Load evidence items (non-blocking — fall back to empty on error)
         if (evidenceRes.ok) {
@@ -125,6 +145,8 @@ export function ManagerAssessmentForm({
           const built = buildInitialSections(fetchedManagerSections);
           setSections(built);
           sectionsRef.current = built;
+          setStrengths(fetchedStrengths);
+          strengthsRef.current = fetchedStrengths;
 
           if (fetchedManagerStatus === "submitted") {
             setSubmitted(true);
@@ -146,11 +168,18 @@ export function ManagerAssessmentForm({
     };
   }, [reviewId, initialStatus]);
 
-  const saveSections = useCallback(
-    async (updatedSections: CategorySectionValue[]) => {
+  const saveProgress = useCallback(
+    async (
+      updatedSections: CategorySectionValue[],
+      updatedStrengths: StrengthsFields,
+    ) => {
       setIsSaving(true);
       try {
-        const body: Record<string, unknown> = { sections: updatedSections };
+        const body: Record<string, unknown> = {
+          sections: updatedSections,
+          strengthsNarrative: updatedStrengths.strengthsNarrative,
+          recognitionHighlights: updatedStrengths.recognitionHighlights,
+        };
         if (!hasFirstSavedRef.current) {
           hasFirstSavedRef.current = true;
           body.status = "in_progress";
@@ -188,11 +217,11 @@ export function ManagerAssessmentForm({
       setSections((prev) => {
         const updated = prev.map((s, i) => (i === index ? { ...s, rating } : s));
         sectionsRef.current = updated;
-        saveSections(updated);
+        saveProgress(updated, strengthsRef.current);
         return updated;
       });
     },
-    [saveSections],
+    [saveProgress],
   );
 
   const handleTextChange = useCallback(
@@ -209,20 +238,31 @@ export function ManagerAssessmentForm({
   const handleBlur = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      saveSections(sectionsRef.current);
+      saveProgress(sectionsRef.current, strengthsRef.current);
     }, 500);
-  }, [saveSections]);
+  }, [saveProgress]);
+
+  const handleStrengthsChange = useCallback(
+    (field: keyof StrengthsFields, value: string) => {
+      setStrengths((prev) => {
+        const next = { ...prev, [field]: value };
+        strengthsRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
 
   const handleEvidenceChange = useCallback(
     (index: number, refs: EvidenceRef[]) => {
       setSections((prev) => {
         const updated = prev.map((s, i) => (i === index ? { ...s, evidence: refs } : s));
         sectionsRef.current = updated;
-        saveSections(updated);
+        saveProgress(updated, strengthsRef.current);
         return updated;
       });
     },
-    [saveSections],
+    [saveProgress],
   );
 
   const handleSubmit = useCallback(async () => {
@@ -232,7 +272,14 @@ export function ManagerAssessmentForm({
       const res = await fetch(`/api/grow/reviews/${reviewId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ managerAssessment: { status: "submitted", sections: sectionsRef.current } }),
+        body: JSON.stringify({
+          managerAssessment: {
+            status: "submitted",
+            sections: sectionsRef.current,
+            strengthsNarrative: strengthsRef.current.strengthsNarrative,
+            recognitionHighlights: strengthsRef.current.recognitionHighlights,
+          },
+        }),
       });
 
       if (!res.ok) {
@@ -324,6 +371,71 @@ export function ManagerAssessmentForm({
                 />
               );
             })}
+          </div>
+
+          {/* Employee Strengths and Documented Contributions — required
+              dedicated section per docs/reqs/perf-reviews.md Five Core
+              Review Sections #3. Primary input to compensation and
+              promotion decisions. */}
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <div className="flex items-start gap-2">
+              <Sparkles
+                className="size-4 mt-0.5 shrink-0"
+                style={{ color: accentColor }}
+              />
+              <div>
+                <h3 className="font-display text-sm font-bold text-foreground mb-0.5">
+                  Strengths and documented contributions
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Capture what this employee did well and how they contributed —
+                  the "how" behind the "what". This is the primary narrative
+                  input to compensation and promotion decisions.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="mgr-strengths">
+                Strengths narrative
+                <span className="text-muted-foreground font-normal">
+                  {" "}
+                  — standout contributions and capabilities
+                </span>
+              </Label>
+              <Textarea
+                id="mgr-strengths"
+                placeholder="Which contributions exceeded expectations this period? Where did this employee bring unique strengths — collaboration, problem-solving, cultural impact, technical depth?"
+                value={strengths.strengthsNarrative}
+                onChange={(e) =>
+                  handleStrengthsChange("strengthsNarrative", e.target.value)
+                }
+                onBlur={handleBlur}
+                disabled={submitted}
+                rows={5}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="mgr-recognition">
+                Recognition highlights
+                <span className="text-muted-foreground font-normal">
+                  {" "}
+                  — behaviors aligned to values that deserve recognition
+                </span>
+              </Label>
+              <Textarea
+                id="mgr-recognition"
+                placeholder="Specific moments or behaviors worth recognizing — tied to organizational values where possible."
+                value={strengths.recognitionHighlights}
+                onChange={(e) =>
+                  handleStrengthsChange("recognitionHighlights", e.target.value)
+                }
+                onBlur={handleBlur}
+                disabled={submitted}
+                rows={4}
+              />
+            </div>
           </div>
 
           {/* Submit row */}

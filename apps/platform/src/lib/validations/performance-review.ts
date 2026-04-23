@@ -31,6 +31,8 @@ const managerAssessmentUpdateSchema = z.object({
   status: z.enum(MANAGER_ASSESSMENT_STATUSES).optional(),
   blockedUntilSelfSubmitted: z.boolean().optional(),
   sections: z.array(categorySectionSchema).optional(),
+  strengthsNarrative: z.string().optional(),
+  recognitionHighlights: z.string().optional(),
 });
 
 const developmentPlanUpdateSchema = z.object({
