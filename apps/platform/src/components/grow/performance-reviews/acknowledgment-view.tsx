@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@ascenta/ui/button";
 import {
   REVIEW_CATEGORY_KEYS,
@@ -9,6 +9,8 @@ import {
 } from "@ascenta/db/performance-review-categories";
 import type { ReviewCategoryKey } from "@ascenta/db/performance-review-categories";
 import { ChevronLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { computeOverallRating } from "@/lib/perf-reviews/overall-rating";
+import { OverallRatingSummary } from "./overall-rating-summary";
 
 interface AssessmentSection {
   categoryKey: ReviewCategoryKey;
@@ -166,6 +168,14 @@ export function AcknowledgmentView({
         </div>
       ) : review ? (
         <>
+          {/* Overall rating summary — mean across all 10 category ratings,
+              shown side-by-side for self vs manager. */}
+          <OverallRatingsRow
+            selfSections={review.selfAssessment.sections}
+            managerSections={review.managerAssessment.sections}
+            accentColor={accentColor}
+          />
+
           {/* Column headers */}
           <div className="grid grid-cols-2 gap-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -345,6 +355,49 @@ export function AcknowledgmentView({
           </div>
         </>
       ) : null}
+    </div>
+  );
+}
+
+function OverallRatingsRow({
+  selfSections,
+  managerSections,
+  accentColor,
+}: {
+  selfSections: AssessmentSection[];
+  managerSections: AssessmentSection[];
+  accentColor: string;
+}) {
+  const expectedCount = REVIEW_CATEGORY_KEYS.length;
+  const selfOverall = useMemo(
+    () =>
+      computeOverallRating(
+        selfSections.map((s) => ({ rating: s.rating })),
+        expectedCount,
+      ),
+    [selfSections, expectedCount],
+  );
+  const managerOverall = useMemo(
+    () =>
+      computeOverallRating(
+        managerSections.map((s) => ({ rating: s.rating })),
+        expectedCount,
+      ),
+    [managerSections, expectedCount],
+  );
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <OverallRatingSummary
+        label="Your overall rating"
+        rating={selfOverall}
+        accentColor={accentColor}
+      />
+      <OverallRatingSummary
+        label="Manager's overall rating"
+        rating={managerOverall}
+        accentColor={accentColor}
+      />
     </div>
   );
 }

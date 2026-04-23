@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@ascenta/ui/button";
 import { REVIEW_CATEGORY_KEYS } from "@ascenta/db/performance-review-categories";
 import type { ReviewCategoryKey, SelfAssessmentStatus, ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 import { ChevronLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { CategorySectionCard } from "./category-section-card";
 import type { EvidenceItem, EvidenceRef } from "./category-section-card";
+import { computeOverallRating } from "@/lib/perf-reviews/overall-rating";
+import { OverallRatingSummary } from "./overall-rating-summary";
 
 interface CategorySectionValue {
   categoryKey: ReviewCategoryKey;
@@ -299,6 +301,13 @@ export function ManagerAssessmentForm({
         </div>
       ) : (
         <>
+          {/* Running overall rating — provisional until all 10 categories rated */}
+          <RunningOverallRating
+            sections={sections}
+            employeeSections={employeeSections}
+            accentColor={accentColor}
+          />
+
           {/* Category sections */}
           <div className="space-y-4">
             {sections.map((section, index) => {
@@ -355,6 +364,48 @@ export function ManagerAssessmentForm({
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function RunningOverallRating({
+  sections,
+  employeeSections,
+  accentColor,
+}: {
+  sections: CategorySectionValue[];
+  employeeSections: CategorySectionValue[];
+  accentColor: string;
+}) {
+  const expectedCount = REVIEW_CATEGORY_KEYS.length;
+  const managerOverall = useMemo(
+    () =>
+      computeOverallRating(
+        sections.map((s) => ({ rating: s.rating })),
+        expectedCount,
+      ),
+    [sections, expectedCount],
+  );
+  const employeeOverall = useMemo(
+    () =>
+      computeOverallRating(
+        employeeSections.map((s) => ({ rating: s.rating })),
+        expectedCount,
+      ),
+    [employeeSections, expectedCount],
+  );
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <OverallRatingSummary
+        label="Your running overall rating"
+        rating={managerOverall}
+        accentColor={accentColor}
+      />
+      <OverallRatingSummary
+        label="Employee self-rating"
+        rating={employeeOverall}
+      />
     </div>
   );
 }
