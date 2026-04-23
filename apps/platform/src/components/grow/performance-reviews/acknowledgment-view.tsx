@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@ascenta/ui/button";
+import { Textarea } from "@ascenta/ui/textarea";
+import { Label } from "@ascenta/ui/label";
 import {
   REVIEW_CATEGORY_KEYS,
   REVIEW_CATEGORIES,
@@ -31,10 +33,16 @@ interface DevelopmentPlan {
   nextReviewDate: string | null;
 }
 
+interface EmployeeResponse {
+  text: string;
+  submittedAt: string | null;
+}
+
 interface ReviewData {
   selfAssessment: { sections: AssessmentSection[] };
   managerAssessment: { sections: AssessmentSection[] };
   developmentPlan: DevelopmentPlan | null;
+  employeeResponse: EmployeeResponse;
   status: string;
 }
 
@@ -68,6 +76,7 @@ export function AcknowledgmentView({
   const [isAcknowledging, setIsAcknowledging] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [ackError, setAckError] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -82,12 +91,18 @@ export function AcknowledgmentView({
         const data = await res.json();
         if (!cancelled) {
           const r = data?.review;
+          const response: EmployeeResponse = {
+            text: r?.employeeResponse?.text ?? "",
+            submittedAt: r?.employeeResponse?.submittedAt ?? null,
+          };
           setReview({
             selfAssessment: r?.selfAssessment ?? { sections: [] },
             managerAssessment: r?.managerAssessment ?? { sections: [] },
             developmentPlan: r?.developmentPlan ?? null,
+            employeeResponse: response,
             status: r?.status ?? "",
           });
+          setResponseText(response.text);
           if (r?.status === "acknowledged") {
             setAcknowledged(true);
           }
@@ -109,10 +124,15 @@ export function AcknowledgmentView({
     setIsAcknowledging(true);
     setAckError(null);
     try {
+      const trimmed = responseText.trim();
+      const body: Record<string, unknown> = { status: "acknowledged" };
+      if (trimmed) {
+        body.employeeResponse = { text: trimmed };
+      }
       const res = await fetch(`/api/grow/reviews/${reviewId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "acknowledged" }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         setAcknowledged(true);
@@ -308,12 +328,48 @@ export function AcknowledgmentView({
             </div>
           )}
 
+          {/* Employee written response — optional, captured alongside acknowledgment */}
+          <div className="rounded-lg border border-border bg-card p-5 space-y-2">
+            <Label htmlFor="employee-response" className="text-sm font-semibold">
+              Your response
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
+                — optional
+              </span>
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Signing off confirms you received the review; it does not mean you agree.
+              Use this space to share your perspective, note disagreements, or add
+              context that should live alongside this record.
+            </p>
+            {acknowledged ? (
+              review?.employeeResponse.text ? (
+                <div className="rounded-md border bg-muted/20 p-3 text-sm whitespace-pre-wrap">
+                  {review.employeeResponse.text}
+                </div>
+              ) : (
+                <p className="text-xs italic text-muted-foreground">
+                  No written response was submitted at acknowledgment.
+                </p>
+              )
+            ) : (
+              <Textarea
+                id="employee-response"
+                placeholder="Add your perspective, disagreements, or context…"
+                value={responseText}
+                onChange={(e) => setResponseText(e.target.value)}
+                rows={4}
+              />
+            )}
+          </div>
+
           {/* Sign-off row */}
           <div className="flex flex-col items-end gap-2 pt-4 border-t border-border">
             {!acknowledged && (
               <>
                 <p className="text-xs text-muted-foreground">
-                  By signing off you confirm you have reviewed and understand this assessment.
+                  By signing off you confirm you have reviewed and understand this
+                  assessment. Your written response above (if any) will be saved
+                  alongside the acknowledgment.
                 </p>
                 {ackError && <p className="text-xs text-red-500">{ackError}</p>}
                 <Button

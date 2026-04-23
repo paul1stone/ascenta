@@ -111,6 +111,11 @@ export const updateReviewSchema = z.object({
   selfAssessment: selfAssessmentUpdateSchema.optional(),
   managerAssessment: managerAssessmentUpdateSchema.optional(),
   developmentPlan: developmentPlanUpdateSchema.optional(),
+  employeeResponse: z
+    .object({
+      text: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type CreateReviewValues = z.infer<typeof createReviewSchema>;
