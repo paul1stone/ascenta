@@ -211,6 +211,7 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
     tabs: [
       { key: "goals", label: "Goals", icon: Target },
       { key: "reviews", label: "Performance Reviews", icon: ClipboardCheck },
+      { key: "cycles", label: "Review Cycles", icon: CalendarCheck },
       { key: "checkins", label: "Check-ins", icon: MessageCircle },
       { key: "reflect", label: "Reflect", icon: Brain },
     ],

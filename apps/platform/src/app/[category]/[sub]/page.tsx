@@ -15,6 +15,7 @@ import { DoTabChat } from "@/components/do-tab-chat";
 import { LearnPanel } from "@/components/grow/learn-panel";
 import { GoalsPanel } from "@/components/grow/goals-panel";
 import { ReviewsPanel } from "@/components/grow/reviews-panel";
+import { ReviewCyclesPanel } from "@/components/grow/review-cycles-panel";
 import { CheckinsPanel } from "@/components/grow/checkins-panel";
 import { SelfAssessmentPanel } from "@/components/grow/performance-reviews/self-assessment-panel";
 
@@ -73,6 +74,8 @@ export default function CategorySubPage({
         <GoalsPanel accentColor={ctx.category.color} />
       ) : activeTab === "checkins" ? (
         <CheckinsPanel accentColor={ctx.category.color} />
+      ) : activeTab === "cycles" ? (
+        <ReviewCyclesPanel accentColor={ctx.category.color} />
       ) : activeTab === "reviews" ? (
         <div className="flex-1 overflow-y-auto p-6">
           {user?.role === "employee" ? (
