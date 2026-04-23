@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { Employee } from "@ascenta/db/employee-schema";
+import { CheckIn } from "@ascenta/db/checkin-schema";
+import { PerformanceNote } from "@ascenta/db/performance-note-schema";
+import { PerformanceReview } from "@ascenta/db/performance-review-schema";
 import { TrackedDocument, WorkflowRun } from "@ascenta/db/workflow-schema";
+import { computeConversationCadence } from "@/lib/perf-reviews/conversation-cadence";
 
 interface AttentionItem {
   id: string;
@@ -11,6 +15,8 @@ interface AttentionItem {
   priority: "high" | "medium" | "low";
   link?: string;
 }
+
+const FINAL_REVIEW_STATUSES = ["finalized", "acknowledged", "shared"];
 
 const PRIORITY_ORDER: Record<string, number> = {
   high: 0,
@@ -116,6 +122,80 @@ export async function GET() {
     }
   } catch (error) {
     console.error("Attention query failed (stalled workflows):", error);
+  }
+
+  // 5. 90-day performance conversation guardrail
+  //    Flags active employees with no completed check-in, performance note,
+  //    or finalized performance review in the last 90+ days.
+  try {
+    const active = await Employee.find({ status: "active" })
+      .select("firstName lastName hireDate status")
+      .lean();
+
+    if (active.length) {
+      const employeeIds = active.map((e) => e._id);
+
+      const [checkInAgg, noteAgg, reviewAgg] = await Promise.all([
+        CheckIn.aggregate([
+          {
+            $match: {
+              employee: { $in: employeeIds },
+              completedAt: { $ne: null },
+            },
+          },
+          { $group: { _id: "$employee", lastAt: { $max: "$completedAt" } } },
+        ]),
+        PerformanceNote.aggregate([
+          { $match: { employee: { $in: employeeIds } } },
+          { $group: { _id: "$employee", lastAt: { $max: "$createdAt" } } },
+        ]),
+        PerformanceReview.aggregate([
+          {
+            $match: {
+              employee: { $in: employeeIds },
+              status: { $in: FINAL_REVIEW_STATUSES },
+            },
+          },
+          { $group: { _id: "$employee", lastAt: { $max: "$updatedAt" } } },
+        ]),
+      ]);
+
+      const checkInMap = new Map<string, Date>();
+      for (const r of checkInAgg) checkInMap.set(String(r._id), r.lastAt);
+      const noteMap = new Map<string, Date>();
+      for (const r of noteAgg) noteMap.set(String(r._id), r.lastAt);
+      const reviewMap = new Map<string, Date>();
+      for (const r of reviewAgg) reviewMap.set(String(r._id), r.lastAt);
+
+      for (const emp of active) {
+        const id = String(emp._id);
+        const cadence = computeConversationCadence({
+          now,
+          hireDate: emp.hireDate as Date,
+          employeeStatus: (emp.status as string) ?? "active",
+          lastCheckInAt: checkInMap.get(id) ?? null,
+          lastNoteAt: noteMap.get(id) ?? null,
+          lastReviewAt: reviewMap.get(id) ?? null,
+        });
+
+        if (cadence.severity === "none") continue;
+
+        items.push({
+          id: `perf-overdue-${id}`,
+          type: "performance_conversation_overdue",
+          title: `No performance conversation in ${cadence.daysSince} days`,
+          description: `${emp.firstName} ${emp.lastName} — last documented conversation ${
+            cadence.lastConversationAt
+              ? `on ${new Date(cadence.lastConversationAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+              : "never recorded"
+          }`,
+          priority: cadence.severity,
+          link: `/dashboard/grow/check-ins?employee=${id}`,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Attention query failed (perf conversation guardrail):", error);
   }
 
   // Sort by priority (high first), then limit to 10
