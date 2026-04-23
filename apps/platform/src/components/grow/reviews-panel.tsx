@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 import { ManagerAssessmentForm } from "./performance-reviews/manager-assessment-form";
 import { DevelopmentPlanForm } from "./performance-reviews/development-plan-form";
+import { GoalHandoffView } from "./performance-reviews/goal-handoff-view";
 import type { ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 
 interface ReviewEntry {
@@ -33,6 +34,7 @@ interface ReviewEntry {
   selfAssessmentStatus: string;
   managerAssessmentStatus: string;
   devPlanStatus: string;
+  goalHandoffCompleted: boolean;
 }
 
 interface ReviewAggregates {
@@ -83,6 +85,7 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
   const [isLoading, setIsLoading] = useState(true);
   const [activeAssessmentReviewId, setActiveAssessmentReviewId] = useState<string | null>(null);
   const [activePlanReviewId, setActivePlanReviewId] = useState<string | null>(null);
+  const [activeHandoffReviewId, setActiveHandoffReviewId] = useState<string | null>(null);
   const { sendMessage } = useChat();
 
   const activeAssessmentReview = activeAssessmentReviewId
@@ -91,6 +94,10 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
 
   const activePlanReview = activePlanReviewId
     ? (reviews.find((r) => r.reviewId === activePlanReviewId) ?? null)
+    : null;
+
+  const activeHandoffReview = activeHandoffReviewId
+    ? (reviews.find((r) => r.reviewId === activeHandoffReviewId) ?? null)
     : null;
 
   const fetchReviews = useCallback(async () => {
@@ -192,6 +199,21 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
         onFinalized={() => {
           fetchReviews();
           setActivePlanReviewId(null);
+        }}
+      />
+    );
+  }
+
+  if (activeHandoffReview) {
+    return (
+      <GoalHandoffView
+        reviewId={activeHandoffReview.reviewId!}
+        employeeName={activeHandoffReview.employeeName}
+        reviewPeriod={period}
+        accentColor={accentColor}
+        onBack={() => setActiveHandoffReviewId(null)}
+        onCompleted={() => {
+          fetchReviews();
         }}
       />
     );
@@ -423,6 +445,33 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
                           PDF
                         </Button>
                       )}
+                      {review.status === "acknowledged" &&
+                        !review.goalHandoffCompleted && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            style={{ color: accentColor }}
+                            onClick={() =>
+                              setActiveHandoffReviewId(review.reviewId!)
+                            }
+                          >
+                            Plan next period →
+                          </Button>
+                        )}
+                      {review.status === "acknowledged" &&
+                        review.goalHandoffCompleted && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              setActiveHandoffReviewId(review.reviewId!)
+                            }
+                          >
+                            View handoff
+                          </Button>
+                        )}
                     </td>
                   </tr>
                 );
