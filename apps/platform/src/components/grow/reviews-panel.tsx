@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { AlertCircle, Download, Users, Clock, CheckCircle, FileX } from "lucide-react";
 import { ManagerAssessmentForm } from "./performance-reviews/manager-assessment-form";
 import { DevelopmentPlanForm } from "./performance-reviews/development-plan-form";
+import { StrategyPrioritiesSidebar } from "./performance-reviews/strategy-priorities-sidebar";
 import type { ManagerAssessmentStatus } from "@ascenta/db/performance-review-categories";
 
 interface ReviewEntry {
@@ -166,18 +167,28 @@ export function ReviewsPanel({ pageKey, accentColor, onSwitchToDoTab }: ReviewsP
 
   if (activeAssessmentReview) {
     return (
-      <ManagerAssessmentForm
-        reviewId={activeAssessmentReview.reviewId!}
-        employeeName={activeAssessmentReview.employeeName}
-        reviewPeriod={period}
-        initialStatus={activeAssessmentReview.managerAssessmentStatus as ManagerAssessmentStatus}
-        accentColor={accentColor}
-        onBack={() => setActiveAssessmentReviewId(null)}
-        onSubmitted={() => {
-          fetchReviews();
-          setActiveAssessmentReviewId(null);
-        }}
-      />
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-6">
+        <div className="min-w-0">
+          <ManagerAssessmentForm
+            reviewId={activeAssessmentReview.reviewId!}
+            employeeName={activeAssessmentReview.employeeName}
+            reviewPeriod={period}
+            initialStatus={activeAssessmentReview.managerAssessmentStatus as ManagerAssessmentStatus}
+            accentColor={accentColor}
+            onBack={() => setActiveAssessmentReviewId(null)}
+            onSubmitted={() => {
+              fetchReviews();
+              setActiveAssessmentReviewId(null);
+            }}
+          />
+        </div>
+        <div className="xl:sticky xl:top-4 xl:self-start">
+          <StrategyPrioritiesSidebar
+            reviewId={activeAssessmentReview.reviewId!}
+            accentColor={accentColor}
+          />
+        </div>
+      </div>
     );
   }
 
