@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   jobDescriptionInputSchema,
@@ -52,7 +52,11 @@ export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps
   const [submitting, setSubmitting] = useState(false);
 
   const methods = useForm<JobDescriptionInput>({
-    resolver: zodResolver(jobDescriptionInputSchema),
+    // The schema uses .default() on a couple of fields, which makes its input
+    // type strictly looser than its output type. The form fills in defaults
+    // via `defaultValues`, so input and output match at runtime — cast the
+    // resolver to silence the spurious mismatch.
+    resolver: zodResolver(jobDescriptionInputSchema) as unknown as Resolver<JobDescriptionInput>,
     defaultValues: { ...emptyDefaults, ...initialValues },
     mode: "onSubmit",
   });
