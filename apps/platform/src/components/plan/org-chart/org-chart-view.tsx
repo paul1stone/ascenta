@@ -1,19 +1,32 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Crosshair, Locate } from "lucide-react";
 import { Dialog, DialogContent } from "@ascenta/ui/dialog";
+import { Button } from "@ascenta/ui/button";
+import { useAuth } from "@/lib/auth/auth-context";
 import { EmployeeProfileCard } from "@/components/plan/profile/employee-profile-card";
-import type { OrgTreeResponse } from "@ascenta/db/employees";
+import type { OrgNode, OrgTreeResponse } from "@ascenta/db/employees";
 import { OrgChartCanvas } from "./org-chart-canvas";
 import { OrgChartSearch } from "./org-chart-search";
 import { OrgChartFilters } from "./org-chart-filters";
 import { UnfilledRoleCluster } from "./unfilled-role-cluster";
 import { OrgChartEmptyState } from "./org-chart-empty-state";
 
+function findNode(roots: OrgNode[], id: string): OrgNode | null {
+  for (const n of roots) {
+    if (n.id === id) return n;
+    const hit = findNode(n.children, id);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 export function OrgChartView() {
+  const { user } = useAuth();
   const [data, setData] = useState<OrgTreeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [highlighted, setHighlighted] = useState<string | null>(null);
+  const [focalId, setFocalId] = useState<string | null>(null);
   const [profileEmployeeId, setProfileEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,6 +35,15 @@ export function OrgChartView() {
       .then((j) => setData(j))
       .finally(() => setLoading(false));
   }, []);
+
+  // Default focal = current user once both load. The canvas centers on
+  // whatever node id we pass as highlightedNodeId.
+  useEffect(() => {
+    if (!user || !data) return;
+    if (focalId) return;
+    const inTree = findNode(data.roots, user.id);
+    if (inTree) setFocalId(user.id);
+  }, [user, data, focalId]);
 
   const departments = useMemo(() => {
     if (!data) return [];
@@ -38,14 +60,41 @@ export function OrgChartView() {
     return Array.from(set).sort();
   }, [data]);
 
+  const focalNode = useMemo(
+    () => (data && focalId ? findNode(data.roots, focalId) : null),
+    [data, focalId],
+  );
+
   if (loading) return <p className="p-6 text-sm text-muted-foreground">Loading org chart...</p>;
   if (!data || data.totalEmployees < 2) return <OrgChartEmptyState />;
+
+  const isViewingSelf = user && focalId === user.id;
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
       <header className="flex items-center justify-between gap-4 flex-wrap">
-        <h2 className="text-xl font-display font-bold">Org Chart</h2>
-        <OrgChartSearch roots={data.roots} onSelect={setHighlighted} />
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-display font-bold">Org Chart</h2>
+          {focalNode && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-1 text-xs">
+              <Crosshair className="size-3" />
+              Viewing: <strong className="font-semibold">{focalNode.name}</strong>
+              {isViewingSelf && <span className="text-muted-foreground">(you)</span>}
+            </span>
+          )}
+          {user && !isViewingSelf && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => setFocalId(user.id)}
+            >
+              <Locate className="size-3" />
+              Center on me
+            </Button>
+          )}
+        </div>
+        <OrgChartSearch roots={data.roots} onSelect={setFocalId} />
       </header>
       <OrgChartFilters
         departments={departments}
@@ -71,7 +120,7 @@ export function OrgChartView() {
       <OrgChartCanvas
         roots={data.roots}
         selectedDepartments={selected}
-        highlightedNodeId={highlighted}
+        highlightedNodeId={focalId}
         onNodeClick={setProfileEmployeeId}
       />
       <Dialog
@@ -80,7 +129,23 @@ export function OrgChartView() {
       >
         <DialogContent className="max-w-2xl">
           {profileEmployeeId && (
-            <EmployeeProfileCard employeeId={profileEmployeeId} mode="inline" />
+            <>
+              <EmployeeProfileCard employeeId={profileEmployeeId} mode="inline" />
+              <div className="mt-4 flex justify-end border-t pt-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => {
+                    setFocalId(profileEmployeeId);
+                    setProfileEmployeeId(null);
+                  }}
+                >
+                  <Crosshair className="size-4" />
+                  Show in org chart
+                </Button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
