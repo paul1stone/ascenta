@@ -10,6 +10,16 @@ import {
 import { ScrollArea } from "@ascenta/ui/scroll-area";
 import { Skeleton } from "@ascenta/ui/skeleton";
 import { FocusLayerSection } from "@/components/plan/focus-layer/focus-layer-section";
+import { EmployeeProfileCard } from "@/components/plan/profile/employee-profile-card";
+import { ProfileEditSection } from "@/components/plan/profile/profile-edit-section";
+import { Button } from "@ascenta/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@ascenta/ui/dialog";
 import { useAuth } from "@/lib/auth/auth-context";
 
 interface EmployeeSheetProps {
@@ -399,6 +409,33 @@ export function EmployeeSheet({
                   </p>
                 )}
               </div>
+
+              {/* About Me / Profile Card */}
+              {data.employee.id && (
+                <div className="rounded-lg border bg-white p-4">
+                  <EmployeeProfileCard
+                    employeeId={data.employee.id}
+                    mode="inline"
+                  />
+                  {user?.role === "hr" && (
+                    <div className="mt-3">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            Edit profile (HR)
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Edit Profile</DialogTitle>
+                          </DialogHeader>
+                          <ProfileEditSection employeeId={data.employee.id} />
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Focus Layer Section */}
               {data.employee.id && user && (
