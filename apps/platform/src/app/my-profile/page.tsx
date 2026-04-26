@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { FocusLayerSection } from "@/components/plan/focus-layer/focus-layer-section";
+import { ProfileEditSection } from "@/components/plan/profile/profile-edit-section";
 
 export default function MyProfilePage() {
   const { user, loading } = useAuth();
@@ -37,8 +38,8 @@ export default function MyProfilePage() {
         <FocusLayerSection employeeId={user.id} mode="edit" />
       </section>
 
-      <section className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-        About Me (Get to Know) — coming in the next sub-project.
+      <section className="rounded-lg border p-6">
+        <ProfileEditSection employeeId={user.id} />
       </section>
     </div>
   );
