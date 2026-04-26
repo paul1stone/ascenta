@@ -24,7 +24,8 @@ function ctx(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
-describe("/api/employees/[id]/profile", () => {
+// CI doesn't have MONGODB_URI; skip real-DB integration tests there.
+describe.skipIf(!process.env.MONGODB_URI)("/api/employees/[id]/profile", () => {
   beforeAll(async () => connectDB());
   beforeEach(async () => {
     await Employee.deleteMany({ employeeId: { $regex: `^${PREFIX}` } });
