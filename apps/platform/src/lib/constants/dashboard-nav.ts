@@ -188,6 +188,10 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
   "plan/org-design": {
     title: "Organizational Design",
     description: "Design organizational structures and operating models for effectiveness.",
+    tabs: [
+      { key: "job-descriptions", label: "Job Descriptions", icon: FileText },
+      { key: "org-chart", label: "Org Chart", icon: Building2 },
+    ],
   },
   "plan/operations": {
     title: "Operations",

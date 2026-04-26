@@ -17,6 +17,7 @@ import { GoalsPanel } from "@/components/grow/goals-panel";
 import { ReviewsPanel } from "@/components/grow/reviews-panel";
 import { CheckinsPanel } from "@/components/grow/checkins-panel";
 import { SelfAssessmentPanel } from "@/components/grow/performance-reviews/self-assessment-panel";
+import { OrgDesignTabs } from "@/components/plan/org-design-tabs";
 
 export default function CategorySubPage({
   params,
@@ -89,6 +90,9 @@ export default function CategorySubPage({
             />
           )}
         </div>
+      ) : pageKey === "plan/org-design" &&
+        (activeTab === "job-descriptions" || activeTab === "org-chart") ? (
+        <OrgDesignTabs activeTab={activeTab} />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
           <div className="text-muted-foreground/40 mb-3">

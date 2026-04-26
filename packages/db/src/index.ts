@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 let isConnected = false;
 
 export async function connectDB(): Promise<void> {
-  if (isConnected) return;
+  // readyState: 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+  if (isConnected && mongoose.connection.readyState === 1) return;
 
   const uri = process.env.MONGODB_URI;
   if (!uri) {
@@ -26,3 +27,4 @@ export * from "./goal-schema";
 export * from "./performance-note-schema";
 export * from "./notification-schema";
 export * from "./review-cycle-schema";
+export * from "./job-descriptions";
