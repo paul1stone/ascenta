@@ -13,7 +13,8 @@
     "db:seed-grow": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-grow.ts",
     "db:seed-strategy": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-strategy.ts",
     "db:seed-translations": "npx tsx scripts/seed-strategy-translations.ts",
-    "db:seed-jds": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-job-descriptions.ts"
+    "db:seed-jds": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-job-descriptions.ts",
+    "db:seed-focus-layers": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-focus-layers.ts"
   },
   "devDependencies": {
     "turbo": "^2"
