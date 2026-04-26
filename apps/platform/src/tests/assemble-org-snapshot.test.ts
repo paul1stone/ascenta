@@ -91,10 +91,15 @@ async function setup() {
 }
 
 async function cleanup() {
+  const emps = await Employee.find(
+    { employeeId: { $regex: `^${PREFIX}` } },
+    { _id: 1 },
+  ).lean();
+  const empIds = (emps as Array<{ _id: unknown }>).map((e) => e._id);
+  await FocusLayer.deleteMany({ employeeId: { $in: empIds } });
   await Employee.deleteMany({ employeeId: { $regex: `^${PREFIX}` } });
-  await JobDescription.deleteMany({ title: "Software Engineer" });
-  await FocusLayer.deleteMany({});
-  await CompanyFoundation.deleteMany({});
+  await JobDescription.deleteMany({ department: TEST_DEPT });
+  await CompanyFoundation.deleteMany({ values: "Care, Clarity" });
 }
 
 describe.skipIf(SKIP_NO_DB)("assembleOrgSnapshot", () => {
