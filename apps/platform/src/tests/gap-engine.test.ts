@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { computeGapSignals, getGapLevel } from "@/lib/check-in/gap-engine";
 

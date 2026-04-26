@@ -22,6 +22,8 @@ if (fs.existsSync(envLocalPath)) {
 export default defineConfig({
   test: {
     passWithNoTests: true,
+    environment: "jsdom",
+    globals: true,
   },
   resolve: {
     alias: {
