@@ -200,3 +200,159 @@ export async function addEmployeeNote(
   const lastNote = notes[notes.length - 1];
   return { id: String((lastNote as Record<string, unknown>)._id ?? (lastNote as Record<string, unknown>).id) };
 }
+
+// ---------------------------------------------------------------------------
+// Org chart tree builder (pure function, no DB access)
+// ---------------------------------------------------------------------------
+
+type OrgEmpInput = {
+  id?: string;
+  _id?: { toString: () => string };
+  employeeId?: string;
+  firstName: string;
+  lastName: string;
+  jobTitle: string;
+  department: string;
+  managerName: string;
+  jobDescriptionId?: string | null;
+  profile?: { photoBase64?: string | null };
+};
+
+type OrgJdInput = {
+  id: string;
+  title: string;
+  department: string;
+  level: string;
+  assignedCount: number;
+};
+
+export interface OrgNode {
+  id: string;
+  employeeId: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  jobTitle: string;
+  department: string;
+  managerId: string | null;
+  photoBase64: string | null;
+  jobDescriptionTitle: string | null;
+  children: OrgNode[];
+}
+
+export interface UnfilledRoleCluster {
+  department: string;
+  roles: Array<{ jobDescriptionId: string; title: string; level: string }>;
+}
+
+export interface OrgTreeResponse {
+  roots: OrgNode[];
+  unfilledRoles: UnfilledRoleCluster[];
+  totalEmployees: number;
+  resolvedEdges: number;
+  unresolvedEmployees: string[];
+}
+
+const orgIdOf = (e: OrgEmpInput): string =>
+  e.id ?? (e._id ? e._id.toString() : "");
+const orgFullName = (e: OrgEmpInput): string => `${e.firstName} ${e.lastName}`;
+const orgNorm = (s: string): string => s.trim().toLowerCase();
+
+export function buildOrgTree(
+  employees: OrgEmpInput[],
+  jobDescriptions: OrgJdInput[],
+  jdTitleById: Map<string, string> = new Map(jobDescriptions.map((j) => [j.id, j.title])),
+): OrgTreeResponse {
+  const byName = new Map<string, OrgEmpInput>();
+  for (const e of employees) byName.set(orgNorm(orgFullName(e)), e);
+
+  const nodes = new Map<string, OrgNode>();
+  for (const e of employees) {
+    const id = orgIdOf(e);
+    nodes.set(id, {
+      id,
+      employeeId: e.employeeId ?? id,
+      name: orgFullName(e),
+      firstName: e.firstName,
+      lastName: e.lastName,
+      jobTitle: e.jobTitle,
+      department: e.department,
+      managerId: null,
+      photoBase64: e.profile?.photoBase64 ?? null,
+      jobDescriptionTitle: e.jobDescriptionId
+        ? jdTitleById.get(String(e.jobDescriptionId)) ?? null
+        : null,
+      children: [],
+    });
+  }
+
+  const unresolved: string[] = [];
+  let resolvedEdges = 0;
+  for (const e of employees) {
+    const id = orgIdOf(e);
+    const mgrName = (e.managerName ?? "").trim();
+    if (!mgrName) continue;
+    const mgr = byName.get(orgNorm(mgrName));
+    if (!mgr) {
+      unresolved.push(orgFullName(e));
+      continue;
+    }
+    const mgrId = orgIdOf(mgr);
+    if (mgrId === id) continue; // self-reference; skip
+    const node = nodes.get(id)!;
+    node.managerId = mgrId;
+    resolvedEdges++;
+  }
+
+  // Cycle detection: walking managerId chains must terminate.
+  for (const node of nodes.values()) {
+    const seen = new Set<string>([node.id]);
+    let cur = node.managerId ? nodes.get(node.managerId) : null;
+    while (cur) {
+      if (seen.has(cur.id)) {
+        node.managerId = null;
+        if (!unresolved.includes(node.name)) unresolved.push(node.name);
+        break;
+      }
+      seen.add(cur.id);
+      cur = cur.managerId ? nodes.get(cur.managerId) : null;
+    }
+  }
+
+  for (const node of nodes.values()) {
+    if (node.managerId) {
+      const parent = nodes.get(node.managerId);
+      if (parent) parent.children.push(node);
+    }
+  }
+  for (const node of nodes.values()) {
+    node.children.sort((a, b) => a.lastName.localeCompare(b.lastName));
+  }
+  const roots = Array.from(nodes.values())
+    .filter((n) => !n.managerId)
+    .sort(
+      (a, b) =>
+        a.department.localeCompare(b.department) || a.lastName.localeCompare(b.lastName),
+    );
+
+  const unfilledByDept = new Map<string, UnfilledRoleCluster>();
+  for (const j of jobDescriptions) {
+    if (j.assignedCount > 0) continue;
+    if (!unfilledByDept.has(j.department)) {
+      unfilledByDept.set(j.department, { department: j.department, roles: [] });
+    }
+    unfilledByDept.get(j.department)!.roles.push({
+      jobDescriptionId: j.id,
+      title: j.title,
+      level: j.level,
+    });
+  }
+
+  return {
+    roots,
+    unfilledRoles: Array.from(unfilledByDept.values()),
+    totalEmployees: employees.length,
+    resolvedEdges,
+    unresolvedEmployees: unresolved,
+  };
+}
