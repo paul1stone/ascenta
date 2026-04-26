@@ -52,6 +52,12 @@ const employeeSchema = new Schema(
     hireDate: { type: Date, required: true },
     status: { type: String, default: "active", required: true },
     notes: [employeeNoteSchema],
+    jobDescriptionId: {
+      type: Schema.Types.ObjectId,
+      ref: "JobDescription",
+      index: true,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -84,6 +90,7 @@ export type Employee_Type = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  jobDescriptionId?: string | null;
 };
 
 export type NewEmployee = {
@@ -96,6 +103,7 @@ export type NewEmployee = {
   managerName: string;
   hireDate: Date;
   status?: string;
+  jobDescriptionId?: string | null;
 };
 
 export type EmployeeNote = {
