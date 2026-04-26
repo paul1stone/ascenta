@@ -88,8 +88,11 @@ function Body({ data }: { data: Snapshot }) {
                 Reports to: {employee.managerName}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <DownloadOrgSnapshotButton employeeId={employee.id} />
+            <div className="flex items-center gap-2 shrink-0">
+              <DownloadOrgSnapshotButton
+                employeeId={employee.id}
+                iconOnly
+              />
               <ProfileCompletionBadge
                 complete={completion.complete}
                 total={completion.total}
