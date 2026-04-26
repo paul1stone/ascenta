@@ -16,12 +16,20 @@ export async function GET(req: NextRequest) {
 
     const q = searchParams.get("q") ?? undefined;
     const department = searchParams.get("department") ?? undefined;
-    const level = searchParams.get("level") as
-      | (typeof LEVEL_OPTIONS)[number]
-      | null;
-    const employmentType = searchParams.get("employmentType") as
-      | (typeof EMPLOYMENT_TYPE_OPTIONS)[number]
-      | null;
+
+    const levelRaw = searchParams.get("level");
+    const level =
+      levelRaw && (LEVEL_OPTIONS as readonly string[]).includes(levelRaw)
+        ? (levelRaw as (typeof LEVEL_OPTIONS)[number])
+        : undefined;
+
+    const employmentTypeRaw = searchParams.get("employmentType");
+    const employmentType =
+      employmentTypeRaw &&
+      (EMPLOYMENT_TYPE_OPTIONS as readonly string[]).includes(employmentTypeRaw)
+        ? (employmentTypeRaw as (typeof EMPLOYMENT_TYPE_OPTIONS)[number])
+        : undefined;
+
     const statusRaw = searchParams.get("status");
     let status: (typeof STATUS_OPTIONS)[number] | "all" | undefined;
     if (statusRaw === "all") status = "all";
@@ -34,8 +42,8 @@ export async function GET(req: NextRequest) {
     const result = await listJobDescriptions({
       q,
       department: department || undefined,
-      level: level ?? undefined,
-      employmentType: employmentType ?? undefined,
+      level,
+      employmentType,
       status,
       limit: Number.isFinite(limit) ? limit : 50,
       offset: Number.isFinite(offset) ? offset : 0,
