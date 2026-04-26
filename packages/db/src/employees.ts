@@ -258,6 +258,17 @@ const orgIdOf = (e: OrgEmpInput): string =>
 const orgFullName = (e: OrgEmpInput): string => `${e.firstName} ${e.lastName}`;
 const orgNorm = (s: string): string => s.trim().toLowerCase();
 
+// Placeholder managerName values that indicate an intentional root
+// (e.g. CEO reporting to "the Board") rather than a data quality issue.
+const ROOT_SENTINELS = new Set([
+  "executive team",
+  "board",
+  "board of directors",
+  "external",
+  "n/a",
+  "none",
+]);
+
 export function buildOrgTree(
   employees: OrgEmpInput[],
   jobDescriptions: OrgJdInput[],
@@ -291,7 +302,7 @@ export function buildOrgTree(
   for (const e of employees) {
     const id = orgIdOf(e);
     const mgrName = (e.managerName ?? "").trim();
-    if (!mgrName) continue;
+    if (!mgrName || ROOT_SENTINELS.has(orgNorm(mgrName))) continue;
     const mgr = byName.get(orgNorm(mgrName));
     if (!mgr) {
       unresolved.push(orgFullName(e));

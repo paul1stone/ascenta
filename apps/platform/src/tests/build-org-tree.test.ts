@@ -41,6 +41,15 @@ describe("buildOrgTree", () => {
     expect(r.unresolvedEmployees).toContain("Or Phan");
   });
 
+  it("treats placeholder managerName sentinels as intentional roots, not unresolved", () => {
+    const ceo = baseEmp({ id: "1", firstName: "Cee", lastName: "Eo", managerName: "Executive Team" });
+    const ic = baseEmp({ id: "2", firstName: "Ian", lastName: "Cee", managerName: "Cee Eo" });
+    const r = buildOrgTree([ceo, ic], []);
+    expect(r.roots).toHaveLength(1);
+    expect(r.roots[0].name).toBe("Cee Eo");
+    expect(r.unresolvedEmployees).not.toContain("Cee Eo");
+  });
+
   it("groups unfilled JDs by department", () => {
     const r = buildOrgTree(
       [],
