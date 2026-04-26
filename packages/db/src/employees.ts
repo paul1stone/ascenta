@@ -367,3 +367,57 @@ export function buildOrgTree(
     unresolvedEmployees: unresolved,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Neighborhood (skip-up + manager + peers + focal + reports + skip-down)
+// ---------------------------------------------------------------------------
+
+function findOrgPath(
+  roots: OrgNode[],
+  targetId: string,
+  trail: OrgNode[] = [],
+): OrgNode[] | null {
+  for (const n of roots) {
+    const next = [...trail, n];
+    if (n.id === targetId) return next;
+    const hit = findOrgPath(n.children, targetId, next);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/**
+ * Trim the org tree to the focal person's local neighborhood:
+ * skip-up (focal's manager's manager) → manager (with focal's peers as
+ * leaf nodes) → focal (with direct reports → skip-down as leaf nodes).
+ * Returns the original roots when the focal id isn't found.
+ */
+export function buildOrgNeighborhood(roots: OrgNode[], focalId: string): OrgNode[] {
+  const path = findOrgPath(roots, focalId);
+  if (!path) return roots;
+
+  const focal = path[path.length - 1];
+  const manager = path.length >= 2 ? path[path.length - 2] : null;
+  const skipUp = path.length >= 3 ? path[path.length - 3] : null;
+
+  const trimmedFocal: OrgNode = {
+    ...focal,
+    children: focal.children.map((child) => ({
+      ...child,
+      children: child.children.map((g) => ({ ...g, children: [] })),
+    })),
+  };
+
+  if (!manager) return [trimmedFocal];
+
+  const trimmedManager: OrgNode = {
+    ...manager,
+    children: manager.children.map((sib) =>
+      sib.id === focalId ? trimmedFocal : { ...sib, children: [] },
+    ),
+  };
+
+  if (!skipUp) return [trimmedManager];
+
+  return [{ ...skipUp, children: [trimmedManager] }];
+}

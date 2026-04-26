@@ -5,12 +5,18 @@ import { Dialog, DialogContent } from "@ascenta/ui/dialog";
 import { Button } from "@ascenta/ui/button";
 import { useAuth } from "@/lib/auth/auth-context";
 import { EmployeeProfileCard } from "@/components/plan/profile/employee-profile-card";
-import type { OrgNode, OrgTreeResponse } from "@ascenta/db/employees";
+import {
+  buildOrgNeighborhood,
+  type OrgNode,
+  type OrgTreeResponse,
+} from "@ascenta/db/employees";
 import { OrgChartCanvas } from "./org-chart-canvas";
 import { OrgChartSearch } from "./org-chart-search";
 import { OrgChartFilters } from "./org-chart-filters";
 import { UnfilledRoleCluster } from "./unfilled-role-cluster";
 import { OrgChartEmptyState } from "./org-chart-empty-state";
+
+type ViewMode = "neighborhood" | "full";
 
 function findNode(roots: OrgNode[], id: string): OrgNode | null {
   for (const n of roots) {
@@ -28,6 +34,7 @@ export function OrgChartView() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [focalId, setFocalId] = useState<string | null>(null);
   const [profileEmployeeId, setProfileEmployeeId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("neighborhood");
 
   useEffect(() => {
     fetch("/api/dashboard/org-tree")
@@ -65,6 +72,12 @@ export function OrgChartView() {
     [data, focalId],
   );
 
+  const visibleRoots = useMemo(() => {
+    if (!data) return [];
+    if (viewMode === "full" || !focalId) return data.roots;
+    return buildOrgNeighborhood(data.roots, focalId);
+  }, [data, focalId, viewMode]);
+
   if (loading) return <p className="p-6 text-sm text-muted-foreground">Loading org chart...</p>;
   if (!data || data.totalEmployees < 2) return <OrgChartEmptyState />;
 
@@ -93,6 +106,32 @@ export function OrgChartView() {
               Center on me
             </Button>
           )}
+          <div className="ml-2 inline-flex rounded-md border bg-muted/30 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("neighborhood")}
+              className={
+                "rounded px-2 py-0.5 " +
+                (viewMode === "neighborhood"
+                  ? "bg-white shadow-sm font-medium"
+                  : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              Neighborhood
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("full")}
+              className={
+                "rounded px-2 py-0.5 " +
+                (viewMode === "full"
+                  ? "bg-white shadow-sm font-medium"
+                  : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              Full org
+            </button>
+          </div>
         </div>
         <OrgChartSearch roots={data.roots} onSelect={setFocalId} />
       </header>
@@ -118,7 +157,7 @@ export function OrgChartView() {
       )}
       <UnfilledRoleCluster clusters={data.unfilledRoles} />
       <OrgChartCanvas
-        roots={data.roots}
+        roots={visibleRoots}
         selectedDepartments={selected}
         highlightedNodeId={focalId}
         onNodeClick={setProfileEmployeeId}
