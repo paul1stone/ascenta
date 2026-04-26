@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "@ascenta/ui/button";
 import { Input } from "@ascenta/ui/input";
@@ -10,8 +11,22 @@ import {
 import { Plus, X } from "lucide-react";
 
 export function FunFactsField({ name }: { name: string }) {
-  const { control, register } = useFormContext();
+  const { control, register, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
+  const initRef = useRef(false);
+
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    if (fields.length > 0) return;
+    const initial = getValues(name);
+    if (Array.isArray(initial) && initial.length > 0) {
+      for (const v of initial) append(typeof v === "string" ? v : "");
+    } else {
+      append("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-2">
