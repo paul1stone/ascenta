@@ -200,3 +200,15 @@ export async function addEmployeeNote(
   const lastNote = notes[notes.length - 1];
   return { id: String((lastNote as Record<string, unknown>)._id ?? (lastNote as Record<string, unknown>).id) };
 }
+
+// Org chart tree builder + neighborhood trimmer live in ./org-tree so
+// they can be imported from client components without dragging in the
+// Mongoose Employee schema. Re-export for back-compat with existing
+// server-side callers.
+export {
+  buildOrgTree,
+  buildOrgNeighborhood,
+  type OrgNode,
+  type UnfilledRoleCluster,
+  type OrgTreeResponse,
+} from "./org-tree";

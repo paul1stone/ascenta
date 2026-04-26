@@ -140,7 +140,10 @@ async function main() {
     }
     const department = random(DEPARTMENTS);
     const jobTitle = random(JOB_TITLES[department]);
-    const managerName = `${random(FIRST_NAMES)} ${random(LAST_NAMES)}`;
+    // managerName is finalized in a second pass below so every employee
+    // points to a real person in the dataset (otherwise the org chart
+    // shows everyone as a root).
+    const managerName = "PENDING";
     const empId = `EMP${1000 + i}`;
     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${i}@company.com`.replace(/\s/g, "");
 
@@ -187,8 +190,54 @@ async function main() {
   const created = await Employee.insertMany(employeeDocs);
   const withNotes = created.filter((e) => e.notes && e.notes.length > 0);
 
+  // ── Wire up reporting structure ─────────────────────────────────────
+  // Sarah Chen is root; one bulk employee per department becomes that
+  // department's head and reports to Sarah Chen (Engineering already has
+  // Jason Lee). Everyone else reports to their department head.
+  const byDept = new Map<string, typeof created>();
+  for (const emp of created) {
+    if (!byDept.has(emp.department)) byDept.set(emp.department, []);
+    byDept.get(emp.department)!.push(emp);
+  }
+
+  const titleRank = (t: string) =>
+    /Director/i.test(t) ? 0
+    : /Manager/i.test(t) ? 1
+    : /Lead/i.test(t) ? 2
+    : /Senior|Staff/i.test(t) ? 3
+    : 4;
+
+  const deptHeadByDept = new Map<string, string>();
+  deptHeadByDept.set("Engineering", "Jason Lee");
+  deptHeadByDept.set("HR", "Sarah Chen");
+
+  for (const [dept, emps] of byDept) {
+    if (deptHeadByDept.has(dept)) continue;
+    const head = [...emps].sort(
+      (a, b) => titleRank(a.jobTitle) - titleRank(b.jobTitle),
+    )[0];
+    deptHeadByDept.set(dept, `${head.firstName} ${head.lastName}`);
+  }
+
+  for (const [dept, emps] of byDept) {
+    const headName = deptHeadByDept.get(dept)!;
+    for (const emp of emps) {
+      const empName = `${emp.firstName} ${emp.lastName}`;
+      const target = empName === headName ? "Sarah Chen" : headName;
+      if (emp.managerName !== target) {
+        emp.managerName = target;
+        await emp.save();
+      }
+    }
+  }
+
   console.log(`Created ${created.length} employees.`);
   console.log(`${withNotes.length} employees have notes.`);
+  console.log(
+    `Department heads: ${[...deptHeadByDept.entries()]
+      .map(([d, n]) => `${d}=${n}`)
+      .join(", ")}`,
+  );
   console.log("Seed complete!");
 
   await mongoose.disconnect();
