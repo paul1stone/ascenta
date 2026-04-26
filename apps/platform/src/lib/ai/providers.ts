@@ -81,3 +81,18 @@ export function checkProviderConfig(): {
     ollama: true, // Ollama is local, no API key needed
   };
 }
+
+/**
+ * Pick the configured model based on env keys.
+ * Prefers OpenAI; falls back to Anthropic.
+ */
+export function resolveModel() {
+  const config = checkProviderConfig();
+  if (config.openai) {
+    return openai(AI_CONFIG.defaultModels.openai);
+  }
+  if (config.anthropic) {
+    return anthropic(AI_CONFIG.defaultModels.anthropic);
+  }
+  throw new Error("No AI provider configured: set OPENAI_API_KEY or ANTHROPIC_API_KEY");
+}
