@@ -32,7 +32,10 @@
     "./notification-schema": "./src/notification-schema.ts",
     "./job-description-constants": "./src/job-description-constants.ts",
     "./job-description-schema": "./src/job-description-schema.ts",
-    "./job-descriptions": "./src/job-descriptions.ts"
+    "./job-descriptions": "./src/job-descriptions.ts",
+    "./focus-layer-constants": "./src/focus-layer-constants.ts",
+    "./focus-layer-schema": "./src/focus-layer-schema.ts",
+    "./focus-layers": "./src/focus-layers.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"
