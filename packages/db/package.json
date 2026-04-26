@@ -30,7 +30,8 @@
     "./performance-review-categories": "./src/performance-review-categories.ts",
     "./review-cycle-schema": "./src/review-cycle-schema.ts",
     "./notification-schema": "./src/notification-schema.ts",
-    "./job-description-constants": "./src/job-description-constants.ts"
+    "./job-description-constants": "./src/job-description-constants.ts",
+    "./job-description-schema": "./src/job-description-schema.ts"
   },
   "scripts": {
     "db:seed": "npx tsx scripts/seed-employees.ts"
