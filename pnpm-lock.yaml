@@ -129,6 +129,9 @@ importers:
       mammoth:
         specifier: ^1.11.0
         version: 1.11.0
+      mongoose:
+        specifier: ^8.14.1
+        version: 8.23.0
       next:
         specifier: 16.1.4
         version: 16.1.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
