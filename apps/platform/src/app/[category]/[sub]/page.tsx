@@ -91,7 +91,9 @@ export default function CategorySubPage({
           )}
         </div>
       ) : pageKey === "plan/org-design" &&
-        (activeTab === "job-descriptions" || activeTab === "org-chart") ? (
+        (activeTab === "job-descriptions" ||
+          activeTab === "my-profile" ||
+          activeTab === "org-chart") ? (
         <OrgDesignTabs activeTab={activeTab} />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-6">

@@ -37,6 +37,42 @@ const employeeNoteSchema = new Schema(
 );
 
 // ============================================================================
+// EMPLOYEE PROFILE (embedded sub-document)
+// ============================================================================
+
+const employeeChoiceSchema = new Schema(
+  {
+    label: { type: String, default: "", trim: true },
+    value: { type: String, default: "", trim: true },
+  },
+  { _id: false }
+);
+
+const getToKnowSchema = new Schema(
+  {
+    personalBio: { type: String, default: "", trim: true },
+    hobbies: { type: String, default: "", trim: true },
+    funFacts: { type: [String], default: [] },
+    askMeAbout: { type: String, default: "", trim: true },
+    hometown: { type: String, default: "", trim: true },
+    currentlyConsuming: { type: String, default: "", trim: true },
+    employeeChoice: { type: employeeChoiceSchema, default: () => ({}) },
+  },
+  { _id: false }
+);
+
+const profileSchema = new Schema(
+  {
+    photoBase64: { type: String, default: null },
+    pronouns: { type: String, default: null, trim: true },
+    preferredChannel: { type: String, default: null, trim: true },
+    getToKnow: { type: getToKnowSchema, default: () => ({}) },
+    profileUpdatedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+// ============================================================================
 // EMPLOYEE
 // ============================================================================
 
@@ -58,6 +94,7 @@ const employeeSchema = new Schema(
       index: true,
       default: null,
     },
+    profile: { type: profileSchema, default: () => ({}) },
   },
   {
     timestamps: true,
@@ -77,6 +114,29 @@ export const Employee =
 // TYPE ALIASES (backward compatibility)
 // ============================================================================
 
+export type EmployeeChoice = {
+  label: string;
+  value: string;
+};
+
+export type EmployeeGetToKnow = {
+  personalBio: string;
+  hobbies: string;
+  funFacts: string[];
+  askMeAbout: string;
+  hometown: string;
+  currentlyConsuming: string;
+  employeeChoice: EmployeeChoice;
+};
+
+export type EmployeeProfile = {
+  photoBase64: string | null;
+  pronouns: string | null;
+  preferredChannel: string | null;
+  getToKnow: EmployeeGetToKnow;
+  profileUpdatedAt: Date | null;
+};
+
 export type Employee_Type = {
   id: string;
   employeeId: string;
@@ -91,6 +151,7 @@ export type Employee_Type = {
   createdAt: Date;
   updatedAt: Date;
   jobDescriptionId?: string | null;
+  profile?: EmployeeProfile;
 };
 
 export type NewEmployee = {

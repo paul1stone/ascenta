@@ -4,6 +4,65 @@
 
 import { Employee } from "./employee-schema";
 
+type GetToKnow = {
+  personalBio?: string;
+  hobbies?: string;
+  funFacts?: string[];
+  askMeAbout?: string;
+  hometown?: string;
+  currentlyConsuming?: string;
+  employeeChoice?: { label?: string; value?: string };
+};
+
+const COMPLETION_KEYS = [
+  "personalBio",
+  "hobbies",
+  "funFacts",
+  "askMeAbout",
+  "hometown",
+  "currentlyConsuming",
+  "employeeChoice",
+] as const;
+type CompletionKey = (typeof COMPLETION_KEYS)[number];
+
+function isComplete(key: CompletionKey, gtk: GetToKnow): boolean {
+  if (key === "funFacts") {
+    return (
+      Array.isArray(gtk.funFacts) &&
+      gtk.funFacts.some((s) => typeof s === "string" && s.trim().length > 0)
+    );
+  }
+  if (key === "employeeChoice") {
+    return !!(
+      gtk.employeeChoice?.label?.trim() && gtk.employeeChoice?.value?.trim()
+    );
+  }
+  const v = gtk[key];
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+export function computeProfileCompletion(profile: { getToKnow?: GetToKnow }): {
+  complete: number;
+  total: number;
+  percent: number;
+  missingKeys: CompletionKey[];
+} {
+  const gtk = profile.getToKnow ?? {};
+  const missing: CompletionKey[] = [];
+  let complete = 0;
+  for (const k of COMPLETION_KEYS) {
+    if (isComplete(k, gtk)) complete++;
+    else missing.push(k);
+  }
+  const total = COMPLETION_KEYS.length;
+  return {
+    complete,
+    total,
+    percent: Math.round((complete / total) * 100),
+    missingKeys: missing,
+  };
+}
+
 export interface EmployeeWithNotes {
   id: string;
   employeeId: string;
