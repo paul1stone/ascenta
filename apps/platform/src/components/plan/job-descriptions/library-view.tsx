@@ -104,11 +104,11 @@ export function LibraryView() {
       )}
 
       <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-        <SheetContent side="right" className="w-[600px] sm:max-w-[600px] overflow-y-auto">
-          <SheetHeader>
+        <SheetContent side="right" className="w-[600px] sm:max-w-[600px] p-0 gap-0">
+          <SheetHeader className="border-b px-6 pt-6 pb-4">
             <SheetTitle>New Job Description</SheetTitle>
           </SheetHeader>
-          <div className="mt-4">
+          <div className="flex-1 overflow-y-auto px-6 py-6">
             <JdForm
               mode="create"
               onSuccess={() => {
@@ -122,12 +122,12 @@ export function LibraryView() {
       </Sheet>
 
       <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="right" className="w-[700px] sm:max-w-[700px] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="sr-only">Job Description Detail</SheetTitle>
+        <SheetContent side="right" className="w-[700px] sm:max-w-[700px] p-0 gap-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Job Description Detail</SheetTitle>
           </SheetHeader>
           {selected && (
-            <div className="mt-4">
+            <div className="flex-1 overflow-y-auto px-6 py-6">
               <JdDetail
                 jobDescription={selected}
                 onChanged={() => fetchList(filters)}

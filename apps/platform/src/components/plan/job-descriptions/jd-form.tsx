@@ -95,7 +95,7 @@ export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 overflow-y-auto"
+        className="flex flex-col gap-6"
         aria-label={mode === "create" ? "Create Job Description" : "Edit Job Description"}
       >
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">

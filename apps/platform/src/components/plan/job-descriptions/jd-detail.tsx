@@ -92,7 +92,7 @@ export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps
   }
 
   return (
-    <div className="flex flex-col gap-6 overflow-y-auto">
+    <div className="flex flex-col gap-6">
       <header className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-display font-bold">{jobDescription.title}</h2>
