@@ -25,20 +25,26 @@ function ctx(employeeId: string) {
   return { params: Promise.resolve({ employeeId }) };
 }
 
+async function cleanup() {
+  const emps = await Employee.find(
+    { employeeId: { $regex: `^${PREFIX}` } },
+    { _id: 1 }
+  ).lean<{ _id: unknown }[]>();
+  if (emps.length) {
+    await FocusLayer.deleteMany({ employeeId: { $in: emps.map((e) => e._id) } });
+  }
+  await Employee.deleteMany({ employeeId: { $regex: `^${PREFIX}` } });
+}
+
 describe.skipIf(!process.env.MONGODB_URI)("/api/focus-layers/[employeeId]", () => {
   beforeAll(async () => {
     await connectDB();
   });
 
-  beforeEach(async () => {
-    await Employee.deleteMany({ employeeId: { $regex: `^${PREFIX}` } });
-    await FocusLayer.deleteMany({});
-  });
+  beforeEach(cleanup);
 
   afterAll(async () => {
-    await Employee.deleteMany({ employeeId: { $regex: `^${PREFIX}` } });
-    await FocusLayer.deleteMany({});
-    await mongoose.disconnect();
+    await cleanup();
   });
 
   it("GET returns null when none", async () => {
