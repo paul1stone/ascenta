@@ -38,7 +38,10 @@ async function callCreate(body: Record<string, unknown>) {
   return { status: res.status, json: await res.json() };
 }
 
-describe("GET /api/job-descriptions", () => {
+// CI doesn't have MONGODB_URI; skip real-DB integration tests there.
+const SKIP_NO_DB = !process.env.MONGODB_URI;
+
+describe.skipIf(SKIP_NO_DB)("GET /api/job-descriptions", () => {
   beforeAll(async () => connectDB());
   beforeEach(async () => {
     await JobDescription.deleteMany({ title: { $regex: `^${PREFIX}` } });
@@ -78,7 +81,7 @@ describe("GET /api/job-descriptions", () => {
   });
 });
 
-describe("POST /api/job-descriptions", () => {
+describe.skipIf(SKIP_NO_DB)("POST /api/job-descriptions", () => {
   beforeAll(async () => connectDB());
   beforeEach(async () => {
     await JobDescription.deleteMany({ title: { $regex: `^${PREFIX}` } });

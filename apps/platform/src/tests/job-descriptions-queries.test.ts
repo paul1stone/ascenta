@@ -28,7 +28,8 @@ async function makeJd(overrides: Partial<Record<string, unknown>> = {}) {
   });
 }
 
-describe("job-descriptions query helpers", () => {
+// CI doesn't have MONGODB_URI; skip real-DB integration tests there.
+describe.skipIf(!process.env.MONGODB_URI)("job-descriptions query helpers", () => {
   beforeAll(async () => {
     await connectDB();
   });

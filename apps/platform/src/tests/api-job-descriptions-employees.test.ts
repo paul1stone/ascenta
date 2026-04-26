@@ -69,7 +69,8 @@ async function del(id: string, body: Record<string, unknown>) {
   return { status: res.status, json: await res.json() };
 }
 
-describe("/api/job-descriptions/[id]/employees", () => {
+// CI doesn't have MONGODB_URI; skip real-DB integration tests there.
+describe.skipIf(!process.env.MONGODB_URI)("/api/job-descriptions/[id]/employees", () => {
   beforeAll(async () => connectDB());
   beforeEach(async () => {
     await JobDescription.deleteMany({ title: { $regex: `^${PREFIX}` } });
