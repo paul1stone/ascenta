@@ -43,13 +43,19 @@ export function OrgChartView() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Default focal = current user once both load. The canvas centers on
-  // whatever node id we pass as highlightedNodeId.
+  // Default focal = current user once both load; fall back to the first
+  // root when no persona is picked, so Neighborhood mode always has a
+  // target instead of silently rendering the full tree.
   useEffect(() => {
-    if (!user || !data) return;
-    if (focalId) return;
-    const inTree = findNode(data.roots, user.id);
-    if (inTree) setFocalId(user.id);
+    if (!data || focalId) return;
+    if (user) {
+      const inTree = findNode(data.roots, user.id);
+      if (inTree) {
+        setFocalId(user.id);
+        return;
+      }
+    }
+    if (data.roots[0]) setFocalId(data.roots[0].id);
   }, [user, data, focalId]);
 
   const departments = useMemo(() => {
