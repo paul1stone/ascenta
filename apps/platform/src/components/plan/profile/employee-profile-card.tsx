@@ -8,6 +8,7 @@ import {
   DialogTrigger,
 } from "@ascenta/ui/dialog";
 import { ProfileCompletionBadge } from "./profile-completion-badge";
+import { DownloadOrgSnapshotButton } from "./download-org-snapshot-button";
 import { FocusLayerReadView } from "@/components/plan/focus-layer/focus-layer-read-view";
 
 interface Props {
@@ -87,10 +88,13 @@ function Body({ data }: { data: Snapshot }) {
                 Reports to: {employee.managerName}
               </p>
             </div>
-            <ProfileCompletionBadge
-              complete={completion.complete}
-              total={completion.total}
-            />
+            <div className="flex items-center gap-2">
+              <DownloadOrgSnapshotButton employeeId={employee.id} />
+              <ProfileCompletionBadge
+                complete={completion.complete}
+                total={completion.total}
+              />
+            </div>
           </div>
         </div>
       </header>
