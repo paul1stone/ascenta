@@ -9,6 +9,8 @@ import {
 } from "@ascenta/ui/sheet";
 import { ScrollArea } from "@ascenta/ui/scroll-area";
 import { Skeleton } from "@ascenta/ui/skeleton";
+import { FocusLayerSection } from "@/components/plan/focus-layer/focus-layer-section";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface EmployeeSheetProps {
   employeeId: string | null;
@@ -223,6 +225,7 @@ export function EmployeeSheet({
   open,
   onOpenChange,
 }: EmployeeSheetProps) {
+  const { user } = useAuth();
   const [data, setData] = useState<EmployeeResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -396,6 +399,21 @@ export function EmployeeSheet({
                   </p>
                 )}
               </div>
+
+              {/* Focus Layer Section */}
+              {data.employee.id && user && (
+                <div>
+                  <FocusLayerSection
+                    employeeId={data.employee.id}
+                    mode="view"
+                    canConfirm={
+                      user.role === "hr" ||
+                      (user.role === "manager" &&
+                        (user.directReports ?? []).includes(data.employee.id))
+                    }
+                  />
+                </div>
+              )}
 
               {/* Documents Section */}
               <div>
