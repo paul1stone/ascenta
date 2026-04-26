@@ -1,5 +1,5 @@
 import mongoose, { Types } from "mongoose";
-import { JobDescription } from "./job-description-schema";
+import { JobDescription, type JobDescription_Type } from "./job-description-schema";
 import { Employee } from "./employee-schema";
 import type {
   Level,
@@ -87,9 +87,17 @@ export async function listJobDescriptions(
   return { items: items as ListedJobDescription[], total };
 }
 
-export async function getJobDescriptionById(id: string) {
+export async function getJobDescriptionById(
+  id: string,
+): Promise<JobDescription_Type | null> {
   if (!mongoose.isValidObjectId(id)) return null;
-  return JobDescription.findById(id).lean();
+  const doc = await JobDescription.findById(id).lean();
+  if (!doc) return null;
+  const { _id, __v: _v, ...rest } = doc as Record<string, unknown> & {
+    _id: unknown;
+    __v?: unknown;
+  };
+  return { ...rest, id: String(_id) } as JobDescription_Type;
 }
 
 export async function listAssignedEmployees(jobDescriptionId: string) {
