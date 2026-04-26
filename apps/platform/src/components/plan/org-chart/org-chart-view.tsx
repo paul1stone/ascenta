@@ -9,7 +9,7 @@ import {
   buildOrgNeighborhood,
   type OrgNode,
   type OrgTreeResponse,
-} from "@ascenta/db/employees";
+} from "@ascenta/db/org-tree";
 import { OrgChartCanvas } from "./org-chart-canvas";
 import { OrgChartSearch } from "./org-chart-search";
 import { OrgChartFilters } from "./org-chart-filters";

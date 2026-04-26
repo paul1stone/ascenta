@@ -166,7 +166,14 @@ Three providers: OpenAI (default: gpt-4o), Anthropic (default: claude-sonnet-4),
 - **IDs**: MongoDB ObjectId (native `_id`). `toJSON` virtuals expose `id` as string. `nanoid` used for non-DB short IDs where needed.
 - **Design tokens**: Deep Blue (#0c1e3d), Summit orange (#ff6b35), Glacier (#f8fafc). Section accent colors defined in `dashboard-nav.ts` per category (Plan=#6688bb, Attract=#aa8866, Launch=#bb6688, Grow=#44aa99, Care=#cc6677, Protect=#8888aa). Custom fonts: Plus Jakarta Sans (display), Geist (sans).
 - **Tailwind v4**: Uses `@source "./components"` in `packages/ui/src/globals.css` to scan shared UI components (Tailwind v4 ignores `node_modules` by default). Without this, utility classes used only in shared packages won't be generated.
-- **Client-side imports**: Never import from `@ascenta/db/*-schema` in client components — these files import mongoose which crashes client-side. Use `@ascenta/db/goal-constants` or `@ascenta/db/performance-note-constants` for enum constants on the client.
+- **Client-side imports**: Never import from `@ascenta/db/*-schema` (or any module that transitively imports mongoose) in client components — module evaluation crashes the browser with `Cannot read properties of undefined (reading '<ModelName>')`. Pure helpers (tree builders, validators, etc.) that you also need on the client must live in their own mongoose-free file (e.g. `@ascenta/db/org-tree`, `@ascenta/db/goal-constants`). Type-only imports from schema modules are safe because they get erased at build time — but if you start importing a runtime export from the same path, the whole module loads. Audit before crossing the client boundary.
 - **Email**: Resend with lazy singleton in `packages/email/`. Templates in `packages/email/src/templates/`. Email failures are caught and logged but don't block primary operations.
 - **Testing**: Vitest with `@` alias support. `passWithNoTests: true` in config.
+- **DB-backed integration tests**: Any test that calls `connectDB()`, `Model.create()`, `Model.find()`, etc. must be gated on `MONGODB_URI` so CI passes (CI doesn't have the secret). Pattern, copied across the suite:
+  ```ts
+  // CI doesn't have MONGODB_URI; skip real-DB integration tests there.
+  const SKIP_NO_DB = !process.env.MONGODB_URI;
+  describe.skipIf(SKIP_NO_DB)("...", () => { ... });
+  ```
+  Without the gate, `beforeAll(connectDB)` throws `MONGODB_URI environment variable is not set` and the test file fails. Pure-function tests (no DB access) don't need the gate.
 - **No auth layer**: No middleware, authentication, or route guards are currently configured. All routes are open.

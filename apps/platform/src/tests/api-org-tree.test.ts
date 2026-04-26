@@ -8,6 +8,9 @@ import { GET } from "@/app/api/dashboard/org-tree/route";
 
 const PREFIX = "ORG_TREE_API_";
 
+// CI doesn't have MONGODB_URI; skip real-DB integration tests there.
+const SKIP_NO_DB = !process.env.MONGODB_URI;
+
 async function makeEmp(suffix: string, managerName = "External") {
   return Employee.create({
     employeeId: `${PREFIX}${suffix}`,
@@ -21,7 +24,7 @@ async function makeEmp(suffix: string, managerName = "External") {
   });
 }
 
-describe("GET /api/dashboard/org-tree", () => {
+describe.skipIf(SKIP_NO_DB)("GET /api/dashboard/org-tree", () => {
   beforeAll(async () => connectDB());
   beforeEach(async () => {
     await Employee.deleteMany({ employeeId: { $regex: `^${PREFIX}` } });
