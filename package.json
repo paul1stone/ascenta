@@ -14,7 +14,8 @@
     "db:seed-strategy": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-strategy.ts",
     "db:seed-translations": "npx tsx scripts/seed-strategy-translations.ts",
     "db:seed-jds": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-job-descriptions.ts",
-    "db:seed-focus-layers": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-focus-layers.ts"
+    "db:seed-focus-layers": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-focus-layers.ts",
+    "db:seed-profiles": "pnpm --filter @ascenta/db exec npx tsx ../../scripts/seed-employee-profiles.ts"
   },
   "devDependencies": {
     "turbo": "^2"
