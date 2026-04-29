@@ -10,6 +10,7 @@ import { Employee } from "@ascenta/db/employee-schema";
 import { JobDescription } from "@ascenta/db/job-description-schema";
 import { FocusLayer } from "@ascenta/db/focus-layer-schema";
 import { WORKING_DOC_PREFIX, WORKING_DOC_SUFFIX } from "./workflow-constants";
+import { generateFocusLayerSuggestion } from "./focus-layer-tool";
 
 const aboutMeShape = z.object({
   photoBase64: z.string().nullable().optional(),
@@ -183,6 +184,109 @@ RULES:
       employeeId,
       employeeName,
       message: `Loaded ${employeeName}'s current role. Starting with About Me.`,
+    };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// suggestFromJDTool — one-shot draft of Focus Layer from the assigned JD.
+// Skips the interview; preserves current About Me values verbatim.
+// ---------------------------------------------------------------------------
+
+export const suggestFromJDTool = tool({
+  description: `Skip the interview and draft the user's Focus Layer values directly from their assigned Job Description. Preserves current About Me. Opens the working document for review.
+
+Call this when the user wants a quick, JD-grounded draft of their Focus Layer rather than a full interview. After this returns successfully, your text turn should say something like: "Here's what I drafted from your JD — review and submit when ready."
+
+If the user has no JD assigned, the tool returns success: false. In that case, recommend the full Compass interview instead.`,
+  inputSchema: z.object({
+    employeeId: z.string(),
+    employeeName: z.string(),
+  }),
+  execute: async ({ employeeId, employeeName }) => {
+    if (!mongoose.isValidObjectId(employeeId)) {
+      return {
+        success: false,
+        message: "Invalid employee ID.",
+        workingDocBlock: null,
+      };
+    }
+
+    await connectDB();
+    const employee = await Employee.findById(employeeId).lean<{
+      _id: unknown;
+      profile?: Record<string, unknown>;
+      jobDescriptionId?: unknown;
+    }>();
+    if (!employee) {
+      return {
+        success: false,
+        message: "Employee not found.",
+        workingDocBlock: null,
+      };
+    }
+    if (!employee.jobDescriptionId) {
+      return {
+        success: false,
+        message:
+          "You have no job description assigned yet, so I can't draft your Focus Layer from it. Try Build my Role with Compass instead.",
+        workingDocBlock: null,
+      };
+    }
+
+    let suggestion;
+    try {
+      suggestion = await generateFocusLayerSuggestion(employeeId);
+    } catch (err) {
+      return {
+        success: false,
+        message:
+          err instanceof Error
+            ? err.message
+            : "Could not generate suggestions from your JD.",
+        workingDocBlock: null,
+      };
+    }
+
+    const profile = (employee.profile ?? {}) as Record<string, unknown>;
+    const gtk = (profile.getToKnow ?? {}) as Record<string, unknown>;
+    const aboutMe = {
+      photoBase64: (profile.photoBase64 as string | null | undefined) ?? null,
+      pronouns: (profile.pronouns as string | null | undefined) ?? "",
+      preferredChannel:
+        (profile.preferredChannel as string | null | undefined) ?? "",
+      getToKnow: {
+        personalBio: (gtk.personalBio as string | undefined) ?? "",
+        hobbies: (gtk.hobbies as string | undefined) ?? "",
+        funFacts: Array.isArray(gtk.funFacts) ? (gtk.funFacts as string[]) : [],
+        askMeAbout: (gtk.askMeAbout as string | undefined) ?? "",
+        hometown: (gtk.hometown as string | undefined) ?? "",
+        currentlyConsuming:
+          (gtk.currentlyConsuming as string | undefined) ?? "",
+        employeeChoice: {
+          label:
+            ((gtk.employeeChoice as Record<string, string> | undefined)
+              ?.label) ?? "",
+          value:
+            ((gtk.employeeChoice as Record<string, string> | undefined)
+              ?.value) ?? "",
+        },
+      },
+    };
+
+    const payload = {
+      action: "open_working_document" as const,
+      workflowType: "build-my-role" as const,
+      runId: "",
+      employeeId,
+      employeeName,
+      prefilled: { aboutMe, focusLayer: suggestion },
+    };
+
+    return {
+      success: true,
+      message: `Drafted your Focus Layer from your JD. Review and submit when ready.`,
+      workingDocBlock: `${WORKING_DOC_PREFIX}${JSON.stringify(payload)}${WORKING_DOC_SUFFIX}`,
     };
   },
 });

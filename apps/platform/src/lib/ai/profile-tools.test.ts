@@ -7,6 +7,7 @@ import { FocusLayer } from "@ascenta/db/focus-layer-schema";
 import {
   startMyRoleWorkflowTool,
   openMyRoleDocumentTool,
+  suggestFromJDTool,
 } from "./profile-tools";
 
 const SKIP_NO_DB = !process.env.MONGODB_URI;
@@ -96,6 +97,32 @@ describe.skipIf(SKIP_NO_DB)("startMyRoleWorkflowTool", () => {
     });
     expect(result.success).toBe(true);
     expect(result.jdSnippet).toBeNull();
+  });
+});
+
+describe.skipIf(SKIP_NO_DB)("suggestFromJDTool", () => {
+  it("returns success: false with a friendly message when the employee has no JD", async () => {
+    await connectDB();
+    const employee = await Employee.create({
+      employeeId: `SUG-${Date.now()}`,
+      firstName: "Sug",
+      lastName: "Gest",
+      email: `sug-${Date.now()}@example.com`,
+      department: "Eng",
+      jobTitle: "Engineer",
+      managerName: "Mgr Mgr",
+      hireDate: new Date(),
+    });
+
+    const result = await (suggestFromJDTool.execute as unknown as (
+      args: { employeeId: string; employeeName: string },
+    ) => Promise<{ success: boolean; message: string }>)({
+      employeeId: String(employee._id),
+      employeeName: "Sug Gest",
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/no job description/i);
   });
 });
 
