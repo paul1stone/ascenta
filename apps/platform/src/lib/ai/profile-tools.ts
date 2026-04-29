@@ -34,10 +34,18 @@ const aboutMeShape = z.object({
 });
 
 const focusLayerShape = z.object({
-  uniqueContribution: z.string().min(20),
-  highImpactArea: z.string().min(20),
-  signatureResponsibility: z.string().min(20),
-  workingStyle: z.string().min(20),
+  uniqueContribution: z
+    .string()
+    .describe("What I uniquely contribute — aim for 2-3 sentences (≥ 20 chars)"),
+  highImpactArea: z
+    .string()
+    .describe("Where I have the highest impact — aim for 2-3 sentences (≥ 20 chars)"),
+  signatureResponsibility: z
+    .string()
+    .describe("My signature responsibility — aim for 2-3 sentences (≥ 20 chars)"),
+  workingStyle: z
+    .string()
+    .describe("How I work best — aim for 2-3 sentences (≥ 20 chars)"),
 });
 
 // ---------------------------------------------------------------------------
