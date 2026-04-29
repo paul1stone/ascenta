@@ -176,6 +176,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         (fields.employeeName as string) || employeeName;
 
       if (workflowType === "build-my-role") {
+        if (!effectiveEmployeeId) {
+          throw new Error("No employee selected — refresh and try again.");
+        }
         const aboutMe = (fields.aboutMe as Record<string, unknown>) ?? {};
         const focusLayer =
           (fields.focusLayer as Record<string, string>) ?? {};
