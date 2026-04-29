@@ -1,0 +1,157 @@
+<h2>Check-in Page Structure & Routing</h2>
+<p class="subtitle">How the check-in pages fit into the existing app structure</p>
+
+<div class="section">
+  <h3>Route Map</h3>
+  <div class="mockup">
+    <div class="mockup-header">App Routes</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; padding: 20px;">
+      <div style="color: #888;">/[category]/[sub]  ← existing dynamic route</div>
+      <div style="margin-left: 20px;">
+        <div style="color: #888;">/grow/performance  ← existing, has tabs: goals | reviews | <strong style="color: #44aa99;">checkins</strong> | reflect</div>
+      </div>
+      <br/>
+      <div style="color: #44aa99; font-weight: bold;">/grow/check-ins/[id]  ← NEW dedicated check-in page</div>
+      <div style="margin-left: 20px; color: #aaa;">
+        <div>Phase-aware rendering based on check-in status + user role</div>
+        <div>Employee sees: their Prepare form, Participate view, their Reflect form</div>
+        <div>Manager sees: their Prepare toolkit, Participate guide, their Reflect form</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Checkins Tab (Dashboard View)</h3>
+  <p class="subtitle">What the manager sees on /grow/performance → checkins tab</p>
+  <div class="mockup">
+    <div class="mockup-header">Grow / Performance System → Check-ins Tab</div>
+    <div class="mockup-body" style="padding: 24px;">
+      <!-- Top stats row -->
+      <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+        <div style="flex: 1; background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 8px; padding: 16px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Upcoming</div>
+          <div style="font-size: 28px; font-weight: 700; color: #44aa99;">4</div>
+          <div style="font-size: 12px; color: #aaa;">Next 14 days</div>
+        </div>
+        <div style="flex: 1; background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 8px; padding: 16px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Completion Rate</div>
+          <div style="font-size: 28px; font-weight: 700; color: #44aa99;">87%</div>
+          <div style="font-size: 12px; color: #aaa;">Last 30 days</div>
+        </div>
+        <div style="flex: 1; background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 8px; padding: 16px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Active Gaps</div>
+          <div style="font-size: 28px; font-weight: 700; color: #cc6677;">2</div>
+          <div style="font-size: 12px; color: #aaa;">Needs attention</div>
+        </div>
+        <div style="flex: 1; background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 8px; padding: 16px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Overdue</div>
+          <div style="font-size: 28px; font-weight: 700; color: #e8a735;">1</div>
+          <div style="font-size: 12px; color: #aaa;">Past scheduled date</div>
+        </div>
+      </div>
+
+      <!-- Schedule button -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; color: #e8e8e8;">Upcoming Check-ins</div>
+        <button class="mock-button" style="font-size: 12px;">+ Schedule Check-in</button>
+      </div>
+
+      <!-- Check-in list -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px 16px; cursor: pointer;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #44aa99; margin-right: 12px;" title="preparing"></div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; color: #e8e8e8;">Sarah Chen</div>
+            <div style="font-size: 12px; color: #888;">Q2 Performance Goals · Weekly</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 13px; color: #44aa99;">Preparing</div>
+            <div style="font-size: 12px; color: #888;">Apr 14, 2:00 PM</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px 16px; cursor: pointer;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #6688bb; margin-right: 12px;" title="ready"></div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; color: #e8e8e8;">James Rodriguez</div>
+            <div style="font-size: 12px; color: #888;">Leadership Development · Biweekly</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 13px; color: #6688bb;">Ready</div>
+            <div style="font-size: 12px; color: #888;">Apr 12, 10:00 AM</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px 16px; cursor: pointer;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #cc6677; margin-right: 12px;" title="reflecting"></div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; color: #e8e8e8;">Alex Kim</div>
+            <div style="font-size: 12px; color: #888;">Q2 Sprint Goals · Weekly</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 13px; color: #cc6677;">Reflecting</div>
+            <div style="font-size: 12px; color: #888;">Apr 10, 3:00 PM</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px 16px; cursor: pointer;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #e8a735; margin-right: 12px;" title="overdue"></div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; color: #e8e8e8;">Maria Santos</div>
+            <div style="font-size: 12px; color: #888;">Onboarding Goals · Weekly</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 13px; color: #e8a735;">Overdue</div>
+            <div style="font-size: 12px; color: #888;">Apr 8, 1:00 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Past check-ins section -->
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);">
+        <div style="font-size: 13px; color: #888; margin-bottom: 8px;">Recent Completed</div>
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.02); border-radius: 6px; padding: 10px 16px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #555; margin-right: 12px;"></div>
+          <div style="flex: 1; color: #888;">
+            <span>Sarah Chen</span> · <span style="font-size: 12px;">Apr 7</span>
+          </div>
+          <div style="font-size: 12px;">
+            <span style="color: #44aa99;" title="No gaps">●●●●</span>
+            <span style="color: #cc6677;" title="Recognition gap">●</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Employee View of Same Tab</h3>
+  <p class="subtitle">What an employee sees — only their own check-ins, no scheduling controls</p>
+  <div class="mockup">
+    <div class="mockup-header">Grow / Performance System → Check-ins Tab (Employee View)</div>
+    <div class="mockup-body" style="padding: 24px;">
+      <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+        <div style="flex: 1; background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 8px; padding: 16px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #888;">Next Check-in</div>
+          <div style="font-size: 16px; font-weight: 600; color: #44aa99;">Apr 14</div>
+          <div style="font-size: 12px; color: #aaa;">Prepare by Apr 12</div>
+        </div>
+        <div style="flex: 1; background: rgba(68,170,153,0.08); border: 1px solid rgba(68,170,153,0.2); border-radius: 8px; padding: 16px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #888;">Status</div>
+          <div style="font-size: 16px; font-weight: 600; color: #e8a735;">Needs Preparation</div>
+          <div style="font-size: 12px; color: #aaa;">3 reflection prompts</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; background: rgba(68,170,153,0.1); border: 1px solid rgba(68,170,153,0.3); border-radius: 8px; padding: 14px 16px; cursor: pointer;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #e8a735; margin-right: 12px;"></div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; color: #e8e8e8;">Upcoming Check-in with David Park</div>
+            <div style="font-size: 12px; color: #888;">Q2 Goals · Apr 14, 2:00 PM</div>
+          </div>
+          <button class="mock-button" style="font-size: 12px;">Prepare Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

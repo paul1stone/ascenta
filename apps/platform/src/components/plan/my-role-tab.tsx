@@ -5,7 +5,7 @@ import { FocusLayerSection } from "@/components/plan/focus-layer/focus-layer-sec
 import { ProfileEditSection } from "@/components/plan/profile/profile-edit-section";
 import { DownloadOrgSnapshotButton } from "@/components/plan/profile/download-org-snapshot-button";
 
-export function MyProfileTab() {
+export function MyRoleTab() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -30,7 +30,7 @@ export function MyProfileTab() {
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-display font-bold">My Profile</h2>
+          <h2 className="text-xl font-display font-bold">My Role</h2>
           <p className="text-sm text-muted-foreground">
             {user.name} · {user.title} · {user.department}
           </p>
