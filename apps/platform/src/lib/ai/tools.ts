@@ -15,6 +15,15 @@ import {
   startPerformanceNoteTool,
   completeGrowWorkflowTool,
 } from "./grow-tools";
+import {
+  startMyRoleWorkflowTool,
+  openMyRoleDocumentTool,
+  suggestFromJDTool,
+} from "./profile-tools";
+import {
+  startJobDescriptionWorkflowTool,
+  openJobDescriptionDocumentTool,
+} from "./job-description-tools";
 
 /**
  * Tool Definitions
@@ -244,6 +253,11 @@ export const defaultChatTools = {
   startCheckIn: startCheckInTool,
   startPerformanceNote: startPerformanceNoteTool,
   completeGrowWorkflow: completeGrowWorkflowTool,
+  startMyRoleWorkflow: startMyRoleWorkflowTool,
+  openMyRoleDocument: openMyRoleDocumentTool,
+  suggestFromJD: suggestFromJDTool,
+  startJobDescriptionWorkflow: startJobDescriptionWorkflowTool,
+  openJobDescriptionDocument: openJobDescriptionDocumentTool,
 };
 
 /**
