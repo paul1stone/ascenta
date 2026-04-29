@@ -25,7 +25,7 @@ export interface PageConversation {
   input: string;
 }
 
-export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note" | "build-mvv" | "strategy-breakdown" | "performance-review";
+export type WorkflowType = "create-goal" | "run-check-in" | "add-performance-note" | "build-mvv" | "strategy-breakdown" | "performance-review" | "build-my-role" | "create-job-description";
 
 export interface WorkingDocumentState {
   isOpen: boolean;
@@ -168,11 +168,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         "build-mvv": "/api/plan/foundation",
       };
 
-      const route = routeMap[workflowType];
-      if (!route) {
-        throw new Error(`Workflow type "${workflowType}" is read-only and cannot be submitted`);
-      }
-
       // Prefer form-level employeeId/employeeName (set by EmployeePicker) over
       // the working-document-level values, which may be empty for direct-open.
       const effectiveEmployeeId =
@@ -180,22 +175,108 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const effectiveEmployeeName =
         (fields.employeeName as string) || employeeName;
 
-      const res = await fetch(route, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...fields,
-          employeeId: effectiveEmployeeId,
-          employeeName: effectiveEmployeeName,
-          ...(runId ? { runId } : {}),
-        }),
-      });
+      if (workflowType === "build-my-role") {
+        const aboutMe = (fields.aboutMe as Record<string, unknown>) ?? {};
+        const focusLayer =
+          (fields.focusLayer as Record<string, string>) ?? {};
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(
-          (errorData as { error?: string }).error ?? "Failed to submit working document",
+        const profileRes = await fetch(
+          `/api/employees/${effectiveEmployeeId}/profile`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(aboutMe),
+          },
         );
+        if (!profileRes.ok) {
+          const err = await profileRes.json().catch(() => ({}));
+          throw new Error(
+            (err as { error?: string }).error ?? "Failed to save About Me",
+          );
+        }
+
+        const flRes = await fetch(
+          `/api/focus-layers/${effectiveEmployeeId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ responses: focusLayer }),
+          },
+        );
+        if (!flRes.ok) {
+          const err = await flRes.json().catch(() => ({}));
+          throw new Error(
+            (err as { error?: string }).error ?? "Failed to save Focus Layer",
+          );
+        }
+
+        const allReady = Object.values(focusLayer).every(
+          (v) => typeof v === "string" && v.trim().length >= 20,
+        );
+        if (allReady) {
+          const submitRes = await fetch(
+            `/api/focus-layers/${effectiveEmployeeId}/submit`,
+            { method: "POST" },
+          );
+          if (!submitRes.ok) {
+            const err = await submitRes.json().catch(() => ({}));
+            throw new Error(
+              (err as { error?: string }).error ??
+                "Failed to submit Focus Layer",
+            );
+          }
+        }
+      } else if (workflowType === "create-job-description") {
+        const mode = (fields.mode as string) ?? "create";
+        const jdId = fields.jdId as string | undefined;
+        const url =
+          mode === "edit" && jdId
+            ? `/api/job-descriptions/${jdId}`
+            : "/api/job-descriptions";
+        const method = mode === "edit" && jdId ? "PATCH" : "POST";
+        // Strip working-doc-only metadata before sending to the API.
+        const { mode: _m, jdId: _j, ...jdFields } = fields as Record<
+          string,
+          unknown
+        >;
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(jdFields),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(
+            (err as { error?: string }).error ??
+              "Failed to save job description",
+          );
+        }
+      } else {
+        const route = routeMap[workflowType];
+        if (!route) {
+          throw new Error(
+            `Workflow type "${workflowType}" is read-only and cannot be submitted`,
+          );
+        }
+
+        const res = await fetch(route, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...fields,
+            employeeId: effectiveEmployeeId,
+            employeeName: effectiveEmployeeName,
+            ...(runId ? { runId } : {}),
+          }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ??
+              "Failed to submit working document",
+          );
+        }
       }
 
       // For MVV, also publish after saving
@@ -210,6 +291,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       let confirmText = `Successfully submitted ${workflowType.replace(/-/g, " ")}`;
       if (workflowType === "build-mvv") {
         confirmText = "Mission, Vision & Values saved and published! You can view them on the Foundation page.";
+      } else if (workflowType === "build-my-role") {
+        confirmText = "Your role has been saved.";
+      } else if (workflowType === "create-job-description") {
+        confirmText =
+          (fields.mode as string) === "edit"
+            ? "Job description updated."
+            : "Job description created.";
       } else {
         confirmText += ` for ${employeeName ?? "employee"}.`;
       }

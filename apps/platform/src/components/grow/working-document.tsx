@@ -22,6 +22,8 @@ const WORKFLOW_TITLES: Record<WorkflowType, string> = {
   "build-mvv": "Mission, Vision & Values",
   "strategy-breakdown": "Strategy Brief",
   "performance-review": "Performance Review",
+  "build-my-role": "My Role",
+  "create-job-description": "Job Description",
 };
 
 // ---------------------------------------------------------------------------
