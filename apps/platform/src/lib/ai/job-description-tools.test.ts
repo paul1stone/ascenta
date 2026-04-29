@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { connectDB } from "@ascenta/db";
 import { JobDescription } from "@ascenta/db/job-description-schema";
 import {
@@ -7,15 +7,21 @@ import {
 } from "./job-description-tools";
 
 const SKIP_NO_DB = !process.env.MONGODB_URI;
+const JD_TEST_DEPT = "JD_TOOL_TEST_DEPT";
+
+async function cleanupJdToolFixtures() {
+  await JobDescription.deleteMany({ department: JD_TEST_DEPT });
+}
 
 describe.skipIf(SKIP_NO_DB)("startJobDescriptionWorkflowTool", () => {
   let jdId: string;
 
   beforeAll(async () => {
     await connectDB();
+    await cleanupJdToolFixtures();
     const jd = await JobDescription.create({
       title: "Staff Engineer",
-      department: "Platform",
+      department: JD_TEST_DEPT,
       level: "senior",
       employmentType: "full_time",
       roleSummary: "Owns platform reliability.",
@@ -26,6 +32,10 @@ describe.skipIf(SKIP_NO_DB)("startJobDescriptionWorkflowTool", () => {
       status: "published",
     });
     jdId = String(jd._id);
+  });
+
+  afterAll(async () => {
+    await cleanupJdToolFixtures();
   });
 
   it("returns null existing + option lists when called without jdId", async () => {

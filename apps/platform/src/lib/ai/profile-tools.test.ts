@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { connectDB } from "@ascenta/db";
-import mongoose from "mongoose";
 import { Employee } from "@ascenta/db/employee-schema";
 import { JobDescription } from "@ascenta/db/job-description-schema";
 import { FocusLayer } from "@ascenta/db/focus-layer-schema";
@@ -11,12 +10,26 @@ import {
 } from "./profile-tools";
 
 const SKIP_NO_DB = !process.env.MONGODB_URI;
+const PROFILE_TEST_PREFIX_RE = /^(TEST|NOJD|SUG)-/;
+
+async function cleanupProfileToolFixtures() {
+  const emps = await Employee.find(
+    { employeeId: { $regex: PROFILE_TEST_PREFIX_RE } },
+    { _id: 1 },
+  ).lean();
+  const ids = (emps as Array<{ _id: unknown }>).map((e) => e._id);
+  if (ids.length === 0) return;
+  await FocusLayer.deleteMany({ employeeId: { $in: ids } });
+  await Employee.deleteMany({ _id: { $in: ids } });
+  await JobDescription.deleteMany({ title: "Engineer", department: "Eng" });
+}
 
 describe.skipIf(SKIP_NO_DB)("startMyRoleWorkflowTool", () => {
   let employeeId: string;
 
   beforeAll(async () => {
     await connectDB();
+    await cleanupProfileToolFixtures();
     const jd = await JobDescription.create({
       title: "Engineer",
       department: "Eng",
@@ -98,6 +111,10 @@ describe.skipIf(SKIP_NO_DB)("startMyRoleWorkflowTool", () => {
     expect(result.success).toBe(true);
     expect(result.jdSnippet).toBeNull();
   });
+
+  afterAll(async () => {
+    await cleanupProfileToolFixtures();
+  });
 });
 
 describe.skipIf(SKIP_NO_DB)("suggestFromJDTool", () => {
@@ -123,6 +140,10 @@ describe.skipIf(SKIP_NO_DB)("suggestFromJDTool", () => {
 
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/no job description/i);
+  });
+
+  afterAll(async () => {
+    await cleanupProfileToolFixtures();
   });
 });
 
