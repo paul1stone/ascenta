@@ -4,7 +4,6 @@ import { useForm, FormProvider } from "react-hook-form";
 import { Button } from "@ascenta/ui/button";
 import { Textarea } from "@ascenta/ui/textarea";
 import { FOCUS_LAYER_PROMPTS } from "@ascenta/db/focus-layer-constants";
-import { AiSuggestButton } from "./ai-suggest-button";
 import { FocusLayerStatusPill } from "./focus-layer-status-pill";
 
 type Responses = {
@@ -39,7 +38,7 @@ export function FocusLayerForm({
     defaultValues: initialResponses,
     mode: "onChange",
   });
-  const { register, watch, reset, getValues, formState } = methods;
+  const { register, watch, getValues, formState } = methods;
 
   async function autoSave() {
     setSavingState("saving");
@@ -108,16 +107,6 @@ export function FocusLayerForm({
             {savingState === "saving" ? "Saving..." : savingState === "saved" ? "Saved" : ""}
           </span>
         </div>
-        {jobDescriptionAssigned && (
-          <AiSuggestButton
-            employeeId={employeeId}
-            hasContent={Object.values(values).some((v) => (v ?? "").trim().length > 0)}
-            onSuggested={(r) => {
-              reset(r as Responses, { keepDirty: true });
-              autoSave();
-            }}
-          />
-        )}
       </div>
 
       {!jobDescriptionAssigned && (
