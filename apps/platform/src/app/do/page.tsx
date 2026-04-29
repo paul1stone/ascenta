@@ -26,10 +26,17 @@ function DoPageInner() {
     const strategyGoalId = searchParams.get("strategyGoalId");
     const strategyGoalTitle = searchParams.get("strategyGoalTitle");
     const contributionRef = searchParams.get("contributionRef");
+    const jobDescriptionId = searchParams.get("jobDescriptionId");
 
     if (prompt) {
       hasSeededRef.current = true;
-      setPageInput("do", prompt);
+      // If a jobDescriptionId is supplied (refine flow), bake it into the
+      // prompt so the tool call carries the jdId arg without expanding the
+      // sendMessage signature.
+      const augmentedPrompt = jobDescriptionId
+        ? `${prompt} (jdId=${jobDescriptionId})`
+        : prompt;
+      setPageInput("do", augmentedPrompt);
       // Auto-send after a brief delay to let the component mount
       setTimeout(() => {
         const employeeInfo = user
@@ -46,7 +53,13 @@ function DoPageInner() {
           outcomeText && strategyGoalId && strategyGoalTitle && contributionRef
             ? { outcomeText, strategyGoalId, strategyGoalTitle, contributionRef }
             : undefined;
-        sendMessage("do", prompt, toolKey ?? undefined, employeeInfo, outcomeCtx);
+        sendMessage(
+          "do",
+          augmentedPrompt,
+          toolKey ?? undefined,
+          employeeInfo,
+          outcomeCtx,
+        );
       }, 100);
     }
   }, [searchParams, setPageInput, sendMessage, user]);

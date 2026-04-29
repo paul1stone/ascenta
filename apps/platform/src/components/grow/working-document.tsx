@@ -10,6 +10,8 @@ import { PerformanceNoteForm } from "@/components/grow/forms/performance-note-fo
 import { MVVForm } from "@/components/plan/mvv-form";
 import { StrategyBriefPanel } from "@/components/strategy/strategy-brief-panel";
 import { PerformanceReviewForm } from "./forms/performance-review-form";
+import { MyRoleWorkingDocument } from "@/components/plan/profile/my-role-working-document";
+import { JdWorkingDocument } from "@/components/plan/job-descriptions/jd-working-document";
 
 // ---------------------------------------------------------------------------
 // Title mapping
@@ -22,6 +24,8 @@ const WORKFLOW_TITLES: Record<WorkflowType, string> = {
   "build-mvv": "Mission, Vision & Values",
   "strategy-breakdown": "Strategy Brief",
   "performance-review": "Performance Review",
+  "build-my-role": "My Role",
+  "create-job-description": "Job Description",
 };
 
 // ---------------------------------------------------------------------------
@@ -155,6 +159,24 @@ export function WorkingDocument({ pageKey, accentColor }: WorkingDocumentProps) 
               reviewId={workingDocument.runId ?? ""}
               employeeId={workingDocument.employeeId ?? ""}
               employeeName={workingDocument.employeeName ?? ""}
+            />
+          )}
+
+          {workingDocument.workflowType === "build-my-role" && (
+            <MyRoleWorkingDocument
+              initialValues={workingDocument.fields}
+              onFieldChange={updateWorkingDocumentField}
+              onSubmit={handleSubmit}
+              onCancel={closeWorkingDocument}
+            />
+          )}
+
+          {workingDocument.workflowType === "create-job-description" && (
+            <JdWorkingDocument
+              initialValues={workingDocument.fields}
+              onFieldChange={updateWorkingDocumentField}
+              onSubmit={handleSubmit}
+              onCancel={closeWorkingDocument}
             />
           )}
         </div>

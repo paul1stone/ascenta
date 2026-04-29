@@ -92,7 +92,7 @@ export default function CategorySubPage({
         </div>
       ) : pageKey === "plan/org-design" &&
         (activeTab === "job-descriptions" ||
-          activeTab === "my-profile" ||
+          activeTab === "my-role" ||
           activeTab === "org-chart") ? (
         <OrgDesignTabs activeTab={activeTab} />
       ) : (

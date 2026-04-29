@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@ascenta/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@ascenta/ui/sheet";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Compass, Wrench } from "lucide-react";
+import Link from "next/link";
+import { JdPickerDialog } from "./jd-picker-dialog";
 import type { ListedJobDescription } from "@ascenta/db/job-descriptions";
 import { LibraryFilterBar, type LibraryFilters } from "./library-filter-bar";
 import { LibraryTable } from "./library-table";
@@ -26,6 +28,7 @@ export function LibraryView() {
   const [filters, setFilters] = useState<LibraryFilters>(initialFilters);
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -90,6 +93,56 @@ export function LibraryView() {
         </div>
       </header>
 
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href={`/do?prompt=${encodeURIComponent("Help me build a job description")}&tool=startJobDescriptionWorkflow`}
+          className="flex items-center gap-3 rounded-xl border p-4 transition-all hover:shadow-md"
+          style={{
+            borderColor: "rgba(255, 107, 53, 0.3)",
+            background: "rgba(255, 107, 53, 0.03)",
+          }}
+        >
+          <div
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: "rgba(255, 107, 53, 0.1)" }}
+          >
+            <Compass className="size-[18px]" style={{ color: "#ff6b35" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-deep-blue">
+              Build a JD with Compass
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              AI-guided JD creation
+            </p>
+          </div>
+        </Link>
+
+        <button
+          onClick={() => setPickerOpen(true)}
+          className="flex items-center gap-3 rounded-xl border p-4 transition-all hover:shadow-md text-left"
+          style={{
+            borderColor: "rgba(102, 136, 187, 0.3)",
+            background: "rgba(102, 136, 187, 0.03)",
+          }}
+        >
+          <div
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: "rgba(102, 136, 187, 0.1)" }}
+          >
+            <Wrench className="size-[18px]" style={{ color: "#6688bb" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-deep-blue">
+              Refine an existing JD
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              Polish or expand any JD in your library
+            </p>
+          </div>
+        </button>
+      </div>
+
       <LibraryFilterBar
         value={filters}
         onChange={setFilters}
@@ -142,6 +195,7 @@ export function LibraryView() {
       </Sheet>
 
       <JdImportStubDialog open={importOpen} onOpenChange={setImportOpen} />
+      <JdPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} />
     </div>
   );
 }

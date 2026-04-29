@@ -191,7 +191,7 @@ export const PAGE_CONFIG: Record<string, PageConfig> = {
     description: "Design organizational structures and operating models for effectiveness.",
     tabs: [
       { key: "job-descriptions", label: "Job Descriptions", icon: FileText },
-      { key: "my-profile", label: "My Profile", icon: UserCircle },
+      { key: "my-role", label: "My Role", icon: UserCircle },
       { key: "org-chart", label: "Org Chart", icon: Building2 },
     ],
   },
