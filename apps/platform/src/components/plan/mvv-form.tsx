@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@ascenta/ui/button";
 import { Loader2, Check } from "lucide-react";
+import { useAuth } from "@/lib/auth/auth-context";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -36,6 +37,7 @@ export function MVVForm({
   onSubmit,
   onCancel,
 }: MVVFormProps) {
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
@@ -77,16 +79,20 @@ export function MVVForm({
       lastSavedRef.current = key;
 
       try {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (user?.id) headers["x-dev-user-id"] = user.id;
         await fetch("/api/plan/foundation", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(formValues),
         });
       } catch {
         // silent
       }
     },
-    [],
+    [user?.id],
   );
 
   // Sync field changes back to chat context AND trigger auto-save

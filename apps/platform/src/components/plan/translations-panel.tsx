@@ -5,6 +5,7 @@ import { Loader2, Languages, RefreshCw, ChevronRight, AlertTriangle, Pencil, Che
 import { cn } from "@ascenta/ui";
 import { TRANSLATION_STATUS_LABELS } from "@ascenta/db/strategy-translation-constants";
 import { TranslationRolePreview } from "./translation-role-preview";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface Role {
   jobTitle: string;
@@ -43,6 +44,11 @@ interface TranslationsPanelProps {
 }
 
 export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
+  const { user } = useAuth();
+  const isHR = user?.role === "hr";
+  const isManager = user?.role === "manager";
+  const isEmployee = user?.role === "employee";
+  const canEditDept = (dept: string) => isHR || (isManager && user?.department === dept);
   const [translations, setTranslations] = useState<TranslationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
@@ -57,11 +63,19 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
     section: string;
   } | null>(null);
 
+  const authHeaders = useCallback((): Record<string, string> => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (user?.id) headers["x-dev-user-id"] = user.id;
+    return headers;
+  }, [user?.id]);
+
   const fetchTranslations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/plan/strategy-translations");
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
+      const res = await fetch("/api/plan/strategy-translations", { headers });
       const data = await res.json();
       if (data.success) {
         setTranslations(data.translations ?? []);
@@ -73,7 +87,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchTranslations();
@@ -84,7 +98,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
     try {
       const res = await fetch("/api/plan/strategy-translations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ department }),
       });
       const data = await res.json();
@@ -104,7 +118,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
     try {
       const res = await fetch("/api/plan/strategy-translations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ department: "all" }),
       });
       const data = await res.json();
@@ -122,7 +136,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
   async function handlePublish(id: string) {
     await fetch(`/api/plan/strategy-translations/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ action: "publish" }),
     });
     fetchTranslations();
@@ -131,7 +145,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
   async function handleArchive(id: string) {
     await fetch(`/api/plan/strategy-translations/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ action: "archive" }),
     });
     fetchTranslations();
@@ -152,7 +166,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
     try {
       const res = await fetch(`/api/plan/strategy-translations/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ roles: editRoles }),
       });
       const data = await res.json();
@@ -193,7 +207,7 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
     try {
       const res = await fetch(`/api/plan/strategy-translations/${translationId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ action: "regenerateSection", roleIndex, section }),
       });
       const data = await res.json();
@@ -238,19 +252,21 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
               AI-generated role-based language derived from your Foundation and Strategic Priorities.
             </p>
           </div>
-          <button
-            onClick={handleGenerateAll}
-            disabled={generating !== null}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-            style={{ backgroundColor: accentColor }}
-          >
-            {generating === "all" ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="size-3.5" />
-            )}
-            Generate All
-          </button>
+          {isHR && (
+            <button
+              onClick={handleGenerateAll}
+              disabled={generating !== null}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+              style={{ backgroundColor: accentColor }}
+            >
+              {generating === "all" ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="size-3.5" />
+              )}
+              Generate All
+            </button>
+          )}
         </div>
 
         {error && (
@@ -266,16 +282,20 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
               No Translations Yet
             </h3>
             <p className="text-sm text-muted-foreground max-w-sm mb-4">
-              Generate strategic translations to convert your strategy into role-based language.
+              {isEmployee
+                ? "No translations have been generated for your department yet."
+                : "Generate strategic translations to convert your strategy into role-based language."}
             </p>
-            <button
-              onClick={handleGenerateAll}
-              disabled={generating !== null}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-40"
-              style={{ backgroundColor: accentColor }}
-            >
-              Generate All Departments
-            </button>
+            {isHR && (
+              <button
+                onClick={handleGenerateAll}
+                disabled={generating !== null}
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-40"
+                style={{ backgroundColor: accentColor }}
+              >
+                Generate All Departments
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -338,90 +358,99 @@ export function TranslationsPanel({ accentColor }: TranslationsPanelProps) {
                   >
                     <div className="overflow-hidden">
                       <div className="border-t px-5 py-4 space-y-4">
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleGenerate(dept)}
-                            disabled={generating !== null}
-                            className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
-                          >
-                            {generating === dept ? (
-                              <Loader2 className="size-3 animate-spin" />
-                            ) : (
-                              <RefreshCw className="size-3" />
-                            )}
-                            Regenerate
-                          </button>
-                          {(translation.status === "draft" || translation.status === "published") && editingId !== translation.id && (
+                        {/* Action buttons (HR + own-dept managers only) */}
+                        {canEditDept(dept) && (
+                          <div className="flex items-center gap-2 flex-wrap">
                             <button
-                              onClick={() => handleStartEdit(translation)}
-                              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                              onClick={() => handleGenerate(dept)}
+                              disabled={generating !== null}
+                              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
                             >
-                              <Pencil className="size-3" />
-                              Edit
+                              {generating === dept ? (
+                                <Loader2 className="size-3 animate-spin" />
+                              ) : (
+                                <RefreshCw className="size-3" />
+                              )}
+                              Regenerate
                             </button>
-                          )}
-                          {editingId === translation.id && (
-                            <>
+                            {(translation.status === "draft" || translation.status === "published") && editingId !== translation.id && (
                               <button
-                                onClick={() => handleSaveEdit(translation.id)}
-                                disabled={saving}
-                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                                onClick={() => handleStartEdit(translation)}
+                                className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <Pencil className="size-3" />
+                                Edit
+                              </button>
+                            )}
+                            {editingId === translation.id && (
+                              <>
+                                <button
+                                  onClick={() => handleSaveEdit(translation.id)}
+                                  disabled={saving}
+                                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                                  style={{ backgroundColor: "#22c55e" }}
+                                >
+                                  {saving ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+                                  Save
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            )}
+                            {translation.status === "draft" && editingId !== translation.id && (
+                              <button
+                                onClick={() => handlePublish(translation.id)}
+                                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
                                 style={{ backgroundColor: "#22c55e" }}
                               >
-                                {saving ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
-                                Save
+                                Publish
                               </button>
+                            )}
+                            {translation.status !== "archived" && editingId !== translation.id && (
                               <button
-                                onClick={handleCancelEdit}
+                                onClick={() => handleArchive(translation.id)}
                                 className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                               >
-                                Cancel
+                                Archive
                               </button>
-                            </>
-                          )}
-                          {translation.status === "draft" && editingId !== translation.id && (
-                            <button
-                              onClick={() => handlePublish(translation.id)}
-                              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
-                              style={{ backgroundColor: "#22c55e" }}
-                            >
-                              Publish
-                            </button>
-                          )}
-                          {translation.status !== "archived" && editingId !== translation.id && (
-                            <button
-                              onClick={() => handleArchive(translation.id)}
-                              className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              Archive
-                            </button>
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        )}
 
-                        {/* Role previews */}
-                        {(editingId === translation.id ? editRoles : translation.roles).map((role, i) => (
-                          <TranslationRolePreview
-                            key={i}
-                            jobTitle={role.jobTitle}
-                            level={role.level}
-                            contributions={role.contributions}
-                            behaviors={role.behaviors}
-                            decisionRights={role.decisionRights}
-                            accentColor={accentColor}
-                            editing={editingId === translation.id}
-                            roleIndex={i}
-                            translationId={translation.id}
-                            onFieldChange={editingId === translation.id ? handleFieldChange : undefined}
-                            onRegenerateSection={editingId !== translation.id ? handleRegenerateSection : undefined}
-                            regeneratingSection={
-                              regeneratingSection?.translationId === translation.id &&
-                              regeneratingSection?.roleIndex === i
-                                ? regeneratingSection.section
-                                : null
-                            }
-                          />
-                        ))}
+                        {/* Role previews — disable edit/regen for non-owners */}
+                        {(editingId === translation.id ? editRoles : translation.roles).map((role, i) => {
+                          const editable = editingId === translation.id && canEditDept(dept);
+                          return (
+                            <TranslationRolePreview
+                              key={i}
+                              jobTitle={role.jobTitle}
+                              level={role.level}
+                              contributions={role.contributions}
+                              behaviors={role.behaviors}
+                              decisionRights={role.decisionRights}
+                              accentColor={accentColor}
+                              editing={editable}
+                              roleIndex={i}
+                              translationId={translation.id}
+                              onFieldChange={editable ? handleFieldChange : undefined}
+                              onRegenerateSection={
+                                editingId !== translation.id && canEditDept(dept)
+                                  ? handleRegenerateSection
+                                  : undefined
+                              }
+                              regeneratingSection={
+                                regeneratingSection?.translationId === translation.id &&
+                                regeneratingSection?.roleIndex === i
+                                  ? regeneratingSection.section
+                                  : null
+                              }
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   </div>

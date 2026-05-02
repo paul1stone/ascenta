@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { CompanyFoundation } from "@ascenta/db/foundation-schema";
 import { foundationFormSchema } from "@/lib/validations/foundation";
+import { getServerUser } from "@/lib/auth/server";
 
 export async function GET() {
   try {
@@ -23,6 +24,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getServerUser(req);
+    if (user?.role !== "hr") {
+      return NextResponse.json(
+        { success: false, error: "Only HR can edit company foundation" },
+        { status: 403 },
+      );
+    }
     await connectDB();
     const body = await req.json();
     const parsed = foundationFormSchema.safeParse(body);
@@ -52,6 +60,13 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const user = await getServerUser(req);
+    if (user?.role !== "hr") {
+      return NextResponse.json(
+        { success: false, error: "Only HR can publish company foundation" },
+        { status: 403 },
+      );
+    }
     await connectDB();
     const body = await req.json();
     const { action } = body;

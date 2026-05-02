@@ -57,7 +57,9 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
   const fetchFoundation = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/plan/foundation");
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
+      const res = await fetch("/api/plan/foundation", { headers });
       const data = await res.json();
       if (data.success) {
         setFoundation(data.foundation);
@@ -79,7 +81,7 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchFoundation();
@@ -98,9 +100,11 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
   async function handleSave() {
     try {
       setSaving(true);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (user?.id) headers["x-dev-user-id"] = user.id;
       const res = await fetch("/api/plan/foundation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -115,9 +119,11 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
   }
 
   async function handlePublish() {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (user?.id) headers["x-dev-user-id"] = user.id;
     const res = await fetch("/api/plan/foundation", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ action: "publish" }),
     });
     const data = await res.json();
@@ -128,9 +134,11 @@ export function FoundationPanel({ accentColor }: FoundationPanelProps) {
   }
 
   async function handleUnpublish() {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (user?.id) headers["x-dev-user-id"] = user.id;
     const res = await fetch("/api/plan/foundation", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ action: "unpublish" }),
     });
     const data = await res.json();
