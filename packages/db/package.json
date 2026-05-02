@@ -40,7 +40,8 @@
     "./employee-profile-constants": "./src/employee-profile-constants.ts"
   },
   "scripts": {
-    "db:seed": "npx tsx scripts/seed-employees.ts"
+    "db:seed": "npx tsx scripts/seed-employees.ts",
+    "db:seed-personas": "npx tsx scripts/seed-personas.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

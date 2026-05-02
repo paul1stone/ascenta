@@ -11,56 +11,63 @@ type EmployeeLean = {
   department: string;
   jobTitle: string;
   managerName: string;
+  demoPersona: "employee" | "manager" | "hr";
+};
+
+const PERSONA_ORDER: Record<EmployeeLean["demoPersona"], number> = {
+  employee: 0,
+  manager: 1,
+  hr: 2,
 };
 
 export async function GET() {
   await connectDB();
 
-  const employees = (await Employee.find({ status: "active" })
-    .select("employeeId firstName lastName department jobTitle managerName")
-    .sort({ lastName: 1 })
+  const personas = (await Employee.find({
+    demoPersona: { $in: ["employee", "manager", "hr"] },
+    status: "active",
+  })
+    .select("employeeId firstName lastName department jobTitle managerName demoPersona")
     .lean()) as unknown as EmployeeLean[];
 
-  const users = employees.map((emp) => {
-    const hasDirectReports = employees.some(
-      (e) =>
-        e.managerName &&
-        e.managerName.toLowerCase().includes(emp.firstName.toLowerCase()) &&
-        e.managerName.toLowerCase().includes(emp.lastName.toLowerCase())
-    );
-
-    // Best-effort manager lookup by matching managerName to another employee
-    let managerId: string | undefined;
-    if (emp.managerName) {
-      const nameParts = emp.managerName.split(" ");
-      const manager = employees.find(
-        (e) =>
-          e.firstName.toLowerCase() === nameParts[0].toLowerCase() &&
-          e.lastName.toLowerCase() ===
-            nameParts[nameParts.length - 1].toLowerCase()
-      );
-      if (manager) {
-        managerId = manager._id.toString();
-      }
+  // Resolve managerId for each persona by managerName lookup, so the FE
+  // has the same shape as before.
+  const allByName = new Map<string, Types.ObjectId>();
+  if (personas.some((p) => p.managerName)) {
+    const lookup = (await Employee.find({
+      $or: personas.map((p) => {
+        const parts = p.managerName.split(" ");
+        return {
+          firstName: new RegExp(`^${parts[0] ?? ""}$`, "i"),
+          lastName: new RegExp(`^${parts[parts.length - 1] ?? ""}$`, "i"),
+          status: "active",
+        };
+      }),
+    })
+      .select("_id firstName lastName")
+      .lean()) as unknown as { _id: Types.ObjectId; firstName: string; lastName: string }[];
+    for (const m of lookup) {
+      allByName.set(`${m.firstName} ${m.lastName}`.toLowerCase(), m._id);
     }
+  }
 
-    // Determine role: hr > manager > employee
-    const isHR = /human resources|people ops|\bhr\b/i.test(emp.department);
-    const role = isHR ? "hr" : hasDirectReports ? "manager" : "employee";
-
-    return {
-      id: emp._id.toString(),
-      employeeId: emp.employeeId,
-      name: `${emp.firstName} ${emp.lastName}`,
-      firstName: emp.firstName,
-      lastName: emp.lastName,
-      department: emp.department,
-      title: emp.jobTitle,
-      role,
-      managerId,
-      managerName: emp.managerName,
-    };
-  });
+  const users = personas
+    .sort((a, b) => PERSONA_ORDER[a.demoPersona] - PERSONA_ORDER[b.demoPersona])
+    .map((emp) => {
+      const managerId = allByName.get(emp.managerName.toLowerCase());
+      return {
+        id: emp._id.toString(),
+        employeeId: emp.employeeId,
+        name: `${emp.firstName} ${emp.lastName}`,
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        department: emp.department,
+        title: emp.jobTitle,
+        role: emp.demoPersona,
+        managerId: managerId ? managerId.toString() : undefined,
+        managerName: emp.managerName,
+      };
+    });
 
   return NextResponse.json({ users });
 }

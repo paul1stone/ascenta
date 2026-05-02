@@ -13,6 +13,7 @@ type EmployeeLean = {
   department: string;
   jobTitle: string;
   managerName: string;
+  demoPersona: "employee" | "manager" | "hr" | null;
 };
 
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   await connectDB();
   const employee = (await Employee.findById(userId)
-    .select("employeeId firstName lastName department jobTitle managerName")
+    .select("employeeId firstName lastName department jobTitle managerName demoPersona")
     .lean()) as unknown as EmployeeLean | null;
 
   if (!employee) {
@@ -41,7 +42,6 @@ export async function GET(request: NextRequest) {
 
   const hasDirectReports = directReports.length > 0;
 
-  // Best-effort manager lookup by matching managerName to another employee
   let managerId: string | undefined;
   if (employee.managerName) {
     const nameParts = employee.managerName.split(" ");
@@ -57,9 +57,15 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Determine role: hr > manager > employee
-  const isHR = /human resources|people ops|\bhr\b/i.test(employee.department);
-  const role = isHR ? "hr" : hasDirectReports ? "manager" : "employee";
+  // Demo personas carry their role explicitly; everything else falls back to
+  // the legacy heuristic (HR by department, manager by direct reports).
+  const role = employee.demoPersona
+    ? employee.demoPersona
+    : /human resources|people ops|\bhr\b/i.test(employee.department)
+      ? "hr"
+      : hasDirectReports
+        ? "manager"
+        : "employee";
 
   return NextResponse.json({
     user: {

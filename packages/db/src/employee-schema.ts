@@ -94,6 +94,12 @@ const employeeSchema = new Schema(
       index: true,
       default: null,
     },
+    demoPersona: {
+      type: String,
+      enum: ["employee", "manager", "hr"],
+      default: null,
+      index: { sparse: true },
+    },
     profile: { type: profileSchema, default: () => ({}) },
   },
   {
@@ -151,6 +157,7 @@ export type Employee_Type = {
   createdAt: Date;
   updatedAt: Date;
   jobDescriptionId?: string | null;
+  demoPersona?: "employee" | "manager" | "hr" | null;
   profile?: EmployeeProfile;
 };
 
@@ -165,6 +172,7 @@ export type NewEmployee = {
   hireDate: Date;
   status?: string;
   jobDescriptionId?: string | null;
+  demoPersona?: "employee" | "manager" | "hr" | null;
 };
 
 export type EmployeeNote = {
