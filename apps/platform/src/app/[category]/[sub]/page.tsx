@@ -18,6 +18,7 @@ import { ReviewsPanel } from "@/components/grow/reviews-panel";
 import { CheckinsPanel } from "@/components/grow/checkins-panel";
 import { SelfAssessmentPanel } from "@/components/grow/performance-reviews/self-assessment-panel";
 import { OrgDesignTabs } from "@/components/plan/org-design-tabs";
+import { ReflectPanel } from "@/components/grow/reflect/reflect-panel";
 
 export default function CategorySubPage({
   params,
@@ -104,6 +105,8 @@ export default function CategorySubPage({
             />
           )}
         </div>
+      ) : activeTab === "reflect" && pageKey === "grow/performance" ? (
+        <ReflectPanel accentColor={ctx.category.color} />
       ) : pageKey === "plan/org-design" &&
         (activeTab === "job-descriptions" ||
           activeTab === "my-role" ||
