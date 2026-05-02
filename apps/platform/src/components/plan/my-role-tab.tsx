@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Compass, Sparkles, Pencil } from "lucide-react";
+import { Compass, Sparkles, Pencil, FileText } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { FocusLayerSection } from "@/components/plan/focus-layer/focus-layer-section";
 import { FocusLayerReadView } from "@/components/plan/focus-layer/focus-layer-read-view";
@@ -10,6 +10,10 @@ import { FocusLayerStatusPill } from "@/components/plan/focus-layer/focus-layer-
 import { ProfileEditSection } from "@/components/plan/profile/profile-edit-section";
 import { DownloadOrgSnapshotButton } from "@/components/plan/profile/download-org-snapshot-button";
 import { GET_TO_KNOW_FIELDS } from "@ascenta/db/employee-profile-constants";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@ascenta/ui/sheet";
+import { JdDetail } from "@/components/plan/job-descriptions/jd-detail";
+import type { ListedJobDescription } from "@ascenta/db/job-descriptions";
+import { withUserHeader } from "@/lib/auth/with-user-header";
 
 interface ProfileSnapshot {
   photoBase64?: string | null;
@@ -22,6 +26,7 @@ interface FocusLayerSnapshot {
   responses: Record<string, string>;
   status: "draft" | "submitted" | "confirmed";
   jobDescriptionAssigned: boolean;
+  jobDescriptionId: string | null;
 }
 
 const PLAN_ACCENT = "#6688bb";
@@ -33,6 +38,9 @@ export function MyRoleTab() {
   const [editFocusLayer, setEditFocusLayer] = useState(false);
   const [profile, setProfile] = useState<ProfileSnapshot | null>(null);
   const [fl, setFl] = useState<FocusLayerSnapshot | null>(null);
+  const [viewJdOpen, setViewJdOpen] = useState(false);
+  const [jd, setJd] = useState<ListedJobDescription | null>(null);
+  const [jdLoading, setJdLoading] = useState(false);
 
   async function load(employeeId: string) {
     const [profileRes, flRes, empRes] = await Promise.all([
@@ -43,6 +51,7 @@ export function MyRoleTab() {
     const profileJson = await profileRes.json();
     const flJson = await flRes.json();
     const empJson = empRes ? await empRes.json().catch(() => ({})) : {};
+    const jdId: string | null = empJson?.employee?.jobDescriptionId ?? null;
     setProfile(profileJson.profile ?? {});
     setFl({
       responses: flJson.focusLayer?.responses ?? {
@@ -52,8 +61,31 @@ export function MyRoleTab() {
         workingStyle: "",
       },
       status: flJson.focusLayer?.status ?? "draft",
-      jobDescriptionAssigned: !!empJson?.employee?.jobDescriptionId,
+      jobDescriptionAssigned: !!jdId,
+      jobDescriptionId: jdId,
     });
+  }
+
+  async function openMyJd() {
+    if (!fl?.jobDescriptionId) return;
+    setViewJdOpen(true);
+    if (jd?.id === fl.jobDescriptionId) return;
+    setJdLoading(true);
+    try {
+      const res = await fetch(`/api/job-descriptions/${fl.jobDescriptionId}`, {
+        headers: withUserHeader(user?.id),
+      });
+      if (!res.ok) {
+        setJd(null);
+        return;
+      }
+      const json = await res.json();
+      const data = json.jobDescription;
+      // Shape into ListedJobDescription (assignedCount not relevant for read-only).
+      setJd({ ...data, assignedCount: 0 } as ListedJobDescription);
+    } finally {
+      setJdLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -102,7 +134,18 @@ export function MyRoleTab() {
             {user.name} · {user.title} · {user.department}
           </p>
         </div>
-        <DownloadOrgSnapshotButton employeeId={user.id} />
+        <div className="flex items-center gap-2">
+          {fl?.jobDescriptionAssigned && (
+            <button
+              onClick={openMyJd}
+              className="flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <FileText className="size-3.5" />
+              View Full JD
+            </button>
+          )}
+          <DownloadOrgSnapshotButton employeeId={user.id} />
+        </div>
       </header>
 
       {/* Compass cards */}
@@ -228,6 +271,29 @@ export function MyRoleTab() {
           </p>
         )}
       </section>
+
+      <Sheet open={viewJdOpen} onOpenChange={setViewJdOpen}>
+        <SheetContent side="right" className="w-[700px] sm:max-w-[700px] p-0 gap-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Job Description</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            {jdLoading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : jd ? (
+              <JdDetail
+                jobDescription={jd}
+                onChanged={() => {}}
+                onDeleted={() => {}}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Unable to load your job description.
+              </p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

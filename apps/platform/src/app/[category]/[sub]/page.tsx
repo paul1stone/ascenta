@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { notFound } from "next/navigation";
 import {
@@ -31,9 +31,23 @@ export default function CategorySubPage({
 
   const pageKey = `${category}/${sub}`;
   const pageConfig = PAGE_CONFIG[pageKey] || DEFAULT_PAGE_CONFIG;
-  const tabs = pageConfig.tabs ?? FUNCTION_TABS;
-  const [activeTab, setActiveTab] = useState<string>(tabs[0].key);
   const { user } = useAuth();
+  const baseTabs = pageConfig.tabs ?? FUNCTION_TABS;
+  const tabs = useMemo(() => {
+    if (pageKey === "plan/org-design" && user?.role === "employee") {
+      return baseTabs.filter((t) => t.key !== "job-descriptions");
+    }
+    return baseTabs;
+  }, [baseTabs, pageKey, user?.role]);
+  const [activeTab, setActiveTab] = useState<string>(tabs[0].key);
+
+  // If the active tab gets filtered out (e.g., employee role loads after mount
+  // and "job-descriptions" disappears), fall back to the first available tab.
+  useEffect(() => {
+    if (!tabs.some((t) => t.key === activeTab)) {
+      setActiveTab(tabs[0].key);
+    }
+  }, [tabs, activeTab]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

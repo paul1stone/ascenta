@@ -13,6 +13,8 @@ export interface ListFilters {
   level?: Level;
   employmentType?: EmploymentType;
   status?: JdStatus | "all";
+  /** Restrict results to a specific JD id (used for the employee self-view). */
+  id?: string;
   limit?: number;
   offset?: number;
 }
@@ -49,6 +51,12 @@ export async function listJobDescriptions(
   if (filters.department) match.department = filters.department;
   if (filters.level) match.level = filters.level;
   if (filters.employmentType) match.employmentType = filters.employmentType;
+  if (filters.id) {
+    if (!mongoose.isValidObjectId(filters.id)) {
+      return { items: [], total: 0 };
+    }
+    match._id = new Types.ObjectId(filters.id);
+  }
   if (filters.q && filters.q.trim()) {
     const re = new RegExp(escapeRegex(filters.q.trim()), "i");
     match.$or = [{ title: re }, { roleSummary: re }];

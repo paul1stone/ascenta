@@ -9,10 +9,14 @@ import {
 } from "@/lib/validations/job-description";
 import { Button } from "@ascenta/ui/button";
 import { JdFormBody } from "./jd-form-body";
+import { useAuth } from "@/lib/auth/auth-context";
+import { withUserHeader } from "@/lib/auth/with-user-header";
 
 interface JdFormProps {
   mode: "create" | "edit";
   initialValues?: Partial<JobDescriptionInput> & { id?: string };
+  /** When set, the department field is disabled and forced to this value. */
+  lockedDepartment?: string;
   onSuccess: (jd: JobDescriptionInput & { id: string }) => void;
   onCancel: () => void;
 }
@@ -30,7 +34,14 @@ const emptyDefaults: JobDescriptionInput = {
   status: "published",
 };
 
-export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps) {
+export function JdForm({
+  mode,
+  initialValues,
+  lockedDepartment,
+  onSuccess,
+  onCancel,
+}: JdFormProps) {
+  const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,7 +51,11 @@ export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps
     // via `defaultValues`, so input and output match at runtime — cast the
     // resolver to silence the spurious mismatch.
     resolver: zodResolver(jobDescriptionInputSchema) as unknown as Resolver<JobDescriptionInput>,
-    defaultValues: { ...emptyDefaults, ...initialValues },
+    defaultValues: {
+      ...emptyDefaults,
+      ...initialValues,
+      ...(lockedDepartment ? { department: lockedDepartment } : {}),
+    },
     mode: "onSubmit",
   });
 
@@ -48,6 +63,9 @@ export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps
     setSubmitting(true);
     setServerError(null);
     try {
+      const finalValues = lockedDepartment
+        ? { ...values, department: lockedDepartment }
+        : values;
       const url =
         mode === "create"
           ? "/api/job-descriptions"
@@ -55,8 +73,8 @@ export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps
       const method = mode === "create" ? "POST" : "PATCH";
       const res = await fetch(url, {
         method,
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(values),
+        headers: withUserHeader(user?.id, { "content-type": "application/json" }),
+        body: JSON.stringify(finalValues),
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
@@ -80,7 +98,7 @@ export function JdForm({ mode, initialValues, onSuccess, onCancel }: JdFormProps
         className="flex flex-col gap-6"
         aria-label={mode === "create" ? "Create Job Description" : "Edit Job Description"}
       >
-        <JdFormBody />
+        <JdFormBody departmentLocked={!!lockedDepartment} />
 
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
 

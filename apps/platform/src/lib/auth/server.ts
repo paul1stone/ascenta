@@ -15,6 +15,7 @@ type EmployeeLean = {
   jobTitle: string;
   managerName: string;
   demoPersona: "employee" | "manager" | "hr" | null;
+  jobDescriptionId: Types.ObjectId | null;
 };
 
 export type ServerUser = {
@@ -24,6 +25,7 @@ export type ServerUser = {
   lastName: string;
   department: string;
   role: UserRole;
+  jobDescriptionId: string | null;
 };
 
 export async function getServerUser(req: NextRequest): Promise<ServerUser | null> {
@@ -32,7 +34,9 @@ export async function getServerUser(req: NextRequest): Promise<ServerUser | null
 
   await connectDB();
   const employee = (await Employee.findById(userId)
-    .select("employeeId firstName lastName department jobTitle managerName demoPersona")
+    .select(
+      "employeeId firstName lastName department jobTitle managerName demoPersona jobDescriptionId",
+    )
     .lean()) as unknown as EmployeeLean | null;
   if (!employee) return null;
 
@@ -61,5 +65,8 @@ export async function getServerUser(req: NextRequest): Promise<ServerUser | null
     lastName: employee.lastName,
     department: employee.department,
     role,
+    jobDescriptionId: employee.jobDescriptionId
+      ? employee.jobDescriptionId.toString()
+      : null,
   };
 }
