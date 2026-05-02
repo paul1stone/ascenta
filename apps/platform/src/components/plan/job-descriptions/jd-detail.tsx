@@ -19,6 +19,8 @@ import type { ListedJobDescription } from "@ascenta/db/job-descriptions";
 import { Pencil, Trash2, UserPlus } from "lucide-react";
 import { JdForm } from "./jd-form";
 import { JdAssignDialog } from "./jd-assign-dialog";
+import { useAuth } from "@/lib/auth/auth-context";
+import { withUserHeader } from "@/lib/auth/with-user-header";
 
 interface AssignedEmployee {
   id: string;
@@ -32,19 +34,41 @@ interface JdDetailProps {
   jobDescription: ListedJobDescription;
   onChanged: () => void;
   onDeleted: () => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canAssign?: boolean;
+  lockedDepartment?: string;
 }
 
-export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps) {
+export function JdDetail({
+  jobDescription,
+  onChanged,
+  onDeleted,
+  canEdit = false,
+  canDelete = false,
+  canAssign = false,
+  lockedDepartment,
+}: JdDetailProps) {
+  const { user } = useAuth();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [employees, setEmployees] = useState<AssignedEmployee[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Employees can view their own JD as read-only — no assigned-employee list.
+  const showAssignedEmployees = canAssign;
+
   async function loadEmployees() {
+    if (!showAssignedEmployees) return;
     const res = await fetch(
       `/api/job-descriptions/${jobDescription.id}/employees`,
+      { headers: withUserHeader(user?.id) },
     );
+    if (!res.ok) {
+      setEmployees([]);
+      return;
+    }
     const json = await res.json();
     setEmployees(json.employees ?? []);
   }
@@ -52,12 +76,12 @@ export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps
   useEffect(() => {
     loadEmployees();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobDescription.id]);
+  }, [jobDescription.id, user?.id, showAssignedEmployees]);
 
   async function unassign(employeeId: string) {
     await fetch(`/api/job-descriptions/${jobDescription.id}/employees`, {
       method: "DELETE",
-      headers: { "content-type": "application/json" },
+      headers: withUserHeader(user?.id, { "content-type": "application/json" }),
       body: JSON.stringify({ employeeIds: [employeeId] }),
     });
     await loadEmployees();
@@ -69,6 +93,7 @@ export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps
     try {
       await fetch(`/api/job-descriptions/${jobDescription.id}`, {
         method: "DELETE",
+        headers: withUserHeader(user?.id),
       });
       onDeleted();
     } finally {
@@ -82,6 +107,7 @@ export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps
       <JdForm
         mode="edit"
         initialValues={{ ...jobDescription, id: jobDescription.id }}
+        lockedDepartment={lockedDepartment}
         onSuccess={() => {
           onChanged();
           setMode("view");
@@ -104,20 +130,26 @@ export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps
             <Badge variant="outline" className="mt-2">Draft</Badge>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setMode("edit")}>
-            <Pencil className="size-4 mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="size-4 mr-1" />
-            Delete
-          </Button>
-        </div>
+        {(canEdit || canDelete) && (
+          <div className="flex gap-2">
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => setMode("edit")}>
+                <Pencil className="size-4 mr-1" />
+                Edit
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="size-4 mr-1" />
+                Delete
+              </Button>
+            )}
+          </div>
+        )}
       </header>
 
       <Section title="Role Summary">
@@ -133,50 +165,57 @@ export function JdDetail({ jobDescription, onChanged, onDeleted }: JdDetailProps
       )}
       <BulletSection title="Competencies" items={jobDescription.competencies} />
 
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-display font-semibold">
-            Assigned Employees{" "}
-            <span className="text-sm text-muted-foreground">({employees.length})</span>
-          </h3>
-          <Button size="sm" onClick={() => setAssignOpen(true)}>
-            <UserPlus className="size-4 mr-1" />
-            Assign Employee
-          </Button>
-        </div>
-        {employees.length === 0 ? (
-          <p className="text-sm text-muted-foreground rounded border border-dashed p-6 text-center">
-            No employees assigned yet.
-          </p>
-        ) : (
-          <ul className="rounded border divide-y">
-            {employees.map((e) => (
-              <li key={e.id} className="flex items-center justify-between p-3">
-                <div>
-                  <div className="text-sm font-medium">
-                    {e.firstName} {e.lastName}
+      {showAssignedEmployees && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-display font-semibold">
+              Assigned Employees{" "}
+              <span className="text-sm text-muted-foreground">({employees.length})</span>
+            </h3>
+            {canAssign && (
+              <Button size="sm" onClick={() => setAssignOpen(true)}>
+                <UserPlus className="size-4 mr-1" />
+                Assign Employee
+              </Button>
+            )}
+          </div>
+          {employees.length === 0 ? (
+            <p className="text-sm text-muted-foreground rounded border border-dashed p-6 text-center">
+              No employees assigned yet.
+            </p>
+          ) : (
+            <ul className="rounded border divide-y">
+              {employees.map((e) => (
+                <li key={e.id} className="flex items-center justify-between p-3">
+                  <div>
+                    <div className="text-sm font-medium">
+                      {e.firstName} {e.lastName}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {e.jobTitle} · {e.department}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {e.jobTitle} · {e.department}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => unassign(e.id)}
-                >
-                  Unassign
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  {canAssign && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unassign(e.id)}
+                    >
+                      Unassign
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <JdAssignDialog
         open={assignOpen}
         onOpenChange={setAssignOpen}
         jobDescriptionId={jobDescription.id}
+        departmentFilter={lockedDepartment}
         onAssigned={() => {
           loadEmployees();
           onChanged();

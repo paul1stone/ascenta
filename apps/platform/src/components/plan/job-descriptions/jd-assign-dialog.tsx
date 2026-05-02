@@ -10,6 +10,8 @@ import {
 } from "@ascenta/ui/dialog";
 import { Button } from "@ascenta/ui/button";
 import { Input } from "@ascenta/ui/input";
+import { useAuth } from "@/lib/auth/auth-context";
+import { withUserHeader } from "@/lib/auth/with-user-header";
 
 interface EmployeeRow {
   id: string;
@@ -25,6 +27,8 @@ interface JdAssignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   jobDescriptionId: string;
+  /** When set, only employees in this department are listed (manager view). */
+  departmentFilter?: string;
   onAssigned: () => void;
 }
 
@@ -32,8 +36,10 @@ export function JdAssignDialog({
   open,
   onOpenChange,
   jobDescriptionId,
+  departmentFilter,
   onAssigned,
 }: JdAssignDialogProps) {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState<EmployeeRow[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -49,12 +55,14 @@ export function JdAssignDialog({
       .then((data) =>
         setEmployees(
           (data.employees ?? []).filter(
-            (e: EmployeeRow) => e.jobDescriptionId !== jobDescriptionId,
+            (e: EmployeeRow) =>
+              e.jobDescriptionId !== jobDescriptionId &&
+              (!departmentFilter || e.department === departmentFilter),
           ),
         ),
       )
       .catch((err) => setError(err.message ?? "Failed to load employees"));
-  }, [open, jobDescriptionId]);
+  }, [open, jobDescriptionId, departmentFilter]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -84,7 +92,7 @@ export function JdAssignDialog({
         `/api/job-descriptions/${jobDescriptionId}/employees`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: withUserHeader(user?.id, { "content-type": "application/json" }),
           body: JSON.stringify({ employeeIds: Array.from(selected) }),
         },
       );

@@ -27,12 +27,15 @@ interface LibraryFilterBarProps {
   value: LibraryFilters;
   onChange: (next: LibraryFilters) => void;
   departments: string[];
+  /** When set, the department filter is locked to this value (manager view). */
+  lockedDepartment?: string;
 }
 
 export function LibraryFilterBar({
   value,
   onChange,
   departments,
+  lockedDepartment,
 }: LibraryFilterBarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -48,12 +51,15 @@ export function LibraryFilterBar({
         onValueChange={(v) =>
           onChange({ ...value, department: v === "any" ? "" : v })
         }
+        disabled={!!lockedDepartment}
       >
         <SelectTrigger className="w-44" aria-label="Filter by department">
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="any">All departments</SelectItem>
+          {!lockedDepartment && (
+            <SelectItem value="any">All departments</SelectItem>
+          )}
           {departments.map((d) => (
             <SelectItem key={d} value={d}>
               {d}

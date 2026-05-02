@@ -21,7 +21,11 @@ import {
 import type { JobDescriptionInput } from "@/lib/validations/job-description";
 import { BulletListField } from "./bullet-list-field";
 
-export function JdFormBody() {
+interface JdFormBodyProps {
+  departmentLocked?: boolean;
+}
+
+export function JdFormBody({ departmentLocked }: JdFormBodyProps = {}) {
   const { register, watch, setValue, formState } =
     useFormContext<JobDescriptionInput>();
   const { errors } = formState;
@@ -44,7 +48,17 @@ export function JdFormBody() {
           <label className="text-sm font-medium" htmlFor="jd-department">
             Department <span className="text-destructive">*</span>
           </label>
-          <Input id="jd-department" {...register("department")} />
+          <Input
+            id="jd-department"
+            {...register("department")}
+            disabled={departmentLocked}
+            aria-readonly={departmentLocked}
+          />
+          {departmentLocked && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Locked to your department.
+            </p>
+          )}
           {errors.department && (
             <p className="text-xs text-destructive mt-1">
               {errors.department.message}
