@@ -9,6 +9,12 @@ import {
 } from "@ascenta/db/performance-review-categories";
 import type { ReviewCategoryKey } from "@ascenta/db/performance-review-categories";
 import { ChevronLeft, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  BehavioralAnchorsCallout,
+  EmployeeStrengthsSection,
+  OverallRatingSummary,
+  EmployeeWrittenResponse,
+} from "./review-enhancements";
 
 interface AssessmentSection {
   categoryKey: ReviewCategoryKey;
@@ -166,6 +172,19 @@ export function AcknowledgmentView({
         </div>
       ) : review ? (
         <>
+          {/* Overall rating computed from category averages */}
+          <OverallRatingSummary
+            self={review.selfAssessment.sections
+              .map((s) => s.rating ?? 0)
+              .filter((n) => n > 0)}
+            manager={review.managerAssessment.sections
+              .map((s) => s.rating ?? 0)
+              .filter((n) => n > 0)}
+          />
+
+          {/* Employee strengths and contributions — dedicated section */}
+          <EmployeeStrengthsSection />
+
           {/* Column headers */}
           <div className="grid grid-cols-2 gap-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -235,6 +254,12 @@ export function AcknowledgmentView({
                         </p>
                       )}
                     </div>
+                  </div>
+                  <div className="border-t border-border bg-muted/10 p-3">
+                    <BehavioralAnchorsCallout
+                      categoryKey={key}
+                      categoryLabel={category.label}
+                    />
                   </div>
                 </div>
               );
@@ -307,6 +332,9 @@ export function AcknowledgmentView({
               )}
             </div>
           )}
+
+          {/* Optional employee written response */}
+          <EmployeeWrittenResponse disabled={acknowledged} />
 
           {/* Sign-off row */}
           <div className="flex flex-col items-end gap-2 pt-4 border-t border-border">

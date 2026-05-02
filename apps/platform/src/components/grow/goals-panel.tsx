@@ -22,6 +22,7 @@ import {
   EmployeeCombobox,
   type EmployeeOption,
 } from "@/components/grow/employee-combobox";
+import { GoalsLifecycle } from "@/components/grow/goals-lifecycle";
 import { useAuth } from "@/lib/auth/auth-context";
 import Link from "next/link";
 
@@ -589,6 +590,10 @@ export function GoalsPanel({ accentColor }: GoalsPanelProps) {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-4xl mx-auto">
+        <GoalsLifecycle
+          role={(user?.role ?? "employee") as "employee" | "manager" | "hr"}
+          hasPriorGoals={completedGoals.length > 0}
+        />
         {/* Compass CTAs — primary actions in grid */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link
