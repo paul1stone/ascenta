@@ -11,6 +11,8 @@ import {
 } from "@ascenta/ui/dialog";
 import { Input } from "@ascenta/ui/input";
 import type { ListedJobDescription } from "@ascenta/db/job-descriptions";
+import { useAuth } from "@/lib/auth/auth-context";
+import { withUserHeader } from "@/lib/auth/with-user-header";
 
 interface Props {
   open: boolean;
@@ -18,6 +20,7 @@ interface Props {
 }
 
 export function JdPickerDialog({ open, onOpenChange }: Props) {
+  const { user } = useAuth();
   const [q, setQ] = useState("");
   const [items, setItems] = useState<ListedJobDescription[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +33,9 @@ export function JdPickerDialog({ open, onOpenChange }: Props) {
       const params = new URLSearchParams();
       if (query) params.set("q", query);
       params.set("status", "published");
-      const res = await fetch(`/api/job-descriptions?${params.toString()}`);
+      const res = await fetch(`/api/job-descriptions?${params.toString()}`, {
+        headers: withUserHeader(user?.id),
+      });
       const json = await res.json();
       setItems(json.jobDescriptions ?? []);
     } finally {
