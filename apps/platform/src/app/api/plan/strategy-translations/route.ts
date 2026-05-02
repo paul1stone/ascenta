@@ -3,6 +3,7 @@ import { connectDB } from "@ascenta/db";
 import { StrategyTranslation } from "@ascenta/db/strategy-translation-schema";
 import { Employee } from "@ascenta/db/employee-schema";
 import { generateTranslationForDepartment, checkTranslationStalenessBatch } from "@/lib/ai/translation-engine";
+import { getServerUser } from "@/lib/auth/server";
 
 // ============================================================================
 // GET — List translations
@@ -10,6 +11,7 @@ import { generateTranslationForDepartment, checkTranslationStalenessBatch } from
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getServerUser(req);
     await connectDB();
     const { searchParams } = new URL(req.url);
     const department = searchParams.get("department");
@@ -21,6 +23,10 @@ export async function GET(req: NextRequest) {
       filter.status = status;
     } else if (!searchParams.has("includeArchived")) {
       filter.status = { $ne: "archived" };
+    }
+
+    if (user?.role === "employee") {
+      filter.department = user.department;
     }
 
     const translations = await StrategyTranslation.find(filter)
@@ -69,6 +75,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getServerUser(req);
+    if (!user || user.role === "employee") {
+      return NextResponse.json(
+        { success: false, error: "Not authorized to generate translations" },
+        { status: 403 },
+      );
+    }
     await connectDB();
     const body = await req.json();
     const { department } = body as { department: string };
@@ -78,6 +91,21 @@ export async function POST(req: NextRequest) {
         { success: false, error: "department is required" },
         { status: 400 },
       );
+    }
+
+    if (user.role === "manager") {
+      if (department === "all") {
+        return NextResponse.json(
+          { success: false, error: "Managers can only generate translations for their own department" },
+          { status: 403 },
+        );
+      }
+      if (department !== user.department) {
+        return NextResponse.json(
+          { success: false, error: "Managers can only generate translations for their own department" },
+          { status: 403 },
+        );
+      }
     }
 
     if (department === "all") {

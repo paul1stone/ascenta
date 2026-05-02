@@ -9,12 +9,16 @@ import {
   STRATEGY_GOAL_STATUSES,
 } from "@ascenta/db/strategy-goal-constants";
 import type { StrategyGoalData } from "./strategy-goal-card";
+import type { UserRole } from "@/lib/auth/auth-context";
 
 interface StrategyGoalFormProps {
   accentColor: string;
   onClose: () => void;
   onSaved: () => void;
   editGoal?: StrategyGoalData | null;
+  userRole: UserRole | null;
+  userId?: string;
+  userDepartment?: string;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -31,14 +35,20 @@ export function StrategyGoalForm({
   onClose,
   onSaved,
   editGoal,
+  userRole,
+  userId,
+  userDepartment,
 }: StrategyGoalFormProps) {
+  const isManager = userRole === "manager";
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [horizon, setHorizon] = useState<string>("short_term");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [scope, setScope] = useState<"company" | "department">("company");
-  const [department, setDepartment] = useState("");
+  const [scope, setScope] = useState<"company" | "department">(
+    isManager ? "department" : "company",
+  );
+  const [department, setDepartment] = useState(isManager ? (userDepartment ?? "") : "");
   const [successMetrics, setSuccessMetrics] = useState("");
   const [rationale, setRationale] = useState("");
   const [status, setStatus] = useState<string>("draft");
@@ -108,9 +118,11 @@ export function StrategyGoalForm({
         : "/api/plan/strategy-goals";
       const method = editGoal ? "PATCH" : "POST";
 
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (userId) headers["x-dev-user-id"] = userId;
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           title,
           description,
@@ -248,11 +260,17 @@ export function StrategyGoalForm({
               <select
                 value={scope}
                 onChange={(e) => setScope(e.target.value as "company" | "department")}
-                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                disabled={isManager}
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:bg-muted/40 disabled:text-muted-foreground"
               >
-                <option value="company">Company-wide</option>
+                {!isManager && <option value="company">Company-wide</option>}
                 <option value="department">Department</option>
               </select>
+              {isManager && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Managers can only create department-scoped goals.
+                </p>
+              )}
             </div>
             {scope === "department" && (
               <div>
@@ -262,7 +280,8 @@ export function StrategyGoalForm({
                 <select
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                  disabled={isManager}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:bg-muted/40 disabled:text-muted-foreground"
                 >
                   <option value="">Select department...</option>
                   {departments.map((d) => (

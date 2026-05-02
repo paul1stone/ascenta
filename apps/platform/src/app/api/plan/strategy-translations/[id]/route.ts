@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { StrategyTranslation } from "@ascenta/db/strategy-translation-schema";
 import { regenerateRoleSection, type TranslationSection } from "@/lib/ai/translation-engine";
+import { getServerUser } from "@/lib/auth/server";
 
 export async function GET(
   _req: NextRequest,
@@ -43,6 +44,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const user = await getServerUser(req);
+    if (!user || user.role === "employee") {
+      return NextResponse.json(
+        { success: false, error: "Not authorized to edit translations" },
+        { status: 403 },
+      );
+    }
     await connectDB();
     const { id } = await params;
     const body = await req.json();
@@ -53,6 +61,13 @@ export async function PATCH(
       return NextResponse.json(
         { success: false, error: "Translation not found" },
         { status: 404 },
+      );
+    }
+
+    if (user.role === "manager" && doc.department !== user.department) {
+      return NextResponse.json(
+        { success: false, error: "Managers can only edit translations for their own department" },
+        { status: 403 },
       );
     }
 

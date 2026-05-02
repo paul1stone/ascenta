@@ -11,6 +11,7 @@ import {
 } from "react";
 import { extractLastWorkflowRunId } from "@/components/chat/workflow-blocks";
 import { AI_CONFIG } from "@/lib/ai/config";
+import { useAuth } from "@/lib/auth/auth-context";
 
 export interface Message {
   id: string;
@@ -96,6 +97,7 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 const DEFAULT_MODEL = AI_CONFIG.defaultModels.anthropic;
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [pageConversations, setPageConversations] = useState<
     Map<string, PageConversation>
   >(new Map());
@@ -262,9 +264,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           );
         }
 
+        const submitHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (user?.id) submitHeaders["x-dev-user-id"] = user.id;
         const res = await fetch(route, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: submitHeaders,
           body: JSON.stringify({
             ...fields,
             employeeId: effectiveEmployeeId,
@@ -284,9 +290,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       // For MVV, also publish after saving
       if (workflowType === "build-mvv") {
+        const publishHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (user?.id) publishHeaders["x-dev-user-id"] = user.id;
         await fetch("/api/plan/foundation", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: publishHeaders,
           body: JSON.stringify({ action: "publish" }),
         });
       }

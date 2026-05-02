@@ -78,7 +78,9 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/plan/strategy-goals");
+      const headers: Record<string, string> = {};
+      if (user?.id) headers["x-dev-user-id"] = user.id;
+      const res = await fetch("/api/plan/strategy-goals", { headers });
       const data = await res.json();
       if (data.success) {
         setGoals(data.goals ?? []);
@@ -90,16 +92,18 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchGoals();
   }, [fetchGoals]);
 
   async function handleArchive(goalId: string) {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (user?.id) headers["x-dev-user-id"] = user.id;
     await fetch(`/api/plan/strategy-goals/${goalId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ status: "archived" }),
     });
     fetchGoals();
@@ -497,6 +501,9 @@ export function StrategyPanel({ accentColor }: StrategyPanelProps) {
           }}
           onSaved={fetchGoals}
           editGoal={editGoal}
+          userRole={user?.role ?? null}
+          userId={user?.id}
+          userDepartment={user?.department}
         />
       )}
     </div>

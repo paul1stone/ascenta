@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@ascenta/db";
 import { StrategyGoal } from "@ascenta/db/strategy-goal-schema";
 import { strategyGoalFormSchema } from "@/lib/validations/strategy-goal";
+import { getServerUser } from "@/lib/auth/server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -44,6 +45,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getServerUser(req);
+    if (!user || user.role === "employee") {
+      return NextResponse.json(
+        { success: false, error: "Not authorized to create strategy goals" },
+        { status: 403 },
+      );
+    }
     await connectDB();
     const body = await req.json();
     const parsed = strategyGoalFormSchema.safeParse(body);
@@ -55,6 +63,22 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+
+    if (user.role === "manager") {
+      if (data.scope !== "department") {
+        return NextResponse.json(
+          { success: false, error: "Managers can only create department-scoped goals" },
+          { status: 403 },
+        );
+      }
+      if (data.department !== user.department) {
+        return NextResponse.json(
+          { success: false, error: "Managers can only create goals for their own department" },
+          { status: 403 },
+        );
+      }
+    }
+
     const goal = await StrategyGoal.create({
       title: data.title,
       description: data.description,
